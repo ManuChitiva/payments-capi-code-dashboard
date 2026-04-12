@@ -1399,7 +1399,7 @@ export default function DashboardPage() {
                   </section>
 
                   <section className="mb-6 grid gap-4 xl:grid-cols-3">
-                    <article className="rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur xl:col-span-2">
+                    <article className="min-w-0 rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur xl:col-span-2">
                       <h3 className="text-sm text-slate-400">
                         Actividad de clientes por dia
                       </h3>
@@ -1423,7 +1423,7 @@ export default function DashboardPage() {
                           Interes de compra: {analytics?.purchaseIntents ?? 0}
                         </div>
                       </div>
-                      <div className="mt-5 rounded-2xl border border-white/10 bg-[#081225]/70 p-4">
+                      <div className="mt-5 min-w-0 rounded-2xl border border-white/10 bg-[#081225]/70 p-3 sm:p-4">
                         <AnalyticsLineChart
                           series={buildDailySeries(
                             analytics?.dailyMetrics ?? [],
@@ -2871,7 +2871,7 @@ function AnalyticsLineChart({
 
   if (!series.length) {
     return (
-      <div className="flex h-[210px] items-center justify-center text-sm text-slate-500">
+      <div className="flex min-h-40 items-center justify-center px-1 text-center text-sm text-slate-500 sm:min-h-[210px]">
         Sin datos de actividad en el periodo.
       </div>
     );
@@ -2911,7 +2911,7 @@ function AnalyticsLineChart({
     });
 
   return (
-    <div className="overflow-x-auto space-y-3">
+    <div className="w-full min-w-0 space-y-3">
       <div className="flex flex-wrap gap-2 text-[11px] text-slate-300">
         {typeMeta.map((type) => (
           <button
@@ -2939,7 +2939,8 @@ function AnalyticsLineChart({
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-[210px] min-w-[640px] w-full"
+        preserveAspectRatio="xMidYMid meet"
+        className="block aspect-760/210 h-auto w-full max-w-full"
       >
         {yTicks.map((tick, index) => (
           <g key={`y-tick-${index}`}>
