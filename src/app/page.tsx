@@ -151,20 +151,20 @@ export default function LoginPage() {
               >
                 {loading ? "Iniciando sesión…" : "Continuar"}
               </button>
+
+              <p className="pt-1 text-center text-sm text-slate-400">
+                ¿No tienes cuenta?{" "}
+                <Link
+                  href="/register"
+                  className="font-medium text-cyan-400 underline-offset-4 hover:text-cyan-300 hover:underline"
+                >
+                  Crear cuenta
+                </Link>
+              </p>
             </form>
           </div>
-          <p className="mt-6 text-center text-sm text-slate-500">
-            ¿Primera vez aquí?{" "}
-            <Link
-              href="/register"
-              className="font-medium text-cyan-400 hover:text-cyan-300"
-            >
-              Crear cuenta
-            </Link>
-            <span className="mx-2 text-slate-600">·</span>
-            <span className="text-slate-600">
-              Si olvidaste tu acceso, contacta a tu administrador.
-            </span>
+          <p className="mt-4 max-w-sm text-center text-xs leading-relaxed text-slate-600 lg:mx-auto">
+            Si olvidaste tu acceso, contacta a tu administrador.
           </p>
         </div>
       </section>
