@@ -142,6 +142,7 @@ export default function DashboardPage() {
   const [actionMessage, setActionMessage] = useState("");
   const [activeSection, setActiveSection] =
     useState<DashboardSection>("resumen");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [storeSettingsForm, setStoreSettingsForm] =
     useState<MyStoreFormPayload>({
       name: "",
@@ -362,6 +363,35 @@ export default function DashboardPage() {
       null
     );
   }, [client]);
+
+  const goToSection = useCallback((section: DashboardSection) => {
+    setActiveSection(section);
+    setMobileNavOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileNavOpen) {
+      return;
+    }
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) {
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileNavOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileNavOpen]);
 
   const loadMyStoreSection = useCallback(async () => {
     const token = window.localStorage.getItem("stores_admin_token");
@@ -1144,62 +1174,136 @@ export default function DashboardPage() {
                 label="Resumen"
                 icon="◈"
                 active={activeSection === "resumen"}
-                onClick={() => setActiveSection("resumen")}
+                onClick={() => goToSection("resumen")}
               />
               <SidebarItem
                 label="Productos"
                 icon="◉"
                 active={activeSection === "productos"}
-                onClick={() => setActiveSection("productos")}
+                onClick={() => goToSection("productos")}
               />
               <SidebarItem
                 label="Mi tienda"
                 icon="⌂"
                 active={activeSection === "tienda"}
-                onClick={() => setActiveSection("tienda")}
+                onClick={() => goToSection("tienda")}
               />
               <SidebarItem
                 label="Medios de pago (PayU)"
                 icon="💳"
                 active={activeSection === "pagos"}
-                onClick={() => setActiveSection("pagos")}
+                onClick={() => goToSection("pagos")}
               />
             </nav>
 
             <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-              <p className="text-xs text-slate-400">Sesion activa</p>
+              <p className="text-xs text-slate-400">Sesión activa</p>
               <p className="mt-1 text-sm font-medium">{client?.name}</p>
               <p className="text-xs text-slate-400">{client?.email}</p>
             </div>
           </aside>
 
-          <section className="flex-1">
-            <header className="sticky top-0 z-10 border-b border-white/10 bg-black/30 px-6 py-4 backdrop-blur-xl">
-              <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium tracking-[0.16em] text-emerald-200 uppercase">
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          {mobileNavOpen ? (
+            <div className="fixed inset-0 z-40 lg:hidden">
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                aria-label="Cerrar menú"
+                onClick={() => setMobileNavOpen(false)}
+              />
+              <div className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-white/15 bg-[#0c1018] p-5 shadow-2xl">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300/90">
                     CapiCode
                   </p>
-                  <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
-                    {activeStore
-                      ? `Dashboard - ${activeStore.name}`
-                      : "Dashboard"}
-                  </h1>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Operacion inteligente de catalogo, inventario y crecimiento
-                    digital con CapiCode.
+                  <button
+                    type="button"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300"
+                    aria-label="Cerrar"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="mt-3 text-sm text-slate-400">
+                  Navega entre secciones del panel.
+                </p>
+                <nav className="mt-6 flex flex-1 flex-col gap-1 overflow-y-auto">
+                  <SidebarItem
+                    label="Resumen"
+                    icon="◈"
+                    active={activeSection === "resumen"}
+                    onClick={() => goToSection("resumen")}
+                  />
+                  <SidebarItem
+                    label="Productos"
+                    icon="◉"
+                    active={activeSection === "productos"}
+                    onClick={() => goToSection("productos")}
+                  />
+                  <SidebarItem
+                    label="Mi tienda"
+                    icon="⌂"
+                    active={activeSection === "tienda"}
+                    onClick={() => goToSection("tienda")}
+                  />
+                  <SidebarItem
+                    label="Medios de pago (PayU)"
+                    icon="💳"
+                    active={activeSection === "pagos"}
+                    onClick={() => goToSection("pagos")}
+                  />
+                </nav>
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p className="text-[11px] text-slate-500">Sesión</p>
+                  <p className="mt-1 truncate text-sm font-medium text-slate-200">
+                    {client?.name}
+                  </p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    {client?.email}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+              </div>
+            </div>
+          ) : null}
+
+          <section className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-10 border-b border-white/10 bg-black/40 px-4 py-3 backdrop-blur-xl sm:px-6 sm:py-4">
+              <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setMobileNavOpen(true)}
+                    className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg text-slate-200 lg:hidden"
+                    aria-label="Abrir menú de navegación"
+                  >
+                    ☰
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium tracking-[0.14em] text-emerald-200 uppercase sm:px-3 sm:py-1 sm:text-[11px] sm:tracking-[0.16em]">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                      CapiCode
+                    </p>
+                    <h1 className="mt-1.5 truncate text-lg font-semibold tracking-tight sm:mt-2 sm:text-xl md:text-2xl">
+                      {activeStore
+                        ? `Dashboard — ${activeStore.name}`
+                        : "Dashboard"}
+                    </h1>
+                    <p className="mt-1 hidden text-xs text-slate-400 sm:block">
+                      Operación inteligente de catálogo, inventario y crecimiento
+                      digital con CapiCode.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                   {client ? (
-                    <div className="relative">
+                    <div className="relative min-w-0 flex-1 sm:flex-initial sm:min-w-[12rem]">
                       <select
                         value={activeStore?.id ?? ""}
                         onChange={(event) =>
                           handleStoreChange(Number(event.target.value))
                         }
-                        className="appearance-none rounded-xl border border-white/15 bg-black/55 px-4 py-2 pr-10 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+                        className="w-full min-w-0 appearance-none rounded-xl border border-white/15 bg-black/55 px-3 py-2 pr-9 text-sm text-slate-100 outline-none transition focus:border-emerald-400 sm:px-4 sm:pr-10"
                       >
                         {client.stores.map((store) => (
                           <option
@@ -1229,15 +1333,15 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={logout}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 sm:px-4"
                   >
-                    Cerrar sesion
+                    Salir
                   </button>
                 </div>
               </div>
             </header>
 
-            <div className="mx-auto w-full max-w-7xl px-6 py-8">
+            <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
               {error ? (
                 <p className="mb-4 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 backdrop-blur">
                   {error}
@@ -1250,7 +1354,7 @@ export default function DashboardPage() {
               ) : null}
               {activeSection === "resumen" ? (
                 <>
-                  <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
                     <StatCard
                       title="Productos"
                       value={formatCompactNumber(products.length)}
@@ -2173,8 +2277,8 @@ export default function DashboardPage() {
         </div>
       </div>
       {productModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-3xl border border-white/15 bg-[#0d1320] p-0 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-white/15 bg-[#0d1320] p-0 shadow-[0_30px_80px_rgba(0,0,0,0.55)] sm:rounded-3xl">
             <div className="mb-4 flex items-start justify-between">
               <div className="w-full rounded-t-3xl border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-violet-500/10 px-6 py-5">
                 <h3 className="text-2xl font-semibold">
