@@ -19,6 +19,12 @@ import {
   type PagedPaymentsResponse,
   type PaymentRevenueSummary,
 } from "@/services/storePaymentsService";
+import {
+  getMyStore,
+  updateMyStore,
+  type MyStoreDetail,
+  type MyStoreFormPayload,
+} from "@/services/storeSettingsService";
 
 type ProductStatus = "activo" | "borrador" | "agotado";
 
@@ -90,7 +96,7 @@ type AnalyticsDashboard = {
   }>;
 };
 
-type DashboardSection = "resumen" | "productos" | "pagos";
+type DashboardSection = "resumen" | "productos" | "pagos" | "tienda";
 
 type PayuFormState = {
   name: string;
@@ -130,6 +136,23 @@ export default function DashboardPage() {
   const [actionMessage, setActionMessage] = useState("");
   const [activeSection, setActiveSection] =
     useState<DashboardSection>("resumen");
+  const [storeSettingsForm, setStoreSettingsForm] =
+    useState<MyStoreFormPayload>({
+      name: "",
+      label: "",
+      slug: "",
+      phone: "",
+      logoUrl: "",
+      primaryColor: "",
+      whatsapp: "",
+      cellPhone: "",
+      address: "",
+    });
+  const [myStorePickups, setMyStorePickups] = useState<
+    MyStoreDetail["pickups"]
+  >([]);
+  const [myStoreLoading, setMyStoreLoading] = useState(false);
+  const [myStoreSaving, setMyStoreSaving] = useState(false);
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [payuMethods, setPayuMethods] = useState<PayuPaymentMethodSummary[]>(
     [],
@@ -327,6 +350,89 @@ export default function DashboardPage() {
       null
     );
   }, [client]);
+
+  const loadMyStoreSection = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      return;
+    }
+    setMyStoreLoading(true);
+    try {
+      const detail = await getMyStore(token, activeStore.id);
+      setStoreSettingsForm({
+        name: detail.name,
+        label: detail.label ?? "",
+        slug: detail.slug,
+        phone: detail.phone ?? "",
+        logoUrl: detail.logoUrl ?? "",
+        primaryColor: detail.primaryColor ?? "",
+        whatsapp: detail.whatsapp ?? "",
+        cellPhone: detail.cellPhone ?? "",
+        address: detail.address ?? "",
+      });
+      setMyStorePickups(detail.pickups ?? []);
+    } catch {
+      setError("No se pudo cargar la configuracion de la tienda.");
+    } finally {
+      setMyStoreLoading(false);
+    }
+  }, [activeStore]);
+
+  useEffect(() => {
+    if (activeSection === "tienda" && activeStore) {
+      void loadMyStoreSection();
+    }
+  }, [activeSection, activeStore?.id, loadMyStoreSection]);
+
+  const handleSaveStoreSettings = async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore || !client) {
+      return;
+    }
+    if (!storeSettingsForm.name.trim() || !storeSettingsForm.slug.trim()) {
+      setError("Nombre y slug son obligatorios.");
+      return;
+    }
+    setMyStoreSaving(true);
+    setError("");
+    try {
+      await updateMyStore(token, activeStore.id, storeSettingsForm);
+      setActionMessage("Tienda actualizada correctamente.");
+      const meResponse = await fetch(`${API_URL}/clients/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!meResponse.ok) {
+        throw new Error("No se pudo refrescar el perfil.");
+      }
+      const data = (await meResponse.json()) as ClientDetail;
+      setClient(data);
+      window.localStorage.setItem("stores_admin_client", JSON.stringify(data));
+      const nextStore =
+        data.stores.find((s) => s.id === data.activeStoreId) ??
+        data.stores.find((s) => s.id === activeStore.id) ??
+        data.stores[0];
+      if (nextStore) {
+        const authFilters = buildAuthFilters(data, nextStore.id);
+        const [loadedProducts, loadedAnalytics] = await Promise.all([
+          loadProducts(token, nextStore.slug),
+          loadAnalytics(token, nextStore.slug),
+        ]);
+        setProducts(loadedProducts);
+        setAnalytics(loadedAnalytics);
+        void listPayuPaymentMethods(token, authFilters).then(setPayuMethods);
+        void getMyPaymentsRevenueSummary(token, authFilters).then(
+          setRevenueSummary,
+        );
+      }
+      await loadMyStoreSection();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo guardar la tienda.",
+      );
+    } finally {
+      setMyStoreSaving(false);
+    }
+  };
 
   const hasActivePayuConfig = useMemo(
     () => payuMethods.some((method) => method.active),
@@ -861,7 +967,7 @@ export default function DashboardPage() {
                 Bienvenido a la dashboard
               </h2>
               <p className="mt-2 text-sm text-slate-400">
-                Resumen, catálogo de productos y pagos PayU.
+                Resumen, tienda, catálogo de productos y pagos PayU.
               </p>
             </div>
 
@@ -877,6 +983,12 @@ export default function DashboardPage() {
                 icon="◉"
                 active={activeSection === "productos"}
                 onClick={() => setActiveSection("productos")}
+              />
+              <SidebarItem
+                label="Mi tienda"
+                icon="⌂"
+                active={activeSection === "tienda"}
+                onClick={() => setActiveSection("tienda")}
               />
               <SidebarItem
                 label="Medios de pago (PayU)"
@@ -1223,6 +1335,194 @@ export default function DashboardPage() {
                       </tbody>
                     </table>
                   </div>
+                </section>
+              ) : null}
+
+              {activeSection === "tienda" ? (
+                <section className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
+                  <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="text-base font-semibold text-slate-100">
+                        Datos de la tienda
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Nombre publico, marca, URL (slug) y datos de contacto. El
+                        slug afecta la URL de tu vitrina.
+                      </p>
+                    </div>
+                  </div>
+
+                  {myStoreLoading ? (
+                    <p className="text-sm text-slate-400">Cargando datos...</p>
+                  ) : (
+                    <>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-slate-300">Nombre de la tienda</span>
+                          <input
+                            value={storeSettingsForm.name}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                name: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-slate-300">Etiqueta visible</span>
+                          <input
+                            value={storeSettingsForm.label}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                label: e.target.value,
+                              }))
+                            }
+                            placeholder="Opcional"
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm sm:col-span-2">
+                          <span className="text-slate-300">
+                            Slug (URL){" "}
+                            <span className="text-slate-500">
+                              /stores/
+                              {storeSettingsForm.slug || "tu-tienda"}
+                            </span>
+                          </span>
+                          <input
+                            value={storeSettingsForm.slug}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                slug: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 font-mono text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-slate-300">Telefono</span>
+                          <input
+                            value={storeSettingsForm.phone}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                phone: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-slate-300">WhatsApp</span>
+                          <input
+                            value={storeSettingsForm.whatsapp}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                whatsapp: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-slate-300">Celular</span>
+                          <input
+                            value={storeSettingsForm.cellPhone}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                cellPhone: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm">
+                          <span className="text-slate-300">Color principal</span>
+                          <input
+                            value={storeSettingsForm.primaryColor}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                primaryColor: e.target.value,
+                              }))
+                            }
+                            placeholder="#0ea5e9"
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm sm:col-span-2">
+                          <span className="text-slate-300">URL del logo</span>
+                          <input
+                            value={storeSettingsForm.logoUrl}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                logoUrl: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                        <label className="block space-y-1.5 text-sm sm:col-span-2">
+                          <span className="text-slate-300">Direccion</span>
+                          <input
+                            value={storeSettingsForm.address}
+                            onChange={(e) =>
+                              setStoreSettingsForm((p) => ({
+                                ...p,
+                                address: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
+                          />
+                        </label>
+                      </div>
+
+                      {myStorePickups.length > 0 ? (
+                        <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
+                          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                            Puntos de recogida
+                          </p>
+                          <ul className="mt-2 space-y-2 text-sm text-slate-300">
+                            {myStorePickups.map((p) => (
+                              <li
+                                key={p.id}
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/5 px-3 py-2"
+                              >
+                                <span>{p.address ?? "Sin direccion"}</span>
+                                <span
+                                  className={
+                                    p.status
+                                      ? "text-emerald-300"
+                                      : "text-slate-500"
+                                  }
+                                >
+                                  {p.status ? "Activo" : "Inactivo"}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveStoreSettings()}
+                          disabled={myStoreSaving}
+                          className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+                        >
+                          {myStoreSaving ? "Guardando..." : "Guardar cambios"}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </section>
               ) : null}
 
