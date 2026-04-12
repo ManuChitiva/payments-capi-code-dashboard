@@ -25,10 +25,8 @@ export type MyStoreDetail = {
 export type MyStoreFormPayload = {
   name: string;
   label: string;
-  slug: string;
   phone: string;
   logoUrl: string;
-  primaryColor: string;
   whatsapp: string;
   cellPhone: string;
   address: string;
@@ -65,10 +63,8 @@ export async function updateMyStore(
     body: JSON.stringify({
       name: payload.name.trim(),
       label: payload.label.trim(),
-      slug: payload.slug.trim(),
       phone: payload.phone.trim(),
       logoUrl: payload.logoUrl.trim(),
-      primaryColor: payload.primaryColor.trim(),
       whatsapp: payload.whatsapp.trim(),
       cellPhone: payload.cellPhone.trim(),
       address: payload.address.trim(),

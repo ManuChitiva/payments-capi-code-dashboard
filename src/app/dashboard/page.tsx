@@ -140,10 +140,8 @@ export default function DashboardPage() {
     useState<MyStoreFormPayload>({
       name: "",
       label: "",
-      slug: "",
       phone: "",
       logoUrl: "",
-      primaryColor: "",
       whatsapp: "",
       cellPhone: "",
       address: "",
@@ -153,6 +151,7 @@ export default function DashboardPage() {
   >([]);
   const [myStoreLoading, setMyStoreLoading] = useState(false);
   const [myStoreSaving, setMyStoreSaving] = useState(false);
+  const [uploadingStoreLogo, setUploadingStoreLogo] = useState(false);
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [payuMethods, setPayuMethods] = useState<PayuPaymentMethodSummary[]>(
     [],
@@ -362,10 +361,8 @@ export default function DashboardPage() {
       setStoreSettingsForm({
         name: detail.name,
         label: detail.label ?? "",
-        slug: detail.slug,
         phone: detail.phone ?? "",
         logoUrl: detail.logoUrl ?? "",
-        primaryColor: detail.primaryColor ?? "",
         whatsapp: detail.whatsapp ?? "",
         cellPhone: detail.cellPhone ?? "",
         address: detail.address ?? "",
@@ -389,8 +386,8 @@ export default function DashboardPage() {
     if (!token || !activeStore || !client) {
       return;
     }
-    if (!storeSettingsForm.name.trim() || !storeSettingsForm.slug.trim()) {
-      setError("Nombre y slug son obligatorios.");
+    if (!storeSettingsForm.name.trim()) {
+      setError("El nombre de la tienda es obligatorio.");
       return;
     }
     setMyStoreSaving(true);
@@ -878,6 +875,40 @@ export default function DashboardPage() {
     }
   };
 
+  const handleStoreLogoUpload = async (file: File) => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      setError("No hay sesion activa para subir archivos.");
+      return;
+    }
+    setUploadingStoreLogo(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(`${API_URL}/me/media/upload`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-store-id": String(activeStore.id),
+        },
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error("upload_store_logo_error");
+      }
+      const payload = (await response.json()) as { fileUrl: string };
+      setStoreSettingsForm((prev) => ({ ...prev, logoUrl: payload.fileUrl }));
+      setActionMessage(
+        "Logo subido. Pulsa Guardar cambios para publicarlo en la tienda.",
+      );
+    } catch {
+      setError("No se pudo subir el logo.");
+    } finally {
+      setUploadingStoreLogo(false);
+    }
+  };
+
   const handleMediaUpload = async (file: File) => {
     const token = window.localStorage.getItem("stores_admin_token");
     const activeStoreId = window.localStorage.getItem(
@@ -1346,8 +1377,9 @@ export default function DashboardPage() {
                         Datos de la tienda
                       </h3>
                       <p className="text-xs text-slate-400">
-                        Nombre publico, marca, URL (slug) y datos de contacto. El
-                        slug afecta la URL de tu vitrina.
+                        Nombre publico, marca y datos de contacto. La URL de la
+                        tienda (slug) se fija al crear la cuenta y no se puede
+                        cambiar.
                       </p>
                     </div>
                   </div>
@@ -1384,25 +1416,16 @@ export default function DashboardPage() {
                             className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
                           />
                         </label>
-                        <label className="block space-y-1.5 text-sm sm:col-span-2">
-                          <span className="text-slate-300">
-                            Slug (URL){" "}
-                            <span className="text-slate-500">
-                              /stores/
-                              {storeSettingsForm.slug || "tu-tienda"}
-                            </span>
-                          </span>
-                          <input
-                            value={storeSettingsForm.slug}
-                            onChange={(e) =>
-                              setStoreSettingsForm((p) => ({
-                                ...p,
-                                slug: e.target.value,
-                              }))
-                            }
-                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 font-mono text-sm outline-none focus:border-emerald-400"
-                          />
-                        </label>
+                        <div className="space-y-1.5 text-sm sm:col-span-2">
+                          <span className="text-slate-300">URL publica (slug)</span>
+                          <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-sm text-slate-200">
+                            {activeStore ? `/stores/${activeStore.slug}` : "—"}
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            Definido al crear la tienda; no es editable (evita
+                            enlaces rotos).
+                          </p>
+                        </div>
                         <label className="block space-y-1.5 text-sm">
                           <span className="text-slate-300">Telefono</span>
                           <input
@@ -1442,33 +1465,80 @@ export default function DashboardPage() {
                             className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
                           />
                         </label>
-                        <label className="block space-y-1.5 text-sm">
+                        <div className="space-y-1.5 text-sm">
                           <span className="text-slate-300">Color principal</span>
-                          <input
-                            value={storeSettingsForm.primaryColor}
-                            onChange={(e) =>
-                              setStoreSettingsForm((p) => ({
-                                ...p,
-                                primaryColor: e.target.value,
-                              }))
-                            }
-                            placeholder="#0ea5e9"
-                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
-                          />
-                        </label>
-                        <label className="block space-y-1.5 text-sm sm:col-span-2">
-                          <span className="text-slate-300">URL del logo</span>
-                          <input
-                            value={storeSettingsForm.logoUrl}
-                            onChange={(e) =>
-                              setStoreSettingsForm((p) => ({
-                                ...p,
-                                logoUrl: e.target.value,
-                              }))
-                            }
-                            className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400"
-                          />
-                        </label>
+                          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5">
+                            {activeStore?.primaryColor ? (
+                              <span
+                                className="h-9 w-9 shrink-0 rounded-lg border border-white/20"
+                                style={{
+                                  backgroundColor: activeStore.primaryColor,
+                                }}
+                                title={activeStore.primaryColor}
+                              />
+                            ) : null}
+                            <span className="font-mono text-sm text-slate-300">
+                              {activeStore?.primaryColor ?? "Sin definir"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            Fijado al crear la tienda; no se modifica desde aquí.
+                          </p>
+                        </div>
+                        <div className="space-y-3 sm:col-span-2">
+                          <span className="text-sm text-slate-300">Logo</span>
+                          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={uploadingStoreLogo}
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                if (file) {
+                                  void handleStoreLogoUpload(file);
+                                }
+                                event.target.value = "";
+                              }}
+                              className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm text-slate-200 outline-none file:mr-3 file:rounded-xl file:border file:border-emerald-300/30 file:bg-emerald-500/10 file:px-3 file:py-1.5 file:text-emerald-100 hover:file:bg-emerald-500/20"
+                            />
+                            {uploadingStoreLogo ? (
+                              <p className="mt-2 text-xs text-emerald-300">
+                                Subiendo imagen...
+                              </p>
+                            ) : (
+                              <p className="mt-2 text-xs text-slate-500">
+                                Misma subida que en productos (JPG, PNG, WEBP,
+                                GIF). Pulsa Guardar cambios después de subir.
+                              </p>
+                            )}
+                            {storeSettingsForm.logoUrl.trim() ? (
+                              <div className="mt-3 flex flex-wrap items-end gap-3">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={storeSettingsForm.logoUrl}
+                                  alt="Vista previa del logo"
+                                  className="max-h-24 max-w-[200px] rounded-lg border border-white/10 object-contain"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setStoreSettingsForm((p) => ({
+                                      ...p,
+                                      logoUrl: "",
+                                    }))
+                                  }
+                                  className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/10"
+                                >
+                                  Quitar (sin guardar aun)
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="mt-3 text-xs text-slate-500">
+                                Aun no hay logo seleccionado para esta sesion.
+                              </p>
+                            )}
+                          </div>
+                        </div>
                         <label className="block space-y-1.5 text-sm sm:col-span-2">
                           <span className="text-slate-300">Direccion</span>
                           <input
@@ -1515,7 +1585,7 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           onClick={() => void handleSaveStoreSettings()}
-                          disabled={myStoreSaving}
+                          disabled={myStoreSaving || uploadingStoreLogo}
                           className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
                         >
                           {myStoreSaving ? "Guardando..." : "Guardar cambios"}
