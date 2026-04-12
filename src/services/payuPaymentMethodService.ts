@@ -1,4 +1,4 @@
-const API_URL = "/api";
+import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type AuthFilters = {
   userId?: number;

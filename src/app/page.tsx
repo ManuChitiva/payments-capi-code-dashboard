@@ -2,8 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const API_URL = "/api";
+import { publicApiBaseUrl } from "@/lib/public-api";
 const DEMO_EMAIL = "admin@stores.local";
 const DEMO_PASSWORD = "Admin123*";
 
@@ -27,7 +26,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    fetch(`${API_URL}/auth/login`, {
+    fetch(`${publicApiBaseUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

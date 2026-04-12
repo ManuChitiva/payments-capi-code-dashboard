@@ -1,6 +1,5 @@
+import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 import type { AuthFilters } from "@/services/payuPaymentMethodService";
-
-const API_URL = "/api";
 
 /** Fila de pago + datos mínimos del pedido (sin cuerpo crudo de PayU). */
 export type AdminPaymentListItem = {

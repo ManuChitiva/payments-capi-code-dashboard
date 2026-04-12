@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 import {
   createPayuPaymentMethod,
   deletePayuPaymentMethod,
@@ -18,8 +19,6 @@ import {
   type PagedPaymentsResponse,
   type PaymentRevenueSummary,
 } from "@/services/storePaymentsService";
-
-const API_URL = "/api";
 
 type ProductStatus = "activo" | "borrador" | "agotado";
 
