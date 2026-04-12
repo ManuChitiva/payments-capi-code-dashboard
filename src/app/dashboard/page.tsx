@@ -20,9 +20,15 @@ import {
   type PaymentRevenueSummary,
 } from "@/services/storePaymentsService";
 import {
+  createPickup,
+  deletePickup,
+  listMyPickups,
+  updatePickup,
+  type PickupPoint,
+} from "@/services/storePickupsService";
+import {
   getMyStore,
   updateMyStore,
-  type MyStoreDetail,
   type MyStoreFormPayload,
 } from "@/services/storeSettingsService";
 
@@ -146,9 +152,16 @@ export default function DashboardPage() {
       cellPhone: "",
       address: "",
     });
-  const [myStorePickups, setMyStorePickups] = useState<
-    MyStoreDetail["pickups"]
-  >([]);
+  const [pickupsList, setPickupsList] = useState<PickupPoint[]>([]);
+  const [newPickupAddress, setNewPickupAddress] = useState("");
+  const [newPickupActive, setNewPickupActive] = useState(true);
+  const [editingPickupId, setEditingPickupId] = useState<number | null>(null);
+  const [editPickupDraft, setEditPickupDraft] = useState({
+    address: "",
+    status: true,
+  });
+  const [pickupsLoading, setPickupsLoading] = useState(false);
+  const [pickupActionLoading, setPickupActionLoading] = useState(false);
   const [myStoreLoading, setMyStoreLoading] = useState(false);
   const [myStoreSaving, setMyStoreSaving] = useState(false);
   const [uploadingStoreLogo, setUploadingStoreLogo] = useState(false);
@@ -367,7 +380,6 @@ export default function DashboardPage() {
         cellPhone: detail.cellPhone ?? "",
         address: detail.address ?? "",
       });
-      setMyStorePickups(detail.pickups ?? []);
     } catch {
       setError("No se pudo cargar la configuracion de la tienda.");
     } finally {
@@ -375,11 +387,28 @@ export default function DashboardPage() {
     }
   }, [activeStore]);
 
+  const loadPickups = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      return;
+    }
+    setPickupsLoading(true);
+    try {
+      const list = await listMyPickups(token, activeStore.id);
+      setPickupsList(list);
+    } catch {
+      setError("No se pudieron cargar los puntos de recogida.");
+    } finally {
+      setPickupsLoading(false);
+    }
+  }, [activeStore]);
+
   useEffect(() => {
     if (activeSection === "tienda" && activeStore) {
       void loadMyStoreSection();
+      void loadPickups();
     }
-  }, [activeSection, activeStore?.id, loadMyStoreSection]);
+  }, [activeSection, activeStore?.id, loadMyStoreSection, loadPickups]);
 
   const handleSaveStoreSettings = async () => {
     const token = window.localStorage.getItem("stores_admin_token");
@@ -422,12 +451,120 @@ export default function DashboardPage() {
         );
       }
       await loadMyStoreSection();
+      await loadPickups();
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "No se pudo guardar la tienda.",
       );
     } finally {
       setMyStoreSaving(false);
+    }
+  };
+
+  const handleAddPickup = async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      return;
+    }
+    if (!newPickupAddress.trim()) {
+      setError("Indica la dirección del punto de recogida.");
+      return;
+    }
+    setPickupActionLoading(true);
+    setError("");
+    try {
+      await createPickup(token, activeStore.id, {
+        address: newPickupAddress.trim(),
+        status: newPickupActive,
+      });
+      setNewPickupAddress("");
+      setNewPickupActive(true);
+      setActionMessage("Punto de recogida creado.");
+      await loadPickups();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo crear el punto.",
+      );
+    } finally {
+      setPickupActionLoading(false);
+    }
+  };
+
+  const handleSavePickupEdit = async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore || editingPickupId == null) {
+      return;
+    }
+    if (!editPickupDraft.address.trim()) {
+      setError("La dirección no puede estar vacía.");
+      return;
+    }
+    setPickupActionLoading(true);
+    setError("");
+    try {
+      await updatePickup(token, activeStore.id, editingPickupId, {
+        address: editPickupDraft.address.trim(),
+        status: editPickupDraft.status,
+      });
+      setEditingPickupId(null);
+      setActionMessage("Punto actualizado.");
+      await loadPickups();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo actualizar el punto.",
+      );
+    } finally {
+      setPickupActionLoading(false);
+    }
+  };
+
+  const handleDeletePickup = async (pickupId: number) => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      return;
+    }
+    if (!window.confirm("Eliminar este punto de recogida?")) {
+      return;
+    }
+    setPickupActionLoading(true);
+    setError("");
+    try {
+      await deletePickup(token, activeStore.id, pickupId);
+      if (editingPickupId === pickupId) {
+        setEditingPickupId(null);
+      }
+      setActionMessage("Punto eliminado.");
+      await loadPickups();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo eliminar el punto.",
+      );
+    } finally {
+      setPickupActionLoading(false);
+    }
+  };
+
+  const handleTogglePickupStatus = async (p: PickupPoint) => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      return;
+    }
+    setPickupActionLoading(true);
+    setError("");
+    try {
+      await updatePickup(token, activeStore.id, p.id, {
+        status: !p.status,
+      });
+      setActionMessage(
+        !p.status ? "Punto activado." : "Punto desactivado.",
+      );
+      await loadPickups();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo cambiar el estado.",
+      );
+    } finally {
+      setPickupActionLoading(false);
     }
   };
 
@@ -1554,32 +1691,180 @@ export default function DashboardPage() {
                         </label>
                       </div>
 
-                      {myStorePickups.length > 0 ? (
-                        <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
-                          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                            Puntos de recogida
+                      <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                          Puntos de recogida
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Los clientes pueden ver estos puntos según tu lógica
+                          en la tienda. Activa o desactiva sin borrar.
+                        </p>
+
+                        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-white/10 bg-black/25 p-3 sm:flex-row sm:items-end">
+                          <label className="min-w-0 flex-1 space-y-1 text-sm">
+                            <span className="text-slate-400">
+                              Nueva dirección
+                            </span>
+                            <input
+                              value={newPickupAddress}
+                              onChange={(e) =>
+                                setNewPickupAddress(e.target.value)
+                              }
+                              placeholder="Ej. Calle 10 # 20-30, local 2"
+                              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+                            />
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={newPickupActive}
+                              onChange={(e) =>
+                                setNewPickupActive(e.target.checked)
+                              }
+                              className="rounded border-white/20"
+                            />
+                            Activo
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => void handleAddPickup()}
+                            disabled={
+                              pickupActionLoading || !newPickupAddress.trim()
+                            }
+                            className="shrink-0 rounded-lg bg-emerald-500/90 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
+                          >
+                            Añadir punto
+                          </button>
+                        </div>
+
+                        {pickupsLoading ? (
+                          <p className="mt-4 text-sm text-slate-500">
+                            Cargando puntos...
                           </p>
-                          <ul className="mt-2 space-y-2 text-sm text-slate-300">
-                            {myStorePickups.map((p) => (
+                        ) : pickupsList.length === 0 ? (
+                          <p className="mt-4 text-sm text-slate-500">
+                            Aún no hay puntos de recogida.
+                          </p>
+                        ) : (
+                          <ul className="mt-4 space-y-2">
+                            {pickupsList.map((p) => (
                               <li
                                 key={p.id}
-                                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/5 px-3 py-2"
+                                className="rounded-lg border border-white/10 bg-black/30 p-3"
                               >
-                                <span>{p.address ?? "Sin direccion"}</span>
-                                <span
-                                  className={
-                                    p.status
-                                      ? "text-emerald-300"
-                                      : "text-slate-500"
-                                  }
-                                >
-                                  {p.status ? "Activo" : "Inactivo"}
-                                </span>
+                                {editingPickupId === p.id ? (
+                                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <label className="min-w-0 flex-1 space-y-1 text-sm">
+                                      <span className="text-slate-400">
+                                        Dirección
+                                      </span>
+                                      <input
+                                        value={editPickupDraft.address}
+                                        onChange={(e) =>
+                                          setEditPickupDraft((d) => ({
+                                            ...d,
+                                            address: e.target.value,
+                                          }))
+                                        }
+                                        className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+                                      />
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm text-slate-300">
+                                      <input
+                                        type="checkbox"
+                                        checked={editPickupDraft.status}
+                                        onChange={(e) =>
+                                          setEditPickupDraft((d) => ({
+                                            ...d,
+                                            status: e.target.checked,
+                                          }))
+                                        }
+                                        className="rounded border-white/20"
+                                      />
+                                      Activo
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          void handleSavePickupEdit()
+                                        }
+                                        disabled={pickupActionLoading}
+                                        className="rounded-lg bg-emerald-500/90 px-3 py-1.5 text-xs font-medium text-slate-950 disabled:opacity-50"
+                                      >
+                                        Guardar
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setEditingPickupId(null)
+                                        }
+                                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300"
+                                      >
+                                        Cancelar
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="min-w-0">
+                                      <p className="text-sm text-slate-200">
+                                        {p.address?.trim() ||
+                                          "Sin direccion"}
+                                      </p>
+                                      <p
+                                        className={
+                                          p.status
+                                            ? "text-xs text-emerald-400"
+                                            : "text-xs text-slate-500"
+                                        }
+                                      >
+                                        {p.status ? "Activo" : "Inactivo"}
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          void handleTogglePickupStatus(p)
+                                        }
+                                        disabled={pickupActionLoading}
+                                        className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-50"
+                                      >
+                                        {p.status ? "Desactivar" : "Activar"}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingPickupId(p.id);
+                                          setEditPickupDraft({
+                                            address: p.address ?? "",
+                                            status: p.status,
+                                          });
+                                        }}
+                                        disabled={pickupActionLoading}
+                                        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+                                      >
+                                        Editar
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          void handleDeletePickup(p.id)
+                                        }
+                                        disabled={pickupActionLoading}
+                                        className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20 disabled:opacity-50"
+                                      >
+                                        Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </li>
                             ))}
                           </ul>
-                        </div>
-                      ) : null}
+                        )}
+                      </div>
 
                       <div className="mt-6 flex flex-wrap gap-3">
                         <button
