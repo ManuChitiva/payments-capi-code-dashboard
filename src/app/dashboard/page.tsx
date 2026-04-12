@@ -77,7 +77,11 @@ type AnalyticsDashboard = {
   purchaseIntents: number;
   dailyMetrics: Array<{
     date: string;
-    eventType: "PRODUCT_VIEW" | "PRODUCT_CLICK" | "ADD_TO_CART" | "PURCHASE_INTENT";
+    eventType:
+      | "PRODUCT_VIEW"
+      | "PRODUCT_CLICK"
+      | "ADD_TO_CART"
+      | "PURCHASE_INTENT";
     count: number;
   }>;
   topProducts: Array<{
@@ -125,11 +129,16 @@ export default function DashboardPage() {
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState("");
   const [actionMessage, setActionMessage] = useState("");
-  const [activeSection, setActiveSection] = useState<DashboardSection>("resumen");
+  const [activeSection, setActiveSection] =
+    useState<DashboardSection>("resumen");
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
-  const [payuMethods, setPayuMethods] = useState<PayuPaymentMethodSummary[]>([]);
+  const [payuMethods, setPayuMethods] = useState<PayuPaymentMethodSummary[]>(
+    [],
+  );
   const [payuModalOpen, setPayuModalOpen] = useState(false);
-  const [payuModalMode, setPayuModalMode] = useState<"create" | "edit">("create");
+  const [payuModalMode, setPayuModalMode] = useState<"create" | "edit">(
+    "create",
+  );
   const [editingPayuId, setEditingPayuId] = useState<number | null>(null);
   const [payuSaving, setPayuSaving] = useState(false);
   const [payuLoading, setPayuLoading] = useState(false);
@@ -152,9 +161,9 @@ export default function DashboardPage() {
   const [payuPaymentStatusDraft, setPayuPaymentStatusDraft] = useState("");
   const [payuPaymentStatusQuery, setPayuPaymentStatusQuery] = useState("");
   const [payuPaymentsListTick, setPayuPaymentsListTick] = useState(0);
-  const [topInterestItems, setTopInterestItems] = useState<TopProductInterest[]>(
-    [],
-  );
+  const [topInterestItems, setTopInterestItems] = useState<
+    TopProductInterest[]
+  >([]);
   const [topInterestLast, setTopInterestLast] = useState(true);
   const [topInterestLoading, setTopInterestLoading] = useState(false);
   const topInterestScrollRef = useRef<HTMLDivElement | null>(null);
@@ -208,7 +217,12 @@ export default function DashboardPage() {
           String(activeStore.id),
         );
         const authFilters = buildAuthFilters(data, activeStore.id);
-        const [loadedProducts, loadedAnalytics, loadedPayuMethods, loadedRevenue] = await Promise.all([
+        const [
+          loadedProducts,
+          loadedAnalytics,
+          loadedPayuMethods,
+          loadedRevenue,
+        ] = await Promise.all([
           loadProducts(token, activeStore.slug),
           loadAnalytics(token, activeStore.slug),
           listPayuPaymentMethods(token, authFilters),
@@ -281,7 +295,12 @@ export default function DashboardPage() {
         String(data.activeStoreId),
       );
       const authFilters = buildAuthFilters(client, selectedStore.id);
-      const [loadedProducts, loadedAnalytics, loadedPayuMethods, loadedRevenue] = await Promise.all([
+      const [
+        loadedProducts,
+        loadedAnalytics,
+        loadedPayuMethods,
+        loadedRevenue,
+      ] = await Promise.all([
         loadProducts(data.token, selectedStore.slug),
         loadAnalytics(data.token, selectedStore.slug),
         listPayuPaymentMethods(data.token, authFilters),
@@ -580,12 +599,7 @@ export default function DashboardPage() {
     } finally {
       setPayuPaymentsLoading(false);
     }
-  }, [
-    activeStore,
-    client,
-    payuPaymentStatusQuery,
-    payuPaymentsPage,
-  ]);
+  }, [activeStore, client, payuPaymentStatusQuery, payuPaymentsPage]);
 
   useEffect(() => {
     if (activeSection !== "pagos" || !client || !activeStore) {
@@ -656,7 +670,9 @@ export default function DashboardPage() {
 
     if (payuModalMode === "create") {
       if (hasActivePayuConfig) {
-        setError("Ya existe una configuracion PayU activa. No se puede crear otra.");
+        setError(
+          "Ya existe una configuracion PayU activa. No se puede crear otra.",
+        );
         return;
       }
       if (
@@ -664,7 +680,9 @@ export default function DashboardPage() {
         !payuForm.apiLogin.trim() ||
         !payuForm.keyPublic.trim()
       ) {
-        setError("API Key, API Login y llave publica son obligatorios al crear.");
+        setError(
+          "API Key, API Login y llave publica son obligatorios al crear.",
+        );
         return;
       }
     }
@@ -794,7 +812,11 @@ export default function DashboardPage() {
   };
 
   const trackAnalyticsEvent = async (
-    eventType: "PRODUCT_VIEW" | "PRODUCT_CLICK" | "ADD_TO_CART" | "PURCHASE_INTENT",
+    eventType:
+      | "PRODUCT_VIEW"
+      | "PRODUCT_CLICK"
+      | "ADD_TO_CART"
+      | "PURCHASE_INTENT",
     productId?: number,
   ) => {
     if (!activeStore) {
@@ -836,9 +858,11 @@ export default function DashboardPage() {
               <p className="text-xs tracking-[0.2em] text-emerald-300/90 uppercase">
                 CapiCode
               </p>
-              <h2 className="mt-2 text-2xl font-semibold">Admin Suite</h2>
+              <h2 className="mt-2 text-2xl font-semibold">
+                Bienvenido a la dashboard
+              </h2>
               <p className="mt-2 text-sm text-slate-400">
-                Resumen, catalogo de productos y pagos PayU.
+                Resumen, catálogo de productos y pagos PayU.
               </p>
             </div>
 
@@ -874,18 +898,19 @@ export default function DashboardPage() {
             <header className="sticky top-0 z-10 border-b border-white/10 bg-black/30 px-6 py-4 backdrop-blur-xl">
               <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3">
                 <div>
-                <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium tracking-[0.16em] text-emerald-200 uppercase">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                  CapiCode
-                </p>
-                <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
-                  {activeStore
-                    ? `CapiCode Dashboard - ${activeStore.name}`
-                    : "CapiCode Dashboard"}
-                </h1>
-                <p className="mt-1 text-xs text-slate-400">
-                  Operacion inteligente de catalogo, inventario y crecimiento digital con CapiCode.
-                </p>
+                  <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium tracking-[0.16em] text-emerald-200 uppercase">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                    CapiCode
+                  </p>
+                  <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
+                    {activeStore
+                      ? `Dashboard - ${activeStore.name}`
+                      : "Dashboard"}
+                  </h1>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Operacion inteligente de catalogo, inventario y crecimiento
+                    digital con CapiCode.
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {client ? (
@@ -912,7 +937,8 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   ) : null}
-                  {activeSection === "resumen" || activeSection === "productos" ? (
+                  {activeSection === "resumen" ||
+                  activeSection === "productos" ? (
                     <button
                       type="button"
                       onClick={openCreateModal}
@@ -969,15 +995,21 @@ export default function DashboardPage() {
                     />
                     <StatCard
                       title="Interes de compra"
-                      value={formatCompactNumber(analytics?.purchaseIntents ?? 0)}
+                      value={formatCompactNumber(
+                        analytics?.purchaseIntents ?? 0,
+                      )}
                       fullValue={String(analytics?.purchaseIntents ?? 0)}
                       tone="amber"
                       icon="◎"
                     />
                     <StatCard
                       title="Ganancias pagadas"
-                      value={formatCompactCopCurrency(revenueSummary?.totalPaidAmount ?? 0)}
-                      fullValue={formatCopCurrency(revenueSummary?.totalPaidAmount ?? 0)}
+                      value={formatCompactCopCurrency(
+                        revenueSummary?.totalPaidAmount ?? 0,
+                      )}
+                      fullValue={formatCopCurrency(
+                        revenueSummary?.totalPaidAmount ?? 0,
+                      )}
                       tone="emerald"
                       icon="💰"
                     />
@@ -985,7 +1017,9 @@ export default function DashboardPage() {
 
                   <section className="mb-6 grid gap-4 xl:grid-cols-3">
                     <article className="rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur xl:col-span-2">
-                      <h3 className="text-sm text-slate-400">Actividad de clientes por dia</h3>
+                      <h3 className="text-sm text-slate-400">
+                        Actividad de clientes por dia
+                      </h3>
                       <p className="mt-1 text-2xl font-semibold">
                         {analytics?.totalEvents ?? 0}
                       </p>
@@ -1008,15 +1042,19 @@ export default function DashboardPage() {
                       </div>
                       <div className="mt-5 rounded-2xl border border-white/10 bg-[#081225]/70 p-4">
                         <AnalyticsLineChart
-                          series={buildDailySeries(analytics?.dailyMetrics ?? [])}
+                          series={buildDailySeries(
+                            analytics?.dailyMetrics ?? [],
+                          )}
                         />
                       </div>
                     </article>
                     <article className="rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur">
-                      <h3 className="text-sm text-slate-400">Productos con mayor interes</h3>
+                      <h3 className="text-sm text-slate-400">
+                        Productos con mayor interes
+                      </h3>
                       <p className="mt-1 text-xs text-slate-500">
-                        Ordenados por cantidad total de interacciones (todas las trazas con
-                        producto).
+                        Ordenados por cantidad total de interacciones (todas las
+                        trazas con producto).
                       </p>
                       <div
                         ref={topInterestScrollRef}
@@ -1044,7 +1082,8 @@ export default function DashboardPage() {
                               </li>
                             );
                           })}
-                          {topInterestItems.length === 0 && !topInterestLoading ? (
+                          {topInterestItems.length === 0 &&
+                          !topInterestLoading ? (
                             <li className="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-slate-500">
                               Sin eventos registrados aun.
                             </li>
@@ -1074,359 +1113,406 @@ export default function DashboardPage() {
               ) : null}
 
               {activeSection === "productos" ? (
-              <section className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar por nombre o SKU"
-                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 sm:max-w-sm"
-                  />
-                  <div className="relative">
-                    <select
-                      value={statusFilter}
-                      onChange={(event) =>
-                        setStatusFilter(
-                          event.target.value as "todos" | ProductStatus,
-                        )
-                      }
-                      className="appearance-none rounded-xl border border-white/15 bg-black/55 px-4 py-2.5 pr-10 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
-                    >
-                      <option
-                        value="todos"
-                        className="bg-slate-950 text-slate-100"
+                <section className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
+                  <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <input
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Buscar por nombre o SKU"
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-sm outline-none focus:border-emerald-400 sm:max-w-sm"
+                    />
+                    <div className="relative">
+                      <select
+                        value={statusFilter}
+                        onChange={(event) =>
+                          setStatusFilter(
+                            event.target.value as "todos" | ProductStatus,
+                          )
+                        }
+                        className="appearance-none rounded-xl border border-white/15 bg-black/55 px-4 py-2.5 pr-10 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
                       >
-                        Todos los estados
-                      </option>
-                      <option
-                        value="activo"
-                        className="bg-slate-950 text-slate-100"
-                      >
-                        Activo
-                      </option>
-                      <option
-                        value="borrador"
-                        className="bg-slate-950 text-slate-100"
-                      >
-                        Borrador
-                      </option>
-                      <option
-                        value="agotado"
-                        className="bg-slate-950 text-slate-100"
-                      >
-                        Agotado
-                      </option>
-                    </select>
-                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-slate-400">
-                      ▼
-                    </span>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10 text-slate-300">
-                        <th className="px-3 py-3 font-medium">SKU</th>
-                        <th className="px-3 py-3 font-medium">Producto</th>
-                        <th className="px-3 py-3 font-medium">Categoria</th>
-                        <th className="px-3 py-3 font-medium">Precio</th>
-                        <th className="px-3 py-3 font-medium">Stock</th>
-                        <th className="px-3 py-3 font-medium">Estado</th>
-                        <th className="px-3 py-3 font-medium">Actualizado</th>
-                        <th className="px-3 py-3 font-medium">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProducts.map((product) => (
-                        <tr
-                          key={product.id}
-                          className="border-b border-white/5 hover:bg-white/5"
+                        <option
+                          value="todos"
+                          className="bg-slate-950 text-slate-100"
                         >
-                          <td className="px-3 py-3 text-slate-300">
-                            {product.sku}
-                          </td>
-                          <td className="px-3 py-3">{product.name}</td>
-                          <td className="px-3 py-3 text-slate-300">
-                            {product.category}
-                          </td>
-                          <td className="px-3 py-3">
-                            ${product.price.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-3">{product.stock}</td>
-                          <td className="px-3 py-3">
-                            <span
-                              className={`rounded-full border px-2.5 py-1 text-xs capitalize ${statusStyles[product.status]}`}
-                            >
-                              {product.status}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-slate-300">
-                            {product.updatedAt}
-                          </td>
-                          <td className="px-3 py-3">
-                            <button
-                              type="button"
-                              onClick={() => openEditModal(product)}
-                              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="ml-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20"
-                            >
-                              Eliminar
-                            </button>
-                          </td>
+                          Todos los estados
+                        </option>
+                        <option
+                          value="activo"
+                          className="bg-slate-950 text-slate-100"
+                        >
+                          Activo
+                        </option>
+                        <option
+                          value="borrador"
+                          className="bg-slate-950 text-slate-100"
+                        >
+                          Borrador
+                        </option>
+                        <option
+                          value="agotado"
+                          className="bg-slate-950 text-slate-100"
+                        >
+                          Agotado
+                        </option>
+                      </select>
+                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-slate-400">
+                        ▼
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-slate-300">
+                          <th className="px-3 py-3 font-medium">SKU</th>
+                          <th className="px-3 py-3 font-medium">Producto</th>
+                          <th className="px-3 py-3 font-medium">Categoria</th>
+                          <th className="px-3 py-3 font-medium">Precio</th>
+                          <th className="px-3 py-3 font-medium">Stock</th>
+                          <th className="px-3 py-3 font-medium">Estado</th>
+                          <th className="px-3 py-3 font-medium">Actualizado</th>
+                          <th className="px-3 py-3 font-medium">Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+                      </thead>
+                      <tbody>
+                        {filteredProducts.map((product) => (
+                          <tr
+                            key={product.id}
+                            className="border-b border-white/5 hover:bg-white/5"
+                          >
+                            <td className="px-3 py-3 text-slate-300">
+                              {product.sku}
+                            </td>
+                            <td className="px-3 py-3">{product.name}</td>
+                            <td className="px-3 py-3 text-slate-300">
+                              {product.category}
+                            </td>
+                            <td className="px-3 py-3">
+                              ${product.price.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-3">{product.stock}</td>
+                            <td className="px-3 py-3">
+                              <span
+                                className={`rounded-full border px-2.5 py-1 text-xs capitalize ${statusStyles[product.status]}`}
+                              >
+                                {product.status}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 text-slate-300">
+                              {product.updatedAt}
+                            </td>
+                            <td className="px-3 py-3">
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(product)}
+                                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="ml-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20"
+                              >
+                                Eliminar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               ) : null}
 
               {activeSection === "pagos" ? (
-              <>
-              <section className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-100">
-                      Configuracion medio de pago PayU
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      CRUD del medio de pago con token y filtros del usuario autenticado.
-                    </p>
-                    {hasActivePayuConfig ? (
-                      <p className="mt-2 text-xs text-amber-200/90">
-                        Ya hay una configuracion PayU activa en esta tienda. Desactivala o eliminala para poder
-                        crear otra.
-                      </p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={openCreatePayuModal}
-                    disabled={hasActivePayuConfig || payuLoading}
-                    title={
-                      hasActivePayuConfig
-                        ? "No puedes crear otra configuracion mientras exista una activa"
-                        : undefined
-                    }
-                    className="rounded-xl border border-emerald-300/40 bg-emerald-500/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-emerald-500/20"
-                  >
-                    Nuevo PayU
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-white/10 text-slate-300">
-                        <th className="px-3 py-3 font-medium">Nombre</th>
-                        <th className="px-3 py-3 font-medium">Merchant ID</th>
-                        <th className="px-3 py-3 font-medium">Account ID</th>
-                        <th className="px-3 py-3 font-medium">Entorno</th>
-                        <th className="px-3 py-3 font-medium">Estado</th>
-                        <th className="px-3 py-3 font-medium">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payuLoading ? (
-                        <tr>
-                          <td className="px-3 py-3 text-slate-400" colSpan={6}>
-                            Cargando configuracion de PayU...
-                          </td>
-                        </tr>
-                      ) : null}
-                      {!payuLoading && payuMethods.length === 0 ? (
-                        <tr>
-                          <td className="px-3 py-3 text-slate-500" colSpan={6}>
-                            Aun no hay configuraciones de PayU para esta store.
-                          </td>
-                        </tr>
-                      ) : null}
-                      {payuMethods.map((method) => (
-                        <tr
-                          key={method.id}
-                          className="border-b border-white/5 hover:bg-white/5"
-                        >
-                          <td className="px-3 py-3">{method.name}</td>
-                          <td className="px-3 py-3 text-slate-300">{method.merchantId}</td>
-                          <td className="px-3 py-3 text-slate-300">{method.accountId}</td>
-                          <td className="px-3 py-3 text-slate-300">
-                            {method.sandbox ? "Sandbox" : "Produccion"}
-                          </td>
-                          <td className="px-3 py-3 text-slate-300">
-                            {method.active ? "Activo" : "Inactivo"}
-                          </td>
-                          <td className="px-3 py-3">
-                            <button
-                              type="button"
-                              onClick={() => openEditPayuModal(method)}
-                              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePayu(method.id)}
-                              className="ml-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20"
-                            >
-                              Eliminar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <section className="mt-6 rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-slate-100">
-                      Pagos PayU registrados
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      Cobros asociados a pedidos (callback PayU). Orden descendente por fecha.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <input
-                      type="text"
-                      value={payuPaymentStatusDraft}
-                      onChange={(e) => setPayuPaymentStatusDraft(e.target.value)}
-                      placeholder="Filtrar por estado (ej. APPROVED)"
-                      className="min-w-[12rem] rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-emerald-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPayuPaymentStatusQuery(payuPaymentStatusDraft.trim());
-                        setPayuPaymentsPage(0);
-                        setPayuPaymentsListTick((t) => t + 1);
-                      }}
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10"
-                    >
-                      Filtrar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPayuPaymentsListTick((t) => t + 1)}
-                      disabled={payuPaymentsLoading}
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 disabled:opacity-50"
-                    >
-                      Refrescar
-                    </button>
-                  </div>
-                </div>
-
-                <div className="max-h-[min(55vh,480px)] overflow-auto overscroll-contain rounded-xl border border-white/10">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="sticky top-0 z-[1] border-b border-white/10 bg-[#0b1018]/95 backdrop-blur-md">
-                      <tr className="text-slate-300">
-                        <th className="px-3 py-3 font-medium">ID pago</th>
-                        <th className="px-3 py-3 font-medium">Pedido</th>
-                        <th className="px-3 py-3 font-medium">Cliente</th>
-                        <th className="px-3 py-3 font-medium">Monto</th>
-                        <th className="px-3 py-3 font-medium">Estado</th>
-                        <th className="px-3 py-3 font-medium">Transaccion</th>
-                        <th className="px-3 py-3 font-medium">Fecha</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payuPaymentsLoading ? (
-                        <tr>
-                          <td className="px-3 py-3 text-slate-400" colSpan={7}>
-                            Cargando pagos...
-                          </td>
-                        </tr>
-                      ) : null}
-                      {!payuPaymentsLoading &&
-                      payuPaymentsData &&
-                      payuPaymentsData.content.length === 0 ? (
-                        <tr>
-                          <td className="px-3 py-3 text-slate-500" colSpan={7}>
-                            No hay pagos PayU registrados para esta tienda.
-                          </td>
-                        </tr>
-                      ) : null}
-                      {!payuPaymentsLoading && payuPaymentsData
-                        ? payuPaymentsData.content.map((row) => (
-                            <tr
-                              key={row.id}
-                              className="border-b border-white/5 hover:bg-white/5"
-                            >
-                              <td className="px-3 py-3 tabular-nums text-slate-300">
-                                #{row.id}
-                              </td>
-                              <td className="px-3 py-3 tabular-nums">#{row.orderId}</td>
-                              <td className="px-3 py-3 text-slate-300">
-                                <span className="block font-medium text-slate-200">
-                                  {row.customerName}
-                                </span>
-                                <span className="text-xs text-slate-500">{row.customerEmail}</span>
-                              </td>
-                              <td className="px-3 py-3 tabular-nums">
-                                ${Number(row.amount).toFixed(2)}
-                              </td>
-                              <td className="px-3 py-3">
-                                <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-xs uppercase text-slate-200">
-                                  {row.status}
-                                </span>
-                              </td>
-                              <td className="max-w-[140px] truncate px-3 py-3 font-mono text-xs text-slate-400" title={row.transactionId ?? ""}>
-                                {row.transactionId ?? "—"}
-                              </td>
-                              <td className="px-3 py-3 text-slate-400">
-                                {new Date(row.createdAt).toLocaleString("es-CO")}
-                              </td>
-                            </tr>
-                          ))
-                        : null}
-                    </tbody>
-                  </table>
-                </div>
-
-                {payuPaymentsData && payuPaymentsData.totalPages > 1 ? (
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4 text-xs text-slate-400">
-                    <span>
-                      Pagina {payuPaymentsData.page + 1} de {payuPaymentsData.totalPages} (
-                      {payuPaymentsData.totalElements} pagos)
-                    </span>
-                    <div className="flex gap-2">
+                <>
+                  <section className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
+                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-semibold text-slate-100">
+                          Configuracion medio de pago PayU
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          CRUD del medio de pago con token y filtros del usuario
+                          autenticado.
+                        </p>
+                        {hasActivePayuConfig ? (
+                          <p className="mt-2 text-xs text-amber-200/90">
+                            Ya hay una configuracion PayU activa en esta tienda.
+                            Desactivala o eliminala para poder crear otra.
+                          </p>
+                        ) : null}
+                      </div>
                       <button
                         type="button"
-                        disabled={payuPaymentsPage <= 0 || payuPaymentsLoading}
-                        onClick={() => setPayuPaymentsPage((p) => Math.max(0, p - 1))}
-                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 disabled:opacity-40"
-                      >
-                        Anterior
-                      </button>
-                      <button
-                        type="button"
-                        disabled={
-                          payuPaymentsPage >= payuPaymentsData.totalPages - 1 ||
-                          payuPaymentsLoading
+                        onClick={openCreatePayuModal}
+                        disabled={hasActivePayuConfig || payuLoading}
+                        title={
+                          hasActivePayuConfig
+                            ? "No puedes crear otra configuracion mientras exista una activa"
+                            : undefined
                         }
-                        onClick={() =>
-                          setPayuPaymentsPage((p) =>
-                            Math.min(payuPaymentsData.totalPages - 1, p + 1),
-                          )
-                        }
-                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 disabled:opacity-40"
+                        className="rounded-xl border border-emerald-300/40 bg-emerald-500/20 px-4 py-2 text-sm text-emerald-100 hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-emerald-500/20"
                       >
-                        Siguiente
+                        Nuevo PayU
                       </button>
                     </div>
-                  </div>
-                ) : null}
-              </section>
-              </>
+
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-white/10 text-slate-300">
+                            <th className="px-3 py-3 font-medium">Nombre</th>
+                            <th className="px-3 py-3 font-medium">
+                              Merchant ID
+                            </th>
+                            <th className="px-3 py-3 font-medium">
+                              Account ID
+                            </th>
+                            <th className="px-3 py-3 font-medium">Entorno</th>
+                            <th className="px-3 py-3 font-medium">Estado</th>
+                            <th className="px-3 py-3 font-medium">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payuLoading ? (
+                            <tr>
+                              <td
+                                className="px-3 py-3 text-slate-400"
+                                colSpan={6}
+                              >
+                                Cargando configuracion de PayU...
+                              </td>
+                            </tr>
+                          ) : null}
+                          {!payuLoading && payuMethods.length === 0 ? (
+                            <tr>
+                              <td
+                                className="px-3 py-3 text-slate-500"
+                                colSpan={6}
+                              >
+                                Aun no hay configuraciones de PayU para esta
+                                store.
+                              </td>
+                            </tr>
+                          ) : null}
+                          {payuMethods.map((method) => (
+                            <tr
+                              key={method.id}
+                              className="border-b border-white/5 hover:bg-white/5"
+                            >
+                              <td className="px-3 py-3">{method.name}</td>
+                              <td className="px-3 py-3 text-slate-300">
+                                {method.merchantId}
+                              </td>
+                              <td className="px-3 py-3 text-slate-300">
+                                {method.accountId}
+                              </td>
+                              <td className="px-3 py-3 text-slate-300">
+                                {method.sandbox ? "Sandbox" : "Produccion"}
+                              </td>
+                              <td className="px-3 py-3 text-slate-300">
+                                {method.active ? "Activo" : "Inactivo"}
+                              </td>
+                              <td className="px-3 py-3">
+                                <button
+                                  type="button"
+                                  onClick={() => openEditPayuModal(method)}
+                                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePayu(method.id)}
+                                  className="ml-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20"
+                                >
+                                  Eliminar
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+
+                  <section className="mt-6 rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+                      <div>
+                        <h3 className="text-base font-semibold text-slate-100">
+                          Pagos PayU registrados
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          Cobros asociados a pedidos (callback PayU). Orden
+                          descendente por fecha.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="text"
+                          value={payuPaymentStatusDraft}
+                          onChange={(e) =>
+                            setPayuPaymentStatusDraft(e.target.value)
+                          }
+                          placeholder="Filtrar por estado (ej. APPROVED)"
+                          className="min-w-[12rem] rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-emerald-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPayuPaymentStatusQuery(
+                              payuPaymentStatusDraft.trim(),
+                            );
+                            setPayuPaymentsPage(0);
+                            setPayuPaymentsListTick((t) => t + 1);
+                          }}
+                          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10"
+                        >
+                          Filtrar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPayuPaymentsListTick((t) => t + 1)}
+                          disabled={payuPaymentsLoading}
+                          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 disabled:opacity-50"
+                        >
+                          Refrescar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="max-h-[min(55vh,480px)] overflow-auto overscroll-contain rounded-xl border border-white/10">
+                      <table className="min-w-full text-left text-sm">
+                        <thead className="sticky top-0 z-[1] border-b border-white/10 bg-[#0b1018]/95 backdrop-blur-md">
+                          <tr className="text-slate-300">
+                            <th className="px-3 py-3 font-medium">ID pago</th>
+                            <th className="px-3 py-3 font-medium">Pedido</th>
+                            <th className="px-3 py-3 font-medium">Cliente</th>
+                            <th className="px-3 py-3 font-medium">Monto</th>
+                            <th className="px-3 py-3 font-medium">Estado</th>
+                            <th className="px-3 py-3 font-medium">
+                              Transaccion
+                            </th>
+                            <th className="px-3 py-3 font-medium">Fecha</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payuPaymentsLoading ? (
+                            <tr>
+                              <td
+                                className="px-3 py-3 text-slate-400"
+                                colSpan={7}
+                              >
+                                Cargando pagos...
+                              </td>
+                            </tr>
+                          ) : null}
+                          {!payuPaymentsLoading &&
+                          payuPaymentsData &&
+                          payuPaymentsData.content.length === 0 ? (
+                            <tr>
+                              <td
+                                className="px-3 py-3 text-slate-500"
+                                colSpan={7}
+                              >
+                                No hay pagos PayU registrados para esta tienda.
+                              </td>
+                            </tr>
+                          ) : null}
+                          {!payuPaymentsLoading && payuPaymentsData
+                            ? payuPaymentsData.content.map((row) => (
+                                <tr
+                                  key={row.id}
+                                  className="border-b border-white/5 hover:bg-white/5"
+                                >
+                                  <td className="px-3 py-3 tabular-nums text-slate-300">
+                                    #{row.id}
+                                  </td>
+                                  <td className="px-3 py-3 tabular-nums">
+                                    #{row.orderId}
+                                  </td>
+                                  <td className="px-3 py-3 text-slate-300">
+                                    <span className="block font-medium text-slate-200">
+                                      {row.customerName}
+                                    </span>
+                                    <span className="text-xs text-slate-500">
+                                      {row.customerEmail}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-3 tabular-nums">
+                                    ${Number(row.amount).toFixed(2)}
+                                  </td>
+                                  <td className="px-3 py-3">
+                                    <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-xs uppercase text-slate-200">
+                                      {row.status}
+                                    </span>
+                                  </td>
+                                  <td
+                                    className="max-w-[140px] truncate px-3 py-3 font-mono text-xs text-slate-400"
+                                    title={row.transactionId ?? ""}
+                                  >
+                                    {row.transactionId ?? "—"}
+                                  </td>
+                                  <td className="px-3 py-3 text-slate-400">
+                                    {new Date(row.createdAt).toLocaleString(
+                                      "es-CO",
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            : null}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {payuPaymentsData && payuPaymentsData.totalPages > 1 ? (
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4 text-xs text-slate-400">
+                        <span>
+                          Pagina {payuPaymentsData.page + 1} de{" "}
+                          {payuPaymentsData.totalPages} (
+                          {payuPaymentsData.totalElements} pagos)
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={
+                              payuPaymentsPage <= 0 || payuPaymentsLoading
+                            }
+                            onClick={() =>
+                              setPayuPaymentsPage((p) => Math.max(0, p - 1))
+                            }
+                            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 disabled:opacity-40"
+                          >
+                            Anterior
+                          </button>
+                          <button
+                            type="button"
+                            disabled={
+                              payuPaymentsPage >=
+                                payuPaymentsData.totalPages - 1 ||
+                              payuPaymentsLoading
+                            }
+                            onClick={() =>
+                              setPayuPaymentsPage((p) =>
+                                Math.min(
+                                  payuPaymentsData.totalPages - 1,
+                                  p + 1,
+                                ),
+                              )
+                            }
+                            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 disabled:opacity-40"
+                          >
+                            Siguiente
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </section>
+                </>
               ) : null}
             </div>
           </section>
@@ -1443,7 +1529,8 @@ export default function DashboardPage() {
                     : "Crear producto"}
                 </h3>
                 <p className="mt-1 text-sm text-slate-300">
-                  Diligencia los campos principales y adjunta multimedia del producto.
+                  Diligencia los campos principales y adjunta multimedia del
+                  producto.
                 </p>
               </div>
             </div>
@@ -1451,17 +1538,19 @@ export default function DashboardPage() {
             <div className="space-y-5 px-6 pb-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-1.5">
-                  <span className="text-xs text-slate-400">Nombre del producto</span>
+                  <span className="text-xs text-slate-400">
+                    Nombre del producto
+                  </span>
                   <input
-                  value={newProduct.name}
-                  onChange={(event) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      name: event.target.value,
-                    }))
-                  }
-                  placeholder="Ej: Camiseta premium"
-                  className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                    value={newProduct.name}
+                    onChange={(event) =>
+                      setNewProduct((prev) => ({
+                        ...prev,
+                        name: event.target.value,
+                      }))
+                    }
+                    placeholder="Ej: Camiseta premium"
+                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </label>
                 <label className="space-y-1.5">
@@ -1501,7 +1590,9 @@ export default function DashboardPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-1.5">
-                  <span className="text-xs text-slate-400">Stock disponible</span>
+                  <span className="text-xs text-slate-400">
+                    Stock disponible
+                  </span>
                   <input
                     type="number"
                     min="0"
@@ -1532,7 +1623,9 @@ export default function DashboardPage() {
                       }))
                     }
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                      newProduct.active ? "bg-emerald-500/80" : "bg-slate-600/70"
+                      newProduct.active
+                        ? "bg-emerald-500/80"
+                        : "bg-slate-600/70"
                     }`}
                   >
                     <span
@@ -1545,7 +1638,9 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-3 rounded-2xl border border-slate-700/80 bg-slate-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Multimedia</p>
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-400">
+                  Multimedia
+                </p>
                 <input
                   type="file"
                   accept="image/*"
@@ -1558,7 +1653,9 @@ export default function DashboardPage() {
                   className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-200 outline-none file:mr-3 file:rounded-xl file:border file:border-emerald-300/30 file:bg-emerald-500/10 file:px-3 file:py-1.5 file:text-emerald-100 hover:file:bg-emerald-500/20"
                 />
                 {uploadingMedia ? (
-                  <p className="text-xs text-emerald-300">Subiendo archivo...</p>
+                  <p className="text-xs text-emerald-300">
+                    Subiendo archivo...
+                  </p>
                 ) : (
                   <p className="text-xs text-slate-500">
                     Formatos permitidos: JPG, PNG, WEBP y GIF.
@@ -1571,7 +1668,9 @@ export default function DashboardPage() {
                       Foto cargada correctamente
                     </p>
                   ) : (
-                    <p className="text-xs text-slate-400">Aun no hay archivo cargado</p>
+                    <p className="text-xs text-slate-400">
+                      Aun no hay archivo cargado
+                    </p>
                   )}
                 </div>
               </div>
@@ -1593,7 +1692,9 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={handleSaveProduct}
-                disabled={savingProduct || uploadingMedia || !newProduct.imageUrl.trim()}
+                disabled={
+                  savingProduct || uploadingMedia || !newProduct.imageUrl.trim()
+                }
                 className="rounded-2xl border border-emerald-300/40 bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-500/30 disabled:opacity-60"
               >
                 {savingProduct
@@ -1624,8 +1725,10 @@ export default function DashboardPage() {
             <div className="space-y-4 px-6 pb-6">
               {payuModalMode === "edit" ? (
                 <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95">
-                  El servidor no devuelve credenciales en listados ni al guardar. Para rotar API Key, API Login o
-                  llave publica, escribe los valores nuevos; deja esos campos vacios para no cambiarlos.
+                  El servidor no devuelve credenciales en listados ni al
+                  guardar. Para rotar API Key, API Login o llave publica,
+                  escribe los valores nuevos; deja esos campos vacios para no
+                  cambiarlos.
                 </p>
               ) : null}
               <div className="grid gap-4 md:grid-cols-2">
@@ -1634,7 +1737,10 @@ export default function DashboardPage() {
                   <input
                     value={payuForm.name}
                     onChange={(event) =>
-                      setPayuForm((prev) => ({ ...prev, name: event.target.value }))
+                      setPayuForm((prev) => ({
+                        ...prev,
+                        name: event.target.value,
+                      }))
                     }
                     className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
                   />
@@ -1644,7 +1750,10 @@ export default function DashboardPage() {
                   <input
                     value={payuForm.merchantId}
                     onChange={(event) =>
-                      setPayuForm((prev) => ({ ...prev, merchantId: event.target.value }))
+                      setPayuForm((prev) => ({
+                        ...prev,
+                        merchantId: event.target.value,
+                      }))
                     }
                     className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
                   />
@@ -1656,7 +1765,10 @@ export default function DashboardPage() {
                   <input
                     value={payuForm.accountId}
                     onChange={(event) =>
-                      setPayuForm((prev) => ({ ...prev, accountId: event.target.value }))
+                      setPayuForm((prev) => ({
+                        ...prev,
+                        accountId: event.target.value,
+                      }))
                     }
                     className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
                   />
@@ -1666,7 +1778,10 @@ export default function DashboardPage() {
                   <input
                     value={payuForm.apiLogin}
                     onChange={(event) =>
-                      setPayuForm((prev) => ({ ...prev, apiLogin: event.target.value }))
+                      setPayuForm((prev) => ({
+                        ...prev,
+                        apiLogin: event.target.value,
+                      }))
                     }
                     className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
                   />
@@ -1677,17 +1792,25 @@ export default function DashboardPage() {
                 <input
                   value={payuForm.apiKey}
                   onChange={(event) =>
-                    setPayuForm((prev) => ({ ...prev, apiKey: event.target.value }))
+                    setPayuForm((prev) => ({
+                      ...prev,
+                      apiKey: event.target.value,
+                    }))
                   }
                   className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-xs text-slate-400">Llave publica (public key)</span>
+                <span className="text-xs text-slate-400">
+                  Llave publica (public key)
+                </span>
                 <input
                   value={payuForm.keyPublic}
                   onChange={(event) =>
-                    setPayuForm((prev) => ({ ...prev, keyPublic: event.target.value }))
+                    setPayuForm((prev) => ({
+                      ...prev,
+                      keyPublic: event.target.value,
+                    }))
                   }
                   placeholder="PK en checkout / Web Checkout"
                   className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
@@ -1701,7 +1824,10 @@ export default function DashboardPage() {
                     role="switch"
                     aria-checked={payuForm.sandbox}
                     onClick={() =>
-                      setPayuForm((prev) => ({ ...prev, sandbox: !prev.sandbox }))
+                      setPayuForm((prev) => ({
+                        ...prev,
+                        sandbox: !prev.sandbox,
+                      }))
                     }
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
                       payuForm.sandbox ? "bg-emerald-500/80" : "bg-slate-600/70"
@@ -1847,11 +1973,14 @@ async function loadAnalytics(
   token: string,
   storeSlug: string,
 ): Promise<AnalyticsDashboard> {
-  const response = await fetch(`${API_URL}/stores/${storeSlug}/analytics/dashboard?days=30`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${API_URL}/stores/${storeSlug}/analytics/dashboard?days=30`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error("analytics_error");
@@ -2004,9 +2133,7 @@ function AnalyticsLineChart({
   const visibleTypes = typeMeta.filter((type) => enabledTypes[type.key]);
 
   const maxCount = Math.max(
-    ...series.flatMap((d) =>
-      visibleTypes.map((type) => d[type.key]),
-    ),
+    ...series.flatMap((d) => visibleTypes.map((type) => d[type.key])),
     1,
   );
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ({
@@ -2020,7 +2147,8 @@ function AnalyticsLineChart({
         series.length === 1
           ? paddingX + chartWidth / 2
           : paddingX + (index / (series.length - 1)) * chartWidth;
-      const y = paddingTop + chartHeight - (entry[key] / maxCount) * chartHeight;
+      const y =
+        paddingTop + chartHeight - (entry[key] / maxCount) * chartHeight;
       return { ...entry, x, y, value: entry[key] };
     });
 
@@ -2051,7 +2179,10 @@ function AnalyticsLineChart({
           </button>
         ))}
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-[210px] min-w-[640px] w-full">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-[210px] min-w-[640px] w-full"
+      >
         {yTicks.map((tick, index) => (
           <g key={`y-tick-${index}`}>
             <line
@@ -2085,7 +2216,10 @@ function AnalyticsLineChart({
         {visibleTypes.map((type) => {
           const points = buildPoints(type.key);
           const path = points
-            .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+            .map(
+              (point, index) =>
+                `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`,
+            )
             .join(" ");
 
           return (
@@ -2100,7 +2234,13 @@ function AnalyticsLineChart({
                 opacity="0.92"
               />
               {points.map((point) => (
-                <circle key={`${type.key}-${point.label}`} cx={point.x} cy={point.y} r="2.5" fill={type.color}>
+                <circle
+                  key={`${type.key}-${point.label}`}
+                  cx={point.x}
+                  cy={point.y}
+                  r="2.5"
+                  fill={type.color}
+                >
                   <title>{`${type.label} - ${point.label}: ${point.value}`}</title>
                 </circle>
               ))}
@@ -2159,7 +2299,10 @@ function StatCard({
   tone?: "emerald" | "cyan" | "violet" | "amber";
   icon: string;
 }) {
-  const toneStyles: Record<typeof tone, { line: string; badge: string; glow: string }> = {
+  const toneStyles: Record<
+    typeof tone,
+    { line: string; badge: string; glow: string }
+  > = {
     emerald: {
       line: "from-emerald-300 to-emerald-500",
       badge: "bg-emerald-400/20 text-emerald-100 border-emerald-300/40",
