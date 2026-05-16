@@ -1,3 +1,4 @@
+import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type PickupRow = {
@@ -37,10 +38,7 @@ export async function getMyStore(
   storeId: number,
 ): Promise<MyStoreDetail> {
   const response = await fetch(`${API_URL}/me/store`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "x-store-id": String(storeId),
-    },
+    headers: buildAuthRequestHeaders({ token, storeId }),
   });
   if (!response.ok) {
     throw new Error("my_store_error");
@@ -55,11 +53,11 @@ export async function updateMyStore(
 ): Promise<MyStoreDetail> {
   const response = await fetch(`${API_URL}/me/store`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      "x-store-id": String(storeId),
-    },
+    headers: buildAuthRequestHeaders({
+      token,
+      storeId,
+      contentType: "application/json",
+    }),
     body: JSON.stringify({
       name: payload.name.trim(),
       label: payload.label.trim(),

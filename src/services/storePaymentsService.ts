@@ -1,3 +1,4 @@
+import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 import type { AuthFilters } from "@/services/payuPaymentMethodService";
 
@@ -61,10 +62,11 @@ export async function listMyPayments(
   const qs = params.toString();
 
   const response = await fetch(`${API_URL}/me/payments${qs ? `?${qs}` : ""}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(query.storeId ? { "x-store-id": String(query.storeId) } : {}),
-    },
+    headers: buildAuthRequestHeaders({
+      token,
+      storeId: query.storeId,
+      requireStore: true,
+    }),
   });
   if (!response.ok) {
     throw new Error("list_my_payments_error");
@@ -90,10 +92,11 @@ export async function listMyPayuPayments(
   const qs = params.toString();
 
   const response = await fetch(`${API_URL}/me/payments/payu${qs ? `?${qs}` : ""}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(query.storeId ? { "x-store-id": String(query.storeId) } : {}),
-    },
+    headers: buildAuthRequestHeaders({
+      token,
+      storeId: query.storeId,
+      requireStore: true,
+    }),
   });
   if (!response.ok) {
     throw new Error("list_my_payu_payments_error");
@@ -118,10 +121,11 @@ export async function getMyPaymentsRevenueSummary(
   const qs = params.toString();
 
   const response = await fetch(`${API_URL}/me/payments/summary${qs ? `?${qs}` : ""}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(query.storeId ? { "x-store-id": String(query.storeId) } : {}),
-    },
+    headers: buildAuthRequestHeaders({
+      token,
+      storeId: query.storeId,
+      requireStore: true,
+    }),
   });
   if (!response.ok) {
     throw new Error("get_my_payments_revenue_summary_error");
