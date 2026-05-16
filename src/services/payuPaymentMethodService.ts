@@ -1,3 +1,4 @@
+import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type AuthFilters = {
@@ -49,16 +50,20 @@ function buildQuery(filters: AuthFilters) {
 }
 
 function buildHeaders(token: string, filters: AuthFilters) {
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
+  return buildAuthRequestHeaders({
+    token,
+    storeId: filters.storeId,
+    contentType: "application/json",
+    requireStore: true,
+  });
+}
 
-  if (filters.storeId) {
-    headers["x-store-id"] = String(filters.storeId);
-  }
-
-  return headers;
+function authHeaders(token: string, filters: AuthFilters) {
+  return buildAuthRequestHeaders({
+    token,
+    storeId: filters.storeId,
+    requireStore: true,
+  });
 }
 
 export async function listPayuPaymentMethods(
@@ -68,10 +73,7 @@ export async function listPayuPaymentMethods(
   const response = await fetch(
     `${API_URL}/me/payment-methods/payu${buildQuery(filters)}`,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(filters.storeId ? { "x-store-id": String(filters.storeId) } : {}),
-      },
+      headers: authHeaders(token, filters),
     },
   );
   if (!response.ok) {
@@ -128,10 +130,7 @@ export async function deletePayuPaymentMethod(
     `${API_URL}/me/payment-methods/payu/${paymentMethodId}${buildQuery(filters)}`,
     {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(filters.storeId ? { "x-store-id": String(filters.storeId) } : {}),
-      },
+      headers: authHeaders(token, filters),
     },
   );
   if (!response.ok) {

@@ -1,3 +1,4 @@
+import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type PickupPoint = {
@@ -7,17 +8,15 @@ export type PickupPoint = {
 };
 
 function storeHeaders(token: string, storeId: number): HeadersInit {
-  return {
-    Authorization: `Bearer ${token}`,
-    "x-store-id": String(storeId),
-  };
+  return buildAuthRequestHeaders({ token, storeId });
 }
 
 function jsonStoreHeaders(token: string, storeId: number): HeadersInit {
-  return {
-    ...storeHeaders(token, storeId),
-    "Content-Type": "application/json",
-  };
+  return buildAuthRequestHeaders({
+    token,
+    storeId,
+    contentType: "application/json",
+  });
 }
 
 export async function listMyPickups(
