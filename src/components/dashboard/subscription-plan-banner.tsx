@@ -54,10 +54,10 @@ export function SubscriptionPlanBanner() {
   const isEnterprise = subscription.planCode === "ENTERPRISE";
   const storeLimit =
     subscription.maxStores == null
-      ? "tiendas ilimitadas"
+      ? "negocios ilimitados"
       : subscription.maxStores === 1
-        ? "1 tienda"
-        : `hasta ${subscription.maxStores} tiendas`;
+        ? "1 negocio"
+        : `hasta ${subscription.maxStores} negocios`;
 
   const bannerClass = isEnterprise
     ? subscriptionBannerEnterprise

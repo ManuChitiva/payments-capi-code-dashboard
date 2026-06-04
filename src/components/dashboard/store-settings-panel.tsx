@@ -3,7 +3,12 @@
 import type { MyStoreFormPayload } from "@/services/storeSettingsService";
 import type { PickupPoint } from "@/services/storePickupsService";
 import {
+  DEFAULT_STORE_PRIMARY_COLOR,
+  normalizeStorePrimaryColor,
+} from "@/lib/brand-store-defaults";
+import {
   brandActionButtonSolid,
+  brandCtaSm,
   brandInputClass,
   brandStoreHero,
   brandTextPrimary,
@@ -14,6 +19,7 @@ import {
 type ActiveStorePreview = {
   slug: string;
   primaryColor: string | null;
+  coverImageUrl?: string | null;
 };
 
 export type StoreSettingsPanelProps = {
@@ -25,8 +31,10 @@ export type StoreSettingsPanelProps = {
   loading: boolean;
   saving: boolean;
   uploadingLogo: boolean;
+  uploadingCover: boolean;
   onSave: () => void;
   onLogoUpload: (file: File) => void;
+  onCoverUpload: (file: File) => void;
   pickups: PickupPoint[];
   pickupsLoading: boolean;
   pickupActionLoading: boolean;
@@ -57,8 +65,10 @@ export function StoreSettingsPanel({
   loading,
   saving,
   uploadingLogo,
+  uploadingCover,
   onSave,
   onLogoUpload,
+  onCoverUpload,
   pickups,
   pickupsLoading,
   pickupActionLoading,
@@ -76,11 +86,12 @@ export function StoreSettingsPanel({
   onTogglePickupStatus,
   onDeletePickup,
 }: StoreSettingsPanelProps) {
-  const accent = activeStore?.primaryColor ?? "#34d399";
-  const displayName = form.name.trim() || "Tu tienda";
+  const accent = normalizeStorePrimaryColor(form.primaryColor);
+  const displayName = form.name.trim() || "Tu negocio";
   const displayLabel = form.label.trim();
   const slugPath = activeStore ? `/stores/${activeStore.slug}` : null;
   const logoPreview = form.logoUrl.trim();
+  const coverPreview = form.coverImageUrl.trim();
 
   if (loading) {
     return (
@@ -98,14 +109,26 @@ export function StoreSettingsPanel({
   return (
     <div className="space-y-8">
       {/* Vista previa / hero */}
-      <div className={brandStoreHero}>
-        <div
-          className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-30 blur-3xl"
-          style={{ backgroundColor: accent }}
-        />
-        <div
-          className="pointer-events-none absolute -bottom-16 left-1/4 h-40 w-40 rounded-full bg-brand-accent/10 blur-3xl"
-        />
+      <div className={`${brandStoreHero} overflow-hidden`}>
+        {coverPreview ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverPreview}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-brand-surface via-brand-surface/85 to-brand-surface/20" />
+          </>
+        ) : (
+          <>
+            <div
+              className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-25 blur-3xl"
+              style={{ backgroundColor: accent }}
+            />
+            <div className="pointer-events-none absolute -bottom-16 left-1/4 h-40 w-40 rounded-full bg-brand-accent/10 blur-3xl" />
+          </>
+        )}
         <div
           className="absolute inset-x-0 top-0 h-1"
           style={{
@@ -113,7 +136,7 @@ export function StoreSettingsPanel({
           }}
         />
 
-        <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex min-w-0 flex-1 items-center gap-5">
             <div
               className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-separator bg-brand-input shadow-lg sm:h-24 sm:w-24"
@@ -138,7 +161,7 @@ export function StoreSettingsPanel({
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-brand-secondary dark:text-emerald-400/90">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-brand-secondary">
                 Vista previa
               </p>
               <h3 className="font-(family-name:--font-rajdhani) truncate text-2xl font-semibold tracking-tight text-brand-primary sm:text-3xl">
@@ -159,24 +182,42 @@ export function StoreSettingsPanel({
           </div>
 
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
-            <div className="flex items-center gap-3 rounded-xl border border-brand-separator bg-brand-input/30 px-4 py-2.5">
-              <span
-                className="h-8 w-8 shrink-0 rounded-lg border border-brand-separator/20 shadow-inner"
-                style={{ backgroundColor: accent }}
-              />
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-brand-tertiary">
-                  Color de marca
-                </p>
-                <p className="font-mono text-xs text-brand-secondary">
-                  {activeStore?.primaryColor ?? "Por defecto"}
-                </p>
+            <div className="rounded-xl border border-brand-separator bg-brand-surface/80 px-4 py-3 backdrop-blur-sm">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-brand-tertiary">
+                Color de marca
+              </p>
+              <div className="mt-2 flex items-center gap-3">
+                <input
+                  type="color"
+                  value={accent}
+                  onChange={(e) =>
+                    onFormChange((p) => ({
+                      ...p,
+                      primaryColor: e.target.value,
+                    }))
+                  }
+                  className="h-10 w-10 shrink-0 cursor-pointer rounded-lg border border-brand-separator bg-transparent p-0.5"
+                  aria-label="Elegir color de marca"
+                />
+                <input
+                  type="text"
+                  value={form.primaryColor}
+                  onChange={(e) =>
+                    onFormChange((p) => ({
+                      ...p,
+                      primaryColor: e.target.value,
+                    }))
+                  }
+                  placeholder={DEFAULT_STORE_PRIMARY_COLOR}
+                  className={`${inputClass} max-w-[8.5rem] py-2 font-mono text-xs`}
+                  spellCheck={false}
+                />
               </div>
             </div>
             <button
               type="button"
               onClick={onSave}
-              disabled={saving || uploadingLogo}
+              disabled={saving || uploadingLogo || uploadingCover}
               className={`inline-flex items-center justify-center gap-2 px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50 ${brandActionButtonSolid}`}
             >
               {saving ? (
@@ -201,7 +242,7 @@ export function StoreSettingsPanel({
           title="Identidad pública"
           description="Cómo te verán los clientes en el catálogo y enlaces."
         >
-          <FormField label="Nombre de la tienda" required>
+          <FormField label="Nombre del negocio" required>
             <input
               value={form.name}
               onChange={(e) =>
@@ -213,7 +254,7 @@ export function StoreSettingsPanel({
           </FormField>
           <FormField
             label="Etiqueta visible"
-            hint="Subtítulo opcional bajo el nombre en la tienda."
+            hint="Subtítulo opcional bajo el nombre en el negocio."
           >
             <input
               value={form.label}
@@ -227,7 +268,7 @@ export function StoreSettingsPanel({
           <ReadonlyField
             label="URL pública"
             value={slugPath ?? "—"}
-            hint="Se define al crear la tienda para no romper enlaces compartidos."
+            hint="Se define al crear el negocio para no romper enlaces compartidos."
           />
         </SettingsCard>
 
@@ -281,37 +322,77 @@ export function StoreSettingsPanel({
 
       <SettingsCard
         icon={<PaletteIcon />}
-        title="Logo de la tienda"
-        description="Imagen que identifica tu marca en el encabezado del catálogo."
+        title="Marca visual"
+        description="Portada, logo y color de acento de tu negocio público."
         className="lg:col-span-2"
       >
-        <div className="grid gap-6 lg:grid-cols-[1fr,minmax(200px,280px)]">
-          <LogoDropzone
-            uploading={uploadingLogo}
-            hasLogo={Boolean(logoPreview)}
-            onFile={onLogoUpload}
-            onClear={() => onFormChange((p) => ({ ...p, logoUrl: "" }))}
-          />
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-brand-separator bg-brand-input/25 p-6">
-            {logoPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoPreview}
-                alt="Vista previa del logo"
-                className="max-h-28 max-w-full object-contain"
+        <div className="space-y-8">
+          <div>
+            <p className="mb-3 text-sm font-medium text-brand-primary">
+              Foto de portada
+            </p>
+            <p className="mb-4 text-xs text-brand-tertiary">
+              Banner horizontal para el encabezado del catálogo. Recomendado 1200×400 px o
+              similar.
+            </p>
+            <div className="grid gap-4 lg:grid-cols-[1fr,minmax(240px,1fr)]">
+              <CoverDropzone
+                uploading={uploadingCover}
+                hasCover={Boolean(coverPreview)}
+                onFile={onCoverUpload}
+                onClear={() => onFormChange((p) => ({ ...p, coverImageUrl: "" }))}
               />
-            ) : (
-              <div className="text-center">
-                <ImageIcon className="mx-auto h-10 w-10 text-brand-tertiary" />
-                <p className="mt-2 text-xs text-brand-tertiary">
-                  La vista previa aparecerá aquí
+              <div className="relative aspect-[3/1] overflow-hidden rounded-2xl border border-dashed border-brand-separator bg-brand-input/25">
+                {coverPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={coverPreview}
+                    alt="Vista previa de portada"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center px-4 text-center">
+                    <ImageIcon className="h-8 w-8 text-brand-tertiary" />
+                    <p className="mt-2 text-xs text-brand-tertiary">
+                      Vista previa de portada
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-3 text-sm font-medium text-brand-primary">Logo</p>
+            <div className="grid gap-6 lg:grid-cols-[1fr,minmax(200px,280px)]">
+              <LogoDropzone
+                uploading={uploadingLogo}
+                hasLogo={Boolean(logoPreview)}
+                onFile={onLogoUpload}
+                onClear={() => onFormChange((p) => ({ ...p, logoUrl: "" }))}
+              />
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-brand-separator bg-brand-input/25 p-6">
+                {logoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoPreview}
+                    alt="Vista previa del logo"
+                    className="max-h-28 max-w-full object-contain"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <ImageIcon className="mx-auto h-10 w-10 text-brand-tertiary" />
+                    <p className="mt-2 text-xs text-brand-tertiary">
+                      La vista previa aparecerá aquí
+                    </p>
+                  </div>
+                )}
+                <p className="mt-4 text-center text-[11px] leading-relaxed text-brand-tertiary">
+                  JPG, PNG, WEBP o GIF. Tras subir, pulsa{" "}
+                  <span className="text-brand-secondary">Guardar cambios</span>.
                 </p>
               </div>
-            )}
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-brand-tertiary">
-              JPG, PNG, WEBP o GIF. Tras subir, pulsa{" "}
-              <span className="text-brand-secondary dark:text-emerald-400/90">Guardar cambios</span>.
-            </p>
+            </div>
           </div>
         </div>
       </SettingsCard>
@@ -322,7 +403,7 @@ export function StoreSettingsPanel({
         description="Direcciones donde los clientes pueden retirar pedidos. Actívalos o desactívalos sin borrarlos."
       >
         <div className="rounded-xl border border-brand-separator bg-brand-hover p-4 sm:p-5">
-          <p className="text-xs font-medium text-brand-secondary dark:text-emerald-200/90">
+          <p className="text-xs font-medium text-brand-primary">
             Añadir nuevo punto
           </p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -344,7 +425,7 @@ export function StoreSettingsPanel({
               type="button"
               onClick={onAddPickup}
               disabled={pickupActionLoading || !newPickupAddress.trim()}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-brand-separator bg-brand-hover dark:border-emerald-400/30 dark:bg-emerald-500/15 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/25 disabled:opacity-50"
+              className={`inline-flex shrink-0 items-center justify-center gap-2 px-5 py-3 disabled:cursor-not-allowed disabled:opacity-50 ${brandCtaSm}`}
             >
               <PlusIcon className="h-4 w-4" />
               Añadir
@@ -407,10 +488,10 @@ function SettingsCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-brand-separator bg-gradient-to-b from-white/[0.04] to-transparent p-5 shadow-lg shadow-black/20 sm:p-6 ${className}`.trim()}
+      className={`rounded-2xl border border-brand-separator/80 bg-brand-surface p-5 shadow-[var(--brand-shadow-card)] sm:p-6 ${className}`.trim()}
     >
       <div className="mb-5 flex gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-separator bg-brand-hover dark:border-emerald-500/25 dark:bg-emerald-500/10 text-emerald-300">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-separator bg-brand-hover text-brand-accent dark:text-brand-accent-soft">
           {icon}
         </div>
         <div>
@@ -472,6 +553,66 @@ function ReadonlyField({
   );
 }
 
+function CoverDropzone({
+  uploading,
+  hasCover,
+  onFile,
+  onClear,
+}: {
+  uploading: boolean;
+  hasCover: boolean;
+  onFile: (file: File) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="relative rounded-2xl border border-dashed border-brand-separator/20 bg-brand-input/30 p-6 transition hover:border-brand-input-border hover:bg-brand-surface-hover">
+      <input
+        type="file"
+        accept="image/*"
+        disabled={uploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+        className="absolute inset-0 z-10 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+        aria-label="Subir foto de portada"
+      />
+      <div className="pointer-events-none flex flex-col items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-separator bg-brand-hover">
+          {uploading ? (
+            <SpinnerIcon className="h-6 w-6 text-brand-accent" />
+          ) : (
+            <UploadIcon className="h-6 w-6 text-brand-secondary" />
+          )}
+        </div>
+        <p className="mt-4 text-sm font-medium text-brand-primary">
+          {uploading
+            ? "Subiendo portada…"
+            : hasCover
+              ? "Haz clic para cambiar la portada"
+              : "Subir foto de portada"}
+        </p>
+        <p className="mt-1 text-xs text-brand-tertiary">
+          JPG, PNG o WEBP · relación 3:1 aprox.
+        </p>
+      </div>
+      {hasCover ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+          className="relative z-20 mt-4 w-full rounded-lg border border-brand-separator bg-brand-hover py-2 text-xs text-brand-secondary transition hover:bg-brand-hover"
+        >
+          Quitar portada (sin guardar aún)
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function LogoDropzone({
   uploading,
   hasLogo,
@@ -500,7 +641,7 @@ function LogoDropzone({
       <div className="pointer-events-none flex flex-col items-center text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-separator bg-brand-hover">
           {uploading ? (
-            <SpinnerIcon className="h-6 w-6 text-brand-accent dark:text-emerald-400" />
+            <SpinnerIcon className="h-6 w-6 text-brand-accent" />
           ) : (
             <UploadIcon className="h-6 w-6 text-brand-secondary" />
           )}
@@ -557,7 +698,7 @@ function PickupCard({
 }) {
   if (isEditing) {
     return (
-      <div className="rounded-xl border border-brand-separator bg-brand-hover dark:border-emerald-500/25 dark:bg-brand-input/40 p-4">
+      <div className="rounded-xl border border-brand-separator bg-brand-hover p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="min-w-0 flex-1 space-y-1.5">
             <span className="text-xs text-brand-secondary">Dirección</span>
@@ -609,12 +750,12 @@ function PickupCard({
           <span
             className={`mt-1 inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
               pickup.status
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                ? "border-brand-accent/25 bg-brand-accent/10 text-brand-accent dark:border-brand-accent-soft/35 dark:bg-brand-accent/15 dark:text-brand-accent-soft"
                 : "border-brand-separator bg-brand-hover text-brand-secondary"
             }`}
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${pickup.status ? "bg-emerald-400" : "bg-brand-tertiary"}`}
+              className={`h-1.5 w-1.5 rounded-full ${pickup.status ? "bg-brand-accent dark:bg-brand-accent-soft" : "bg-brand-tertiary"}`}
             />
             {pickup.status ? "Activo" : "Inactivo"}
           </span>
@@ -641,7 +782,7 @@ function PickupCard({
           type="button"
           onClick={onDelete}
           disabled={loading}
-          className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20 disabled:opacity-50"
+          className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
         >
           Eliminar
         </button>
@@ -665,7 +806,7 @@ function TogglePill({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-brand-separator/20 bg-brand-input text-emerald-500 focus:ring-emerald-500/30"
+        className="h-4 w-4 rounded border-brand-input-border bg-brand-input text-brand-accent focus:ring-brand-accent/25"
       />
       {label}
     </label>

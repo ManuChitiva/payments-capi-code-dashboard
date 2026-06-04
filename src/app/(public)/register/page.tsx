@@ -42,7 +42,7 @@ import {
 
 const PHASES = [
   { id: 0, title: "Tu cuenta", hint: "Datos del administrador" },
-  { id: 1, title: "Tu tienda", hint: "Nombre y URL opcional" },
+  { id: 1, title: "Tu negocio", hint: "Nombre y URL opcional" },
 ] as const;
 
 function RegisterPageContent() {
@@ -83,7 +83,7 @@ function RegisterPageContent() {
     }
     if (p === 1) {
       if (!storeName.trim()) {
-        return "Indica el nombre de la tienda.";
+        return "Indica el nombre del negocio.";
       }
       return null;
     }
@@ -160,12 +160,12 @@ function RegisterPageContent() {
             <h1 className={brandHeroTitle}>
               {wantsPro
                 ? "Crea tu cuenta y pasa a PRO"
-                : "Tu tienda online en dos pasos"}
+                : "Tu negocio online en dos pasos"}
             </h1>
             <p className={`text-base leading-relaxed ${brandTextSecondary}`}>
               {wantsPro ? (
                 <>
-                  Registro gratuito con tu primera tienda. Al terminar te llevamos
+                  Registro gratuito con tu primer negocio. Al terminar te llevamos
                   al pago seguro del plan{" "}
                   <span className={brandHighlightPro}>Profesional</span>.
                 </>
@@ -173,20 +173,20 @@ function RegisterPageContent() {
                 <>
                   Sin código de invitación. Al registrarte activamos el plan{" "}
                   <span className={brandHighlightAccent}>Gratis</span> con tu
-                  primera tienda incluida.
+                  primer negocio incluido.
                 </>
               )}
             </p>
           </div>
           <ul className={brandFeatureList}>
             <li className={brandFeatureItem}>
-              1 tienda incluida en el plan Gratis
+              1 negocio incluido en el plan Gratis
             </li>
             <li className={brandFeatureItemMuted}>
               Catálogo, variantes, PayU y panel administrativo
             </li>
             <li className={brandFeatureItem}>
-              Más tiendas con el plan Profesional —{" "}
+              Más negocios con el plan Profesional —{" "}
               <Link href="/plans" className={brandLinkAccent}>
                 ver planes
               </Link>
@@ -328,7 +328,7 @@ function RegisterPageContent() {
               {phase === 1 ? (
                 <>
                   <label className="block space-y-2 text-sm">
-                    <span className={brandFormLabel}>Nombre de la tienda</span>
+                    <span className={brandFormLabel}>Nombre del negocio</span>
                     <input
                       type="text"
                       name="storeName"

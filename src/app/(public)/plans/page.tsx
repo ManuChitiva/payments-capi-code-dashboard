@@ -49,7 +49,7 @@ const FALLBACK_PLANS: SubscriptionPlan[] = [
     id: 1,
     code: "FREE",
     name: "Gratis",
-    description: "Ideal para lanzar tu primera tienda online sin costo.",
+    description: "Ideal para lanzar tu primer negocio online sin costo.",
     price: 0,
     currency: "COP",
     maxProducts: null,
@@ -59,7 +59,7 @@ const FALLBACK_PLANS: SubscriptionPlan[] = [
     id: 2,
     code: "PRO",
     name: "Profesional",
-    description: "Escala tu operación con varias tiendas y más capacidad.",
+    description: "Escala tu operación con varios negocios y más capacidad.",
     price: 99000,
     currency: "COP",
     maxProducts: null,
@@ -70,7 +70,7 @@ const FALLBACK_PLANS: SubscriptionPlan[] = [
     code: "ENTERPRISE",
     name: "Empresarial",
     description:
-      "Tiendas ilimitadas con agente de IA y bots en WhatsApp y Telegram.",
+      "Negocios ilimitados con agente de IA y bots en WhatsApp y Telegram.",
     price: 249000,
     currency: "COP",
     maxProducts: null,
@@ -172,7 +172,7 @@ export default function PlansPage() {
         <p
           className={`mx-auto mt-6 max-w-2xl text-base leading-relaxed sm:text-lg ${brandTextSecondary}`}
         >
-          Registro gratuito con tu primera tienda incluida. Catálogo con variantes,
+          Registro gratuito con tu primer negocio incluido. Catálogo con variantes,
           pagos PayU, pedidos y panel administrativo — sin código de invitación.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -253,7 +253,7 @@ export default function PlansPage() {
                 <p className={`mb-6 text-sm font-medium ${planMetaText}`}>
                   {formatStoreLimit(plan.maxStores)}
                   {plan.maxProducts != null
-                    ? ` · hasta ${plan.maxProducts} productos/tienda`
+                    ? ` · hasta ${plan.maxProducts} productos/negocio`
                     : " · catálogo flexible"}
                 </p>
                 {plan.description ? (
@@ -301,11 +301,11 @@ export default function PlansPage() {
           <h2
             className={`font-(family-name:--font-rajdhani) text-2xl font-bold sm:text-3xl ${brandTextPrimary}`}
           >
-            Tu primera tienda, en minutos
+            Tu primer negocio, en minutos
           </h2>
           <p className={`mx-auto mt-3 max-w-xl text-sm sm:text-base ${brandTextSecondary}`}>
-            Crea tu cuenta, define el nombre de la tienda y entra al panel. El
-            plan Gratis incluye una tienda activa desde el registro.
+            Crea tu cuenta, define el nombre del negocio y entra al panel. El
+            plan Gratis incluye un negocio activo desde el registro.
           </p>
           <Link href="/register" className={`mt-8 inline-block px-8 ${brandCtaMd}`}>
             Crear cuenta gratis

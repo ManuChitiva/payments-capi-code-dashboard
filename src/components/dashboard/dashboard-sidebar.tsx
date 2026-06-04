@@ -15,7 +15,12 @@ type StoreOption = {
   name: string;
 };
 
-export type DashboardSection = "resumen" | "productos" | "tienda" | "pagos";
+export type DashboardSection =
+  | "resumen"
+  | "productos"
+  | "pedidos"
+  | "tienda"
+  | "pagos";
 
 const NAV_ITEMS: {
   id: DashboardSection;
@@ -24,7 +29,8 @@ const NAV_ITEMS: {
 }[] = [
   { id: "resumen", label: "Resumen", icon: "◈" },
   { id: "productos", label: "Productos", icon: "◉" },
-  { id: "tienda", label: "Mi tienda", icon: "⌂" },
+  { id: "pedidos", label: "Pedidos y pagos", icon: "◎" },
+  { id: "tienda", label: "Mi negocio", icon: "⌂" },
   { id: "pagos", label: "Pagos PayU", icon: "💳" },
 ];
 
@@ -62,13 +68,13 @@ export function DashboardSidebar({
     <div className="flex h-full flex-col">
       <div className="mb-6">
         <p className={brandWordmarkClass}>CapiCode</p>
-        <p className={brandWordmarkSubClass}>Gestión de tiendas</p>
+        <p className={brandWordmarkSubClass}>Gestión de negocios</p>
       </div>
 
       {stores.length > 0 ? (
         <div className="rounded-2xl border border-brand-separator bg-brand-surface p-3">
           <p className="text-[10px] font-medium tracking-[0.14em] text-brand-secondary uppercase">
-            Tienda activa
+            Negocio activo
           </p>
           <div className="relative mt-2">
             <select
@@ -101,7 +107,7 @@ export function DashboardSidebar({
             }}
             className="mt-2.5 w-full rounded-lg border border-dashed border-brand-input-border py-2 text-xs font-medium text-brand-secondary transition hover:border-brand-accent-soft hover:bg-brand-hover hover:text-brand-accent-soft"
           >
-            + Añadir tienda
+            + Añadir negocio
           </button>
         </div>
       ) : null}

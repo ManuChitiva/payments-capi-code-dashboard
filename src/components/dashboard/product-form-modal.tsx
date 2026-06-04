@@ -1,20 +1,16 @@
 "use client";
 
 import { useId, useRef, type ReactNode } from "react";
+import { ProductVariantsEditor } from "@/components/dashboard/product-variants-editor";
+import { createEmptyVariantRow } from "@/lib/product-variants";
 import {
   PRODUCT_LIMITS,
   productFieldClass,
   type ProductFormErrors,
+  type ProductFormValues,
 } from "@/lib/product-form-validation";
 
-export type ProductFormValues = {
-  name: string;
-  description: string;
-  price: string;
-  imageUrl: string;
-  availableQuantity: string;
-  active: boolean;
-};
+export type { ProductFormValues };
 
 type ProductFormModalProps = {
   open: boolean;
@@ -31,6 +27,8 @@ type ProductFormModalProps = {
   onChange: (patch: Partial<ProductFormValues>) => void;
   onBlurValidate: () => void;
   onImageSelect: (file: File) => void;
+  uploadingVariantId: string | null;
+  onVariantImageSelect: (localId: string, file: File) => void;
 };
 
 export function ProductFormModal({
@@ -48,6 +46,8 @@ export function ProductFormModal({
   onChange,
   onBlurValidate,
   onImageSelect,
+  uploadingVariantId,
+  onVariantImageSelect,
 }: ProductFormModalProps) {
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,8 +86,8 @@ export function ProductFormModal({
             </h2>
             <p className="mt-1 max-w-md text-sm text-brand-secondary">
               {isEdit
-                ? "Actualiza la ficha que ven tus clientes en la tienda."
-                : "Completa la informacion y publica el articulo en tu tienda."}
+                ? "Actualiza la ficha que ven tus clientes en el negocio."
+                : "Completa la informacion y publica el articulo en tu negocio."}
             </p>
           </div>
           <button
@@ -114,7 +114,7 @@ export function ProductFormModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
-          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-5 lg:gap-8">
+          <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-5 lg:items-start lg:gap-8">
             {/* Form */}
             <div className="space-y-6 lg:col-span-3">
               <section>
@@ -177,11 +177,50 @@ export function ProductFormModal({
                 </div>
               </section>
 
+              <ProductVariantsEditor
+                enabled={values.hasVariants}
+                basePrice={values.price}
+                variants={values.variants}
+                variantErrors={errors.variantErrors}
+                variantsSummary={errors.variantsSummary}
+                showErrors={showErrors}
+                uploadingVariantId={uploadingVariantId}
+                onEnabledChange={(hasVariants) => {
+                  onChange({
+                    hasVariants,
+                    variants: hasVariants
+                      ? values.variants.length > 0
+                        ? values.variants
+                        : [createEmptyVariantRow()]
+                      : [],
+                    ...(hasVariants ? { availableQuantity: "0" } : {}),
+                  });
+                }}
+                onVariantsChange={(variants) => onChange({ variants })}
+                onVariantPatch={(localId, patch) =>
+                  onChange({
+                    variants: values.variants.map((v) =>
+                      v.localId === localId ? { ...v, ...patch } : v,
+                    ),
+                  })
+                }
+                onVariantImageSelect={onVariantImageSelect}
+                onBlurValidate={onBlurValidate}
+              />
+
               <section>
-                <SectionTitle>Precio e inventario</SectionTitle>
+                <SectionTitle>
+                  {values.hasVariants ? "Precio base e inventario" : "Precio e inventario"}
+                </SectionTitle>
+                {values.hasVariants ? (
+                  <p className="-mt-2 mb-4 text-xs text-brand-tertiary">
+                    El precio base se usa como referencia y para extras. El stock se
+                    gestiona por variante.
+                  </p>
+                ) : null}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field
-                    label="Precio de venta"
+                    label={values.hasVariants ? "Precio base" : "Precio de venta"}
                     required
                     error={showErrors ? errors.price : undefined}
                   >
@@ -204,42 +243,44 @@ export function ProductFormModal({
                     </div>
                   </Field>
 
-                  <Field
-                    label="Unidades en stock"
-                    required
-                    error={showErrors ? errors.availableQuantity : undefined}
-                  >
-                    <input
-                      type="number"
-                      min={PRODUCT_LIMITS.stockMin}
-                      max={PRODUCT_LIMITS.stockMax}
-                      step="1"
-                      value={values.availableQuantity}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        onChange({
-                          availableQuantity:
-                            raw === "" || Number(raw) < 0
-                              ? raw
-                              : raw.replace(/\./g, ""),
-                        });
-                      }}
-                      onBlur={onBlurValidate}
-                      placeholder="0"
-                      aria-invalid={Boolean(
-                        showErrors && errors.availableQuantity,
-                      )}
-                      className={productFieldClass(
-                        Boolean(showErrors && errors.availableQuantity),
-                      )}
-                    />
-                  </Field>
+                  {!values.hasVariants ? (
+                    <Field
+                      label="Unidades en stock"
+                      required
+                      error={showErrors ? errors.availableQuantity : undefined}
+                    >
+                      <input
+                        type="number"
+                        min={PRODUCT_LIMITS.stockMin}
+                        max={PRODUCT_LIMITS.stockMax}
+                        step="1"
+                        value={values.availableQuantity}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          onChange({
+                            availableQuantity:
+                              raw === "" || Number(raw) < 0
+                                ? raw
+                                : raw.replace(/\./g, ""),
+                          });
+                        }}
+                        onBlur={onBlurValidate}
+                        placeholder="0"
+                        aria-invalid={Boolean(
+                          showErrors && errors.availableQuantity,
+                        )}
+                        className={productFieldClass(
+                          Boolean(showErrors && errors.availableQuantity),
+                        )}
+                      />
+                    </Field>
+                  ) : null}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between rounded-xl border border-brand-separator bg-brand-hover px-4 py-3.5">
                   <div>
                     <p className="text-sm font-medium text-brand-primary">
-                      Visible en la tienda
+                      Visible en el negocio
                     </p>
                     <p className="mt-0.5 text-xs text-brand-tertiary">
                       {values.active
@@ -266,12 +307,12 @@ export function ProductFormModal({
               </section>
             </div>
 
-            {/* Image panel */}
-            <div className="lg:col-span-2">
+            {/* Image panel — altura propia; no estirar con la columna de variantes */}
+            <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start">
               <section
-                className={`flex h-full flex-col rounded-xl border p-4 ${
+                className={`flex w-full flex-col rounded-xl border p-4 ${
                   showErrors && errors.imageUrl
-                    ? "border-rose-500/50 bg-rose-500/[0.04]"
+                    ? "border-rose-500/50 bg-rose-500/4"
                     : "border-brand-separator bg-brand-hover"
                 }`}
               >
@@ -281,7 +322,7 @@ export function ProductFormModal({
                 </p>
 
                 <div
-                  className={`relative mb-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-dashed ${
+                  className={`relative mx-auto mb-4 flex aspect-square w-full max-w-[min(100%,17rem)] items-center justify-center overflow-hidden rounded-xl border border-dashed ${
                     hasImage
                       ? "border-brand-separator bg-brand-surface-hover"
                       : "border-brand-separator bg-brand-hover"
@@ -372,7 +413,7 @@ export function ProductFormModal({
             </p>
           ) : (
             <p className="hidden text-xs text-brand-tertiary sm:mr-auto sm:block">
-              Los campos con <span className="text-rose-400">*</span> son
+              Los campos con <span className="text-rose-500">*</span> son
               obligatorios.
             </p>
           )}
@@ -408,7 +449,7 @@ export function ProductFormModal({
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-tertiary">
+    <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-secondary">
       {children}
     </h3>
   );
@@ -431,10 +472,10 @@ function Field({
     <label className="block space-y-1.5">
       <div className="flex items-center justify-between gap-2">
         <span
-          className={`text-sm font-medium ${error ? "text-rose-300" : "text-brand-secondary"}`}
+          className={`text-sm font-medium ${error ? "text-rose-600 dark:text-rose-300" : "text-brand-primary"}`}
         >
           {label}
-          {required ? <span className="ml-0.5 text-rose-400">*</span> : null}
+              {required ? <span className="ml-0.5 text-rose-500">*</span> : null}
         </span>
         {counter}
       </div>
@@ -453,7 +494,7 @@ function FieldError({
 }) {
   if (!show || !message) return null;
   return (
-    <p className="text-xs text-rose-300" role="alert">
+    <p className="text-xs text-rose-600 dark:text-rose-300" role="alert">
       {message}
     </p>
   );
@@ -463,7 +504,7 @@ function CharCounter({ current, max }: { current: number; max: number }) {
   const warn = current / max >= 0.9;
   return (
     <span
-      className={`text-[11px] tabular-nums ${warn ? "text-amber-400" : "text-brand-tertiary"}`}
+      className={`text-[11px] tabular-nums ${warn ? "text-amber-700 dark:text-amber-400" : "text-brand-tertiary"}`}
     >
       {current}/{max}
     </span>

@@ -59,7 +59,7 @@ export async function postAuthRegister(
   if (!response.ok) {
     let fallback = "No se pudo crear la cuenta. Intenta de nuevo.";
     if (response.status === 409) {
-      fallback = "El correo o el identificador de tienda ya están en uso.";
+      fallback = "El correo o el identificador de negocio ya están en uso.";
     } else if (response.status >= 500) {
       fallback = "El servicio no está disponible. Intenta más tarde.";
     }

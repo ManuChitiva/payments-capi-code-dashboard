@@ -59,7 +59,7 @@ export async function createMyStore(
 
   if (!response.ok) {
     throw new Error(
-      await parseErrorMessage(response, "No se pudo crear la tienda."),
+      await parseErrorMessage(response, "No se pudo crear el negocio."),
     );
   }
 
@@ -79,7 +79,7 @@ export async function validateActiveStore(
     body: JSON.stringify({ storeId }),
   });
   if (!response.ok) {
-    throw new Error("No se pudo activar la tienda seleccionada.");
+    throw new Error("No se pudo activar el negocio seleccionado.");
   }
   const data = (await response.json()) as { storeId: number };
   return data.storeId;

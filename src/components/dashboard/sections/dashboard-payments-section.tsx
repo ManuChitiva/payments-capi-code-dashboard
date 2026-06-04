@@ -66,7 +66,7 @@ export function DashboardPaymentsSection({
             </p>
             {hasActivePayuConfig ? (
               <p className="mt-2 text-xs text-brand-secondary">
-                Ya hay una configuracion PayU activa en esta tienda.
+                Ya hay una configuracion PayU activa en este negocio.
                 Desactivala o eliminala para poder crear otra.
               </p>
             ) : null}
@@ -221,7 +221,7 @@ export function DashboardPaymentsSection({
               payuPaymentsData.content.length === 0 ? (
                 <tr>
                   <td className="px-3 py-3 text-brand-tertiary" colSpan={7}>
-                    No hay pagos PayU registrados para esta tienda.
+                    No hay pagos PayU registrados para este negocio.
                   </td>
                 </tr>
               ) : null}

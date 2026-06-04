@@ -8,7 +8,9 @@ import { CreateStoreModal } from "@/components/dashboard/modals/create-store-mod
 import { PayuMethodModal } from "@/components/dashboard/modals/payu-method-modal";
 import { DashboardSummarySection } from "@/components/dashboard/sections/dashboard-summary-section";
 import { DashboardProductsSection } from "@/components/dashboard/sections/dashboard-products-section";
+import { DashboardOrdersSection } from "@/components/dashboard/sections/dashboard-orders-section";
 import { DashboardPaymentsSection } from "@/components/dashboard/sections/dashboard-payments-section";
+import { OrderDetailModal } from "@/components/dashboard/modals/order-detail-modal";
 import { useDashboardPage } from "@/hooks/use-dashboard-page";
 import { brandPageBg, brandTextSecondary } from "@/lib/brand-theme";
 
@@ -76,6 +78,33 @@ export default function DashboardPage() {
         />
       ) : null}
 
+      {d.activeSection === "pedidos" ? (
+        <DashboardOrdersSection
+          title={d.sectionMeta.title}
+          description={d.sectionMeta.description}
+          activeTab={d.salesTab}
+          onTabChange={d.setSalesTab}
+          revenueSummary={d.salesRevenueSummary}
+          ordersData={d.ordersData}
+          ordersLoading={d.ordersLoading}
+          ordersPage={d.ordersPage}
+          setOrdersPage={d.setOrdersPage}
+          orderStatusDraft={d.orderStatusDraft}
+          setOrderStatusDraft={d.setOrderStatusDraft}
+          setOrderStatusQuery={d.setOrderStatusQuery}
+          setOrdersListTick={d.setOrdersListTick}
+          paymentsData={d.salesPaymentsData}
+          paymentsLoading={d.salesPaymentsLoading}
+          paymentsPage={d.salesPaymentsPage}
+          setPaymentsPage={d.setSalesPaymentsPage}
+          paymentStatusDraft={d.salesPaymentStatusDraft}
+          setPaymentStatusDraft={d.setSalesPaymentStatusDraft}
+          setPaymentStatusQuery={d.setSalesPaymentStatusQuery}
+          setPaymentsListTick={d.setSalesPaymentsListTick}
+          onOpenOrder={(id) => void d.openOrderDetail(id)}
+        />
+      ) : null}
+
       {d.activeSection === "tienda" ? (
         <section className="rounded-2xl border border-brand-separator bg-brand-surface/90 p-4 backdrop-blur sm:p-6">
           <SectionHeader
@@ -88,6 +117,7 @@ export default function DashboardPage() {
                 ? {
                     slug: d.activeStore.slug,
                     primaryColor: d.activeStore.primaryColor,
+                    coverImageUrl: d.activeStore.coverImageUrl,
                   }
                 : null
             }
@@ -96,8 +126,10 @@ export default function DashboardPage() {
             loading={d.myStoreLoading}
             saving={d.myStoreSaving}
             uploadingLogo={d.uploadingStoreLogo}
+            uploadingCover={d.uploadingStoreCover}
             onSave={() => void d.handleSaveStoreSettings()}
             onLogoUpload={(file) => void d.handleStoreLogoUpload(file)}
+            onCoverUpload={(file) => void d.handleStoreCoverUpload(file)}
             pickups={d.pickupsList}
             pickupsLoading={d.pickupsLoading}
             pickupActionLoading={d.pickupActionLoading}
@@ -176,6 +208,10 @@ export default function DashboardPage() {
         onImageSelect={(file) => {
           void d.handleMediaUpload(file);
         }}
+        uploadingVariantId={d.uploadingVariantId}
+        onVariantImageSelect={(localId, file) => {
+          void d.handleVariantMediaUpload(localId, file);
+        }}
       />
 
       <PayuMethodModal
@@ -186,6 +222,15 @@ export default function DashboardPage() {
         onClose={() => d.setPayuModalOpen(false)}
         onSave={d.handleSavePayu}
         onChange={(patch) => d.setPayuForm((prev) => ({ ...prev, ...patch }))}
+      />
+
+      <OrderDetailModal
+        open={d.orderDetailOpen}
+        loading={d.orderDetailLoading}
+        order={d.orderDetail}
+        onClose={() => {
+          d.setOrderDetailOpen(false);
+        }}
       />
 
       <CreateStoreModal

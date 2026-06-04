@@ -1,4 +1,5 @@
 import { buildAuthRequestHeaders } from "@/lib/api-headers";
+import { normalizeStorePrimaryColor } from "@/lib/brand-store-defaults";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type PickupRow = {
@@ -16,6 +17,7 @@ export type MyStoreDetail = {
   phone: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  coverImageUrl: string | null;
   whatsapp: string | null;
   cellPhone: string | null;
   address: string | null;
@@ -28,6 +30,8 @@ export type MyStoreFormPayload = {
   label: string;
   phone: string;
   logoUrl: string;
+  primaryColor: string;
+  coverImageUrl: string;
   whatsapp: string;
   cellPhone: string;
   address: string;
@@ -63,13 +67,15 @@ export async function updateMyStore(
       label: payload.label.trim(),
       phone: payload.phone.trim(),
       logoUrl: payload.logoUrl.trim(),
+      primaryColor: normalizeStorePrimaryColor(payload.primaryColor),
+      coverImageUrl: payload.coverImageUrl.trim(),
       whatsapp: payload.whatsapp.trim(),
       cellPhone: payload.cellPhone.trim(),
       address: payload.address.trim(),
     }),
   });
   if (!response.ok) {
-    let message = "No se pudo guardar la tienda.";
+    let message = "No se pudo guardar el negocio.";
     try {
       const body = (await response.json()) as {
         message?: string;

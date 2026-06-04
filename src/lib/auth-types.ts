@@ -5,6 +5,7 @@ export type AuthStoreSummary = {
   label: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  coverImageUrl: string | null;
 };
 
 export type AuthClientDetail = {

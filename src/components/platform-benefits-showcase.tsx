@@ -148,7 +148,7 @@ function BenefitVisual({ variant }: { variant: PlatformBenefitVisual }) {
       return (
         <div className="absolute inset-0 flex items-end justify-center" aria-hidden>
           <div className="mb-8 flex items-end gap-2">
-            {["1 tienda", "5 tiendas", "∞"].map((label, i) => (
+            {["1 negocio", "5 negocios", "∞"].map((label, i) => (
               <div
                 key={label}
                 className="flex flex-col items-center justify-end rounded-xl border border-white/10 bg-white/5 px-3 pb-2 text-center"
@@ -220,7 +220,7 @@ export function PlatformBenefitsShowcase({
           Lo que obtienes con CapiCode
         </h2>
         <p className="mt-3 max-w-xl text-base text-brand-secondary sm:text-lg">
-          Una plataforma pensada para dueños de tienda, no solo para desarrolladores.
+          Una plataforma pensada para dueños de negocio, no solo para desarrolladores.
         </p>
       </div>
 

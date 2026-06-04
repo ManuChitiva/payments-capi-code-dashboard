@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist, Geist_Mono, Rajdhani } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { siteMetadata } from "@/lib/site-seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,10 +26,7 @@ const brandScript = Cormorant_Garamond({
   style: ["italic"],
 });
 
-export const metadata: Metadata = {
-  title: "Stores Admin Dashboard",
-  description: "Panel administrativo de productos para Stores",
-};
+export const metadata = siteMetadata;
 
 export default function RootLayout({
   children,

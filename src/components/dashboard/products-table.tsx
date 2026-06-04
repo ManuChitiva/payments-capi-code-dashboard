@@ -18,6 +18,9 @@ const PAGE_SIZE = 5;
 
 export type ProductStatus = "activo" | "inactivo" | "agotado";
 
+import type { ProductVariantApi } from "@/lib/product-variants";
+import { formatCatalogPrice } from "@/services/productService";
+
 export type CatalogProduct = {
   id: number;
   sku: string;
@@ -25,11 +28,18 @@ export type CatalogProduct = {
   description: string;
   category: string;
   price: number;
+  /** Precio del producto padre en API (referencia / base) */
+  basePrice: number;
+  /** "desde" cuando hay variantes con precios distintos */
+  priceLabel?: string;
   imageUrl: string;
   stock: number;
   status: ProductStatus;
   active: boolean;
   updatedAt: string;
+  hasVariants: boolean;
+  variantCount: number;
+  variants: ProductVariantApi[];
 };
 
 type ProductsTableProps = {
@@ -297,8 +307,8 @@ export function ProductsTable({
                 &ldquo;{pendingToggle.product.name}&rdquo;
               </span>{" "}
               {pendingToggle.willActivate
-                ? "volverá a mostrarse en tu tienda. ¿Estás seguro de que quieres activarlo?"
-                : "dejará de mostrarse en tu tienda. ¿Estás seguro de que quieres desactivarlo?"}
+                ? "volverá a mostrarse en tu negocio. ¿Estás seguro de que quieres activarlo?"
+                : "dejará de mostrarse en tu negocio. ¿Estás seguro de que quieres desactivarlo?"}
             </>
           ) : null
         }
@@ -349,13 +359,16 @@ function ProductRow({
                 />
                 <p className="mt-0.5 font-mono text-[11px] text-brand-tertiary">
                   {product.sku}
+                  {product.variantCount > 0
+                    ? ` · ${product.variantCount} variantes`
+                    : ""}
                 </p>
               </div>
               <StatusBadge status={product.status} />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
               <span className={`font-semibold ${brandTextPrimary}`}>
-                {formatCop(product.price)}
+                {formatCatalogPrice(product)}
               </span>
               <span className={stockLevel.className}>
                 {product.stock} uds · {stockLevel.label}
@@ -383,12 +396,15 @@ function ProductRow({
             <ProductName name={product.name} />
             <p className="mt-0.5 truncate font-mono text-[11px] text-brand-tertiary">
               {product.sku}
+              {product.variantCount > 0
+                ? ` · ${product.variantCount} var.`
+                : ""}
             </p>
           </div>
         </div>
       </td>
       <td className="px-4 py-3 text-right font-medium tabular-nums text-brand-primary">
-        {formatCop(product.price)}
+        {formatCatalogPrice(product)}
       </td>
       <td className="px-4 py-3 text-center">
         <span
@@ -615,7 +631,7 @@ function EmptyState({
       <p className="mt-2 max-w-sm text-sm text-brand-tertiary">
         {hasProducts
           ? "Prueba otro término de búsqueda o cambia el filtro de estado."
-          : "Publica tu primer producto para que aparezca en la tienda y en este listado."}
+          : "Publica tu primer producto para que aparezca en el negocio y en este listado."}
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         {hasProducts ? (

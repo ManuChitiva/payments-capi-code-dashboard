@@ -1,5 +1,10 @@
 import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
+import {
+  minVariantPrice,
+  totalVariantStock,
+  type ProductVariantApi,
+} from "@/lib/product-variants";
 import type { CatalogProduct, ProductStatus } from "@/components/dashboard/products-table";
 
 type ProductApiRow = {
@@ -11,6 +16,7 @@ type ProductApiRow = {
   active: boolean;
   availableQuantity: number;
   createdAt: string;
+  variants?: ProductVariantApi[];
 };
 
 export type CatalogFilter = "todos" | ProductStatus;
@@ -24,9 +30,48 @@ export function catalogFilterToActiveParam(
   return undefined;
 }
 
+function resolveCatalogStock(
+  item: ProductApiRow,
+  variants: ProductVariantApi[],
+): number {
+  if (variants.length > 0) {
+    return variants
+      .filter((v) => v.active)
+      .reduce((sum, v) => sum + Math.max(0, v.availableQuantity), 0);
+  }
+  return item.availableQuantity;
+}
+
+function resolveCatalogPrice(
+  item: ProductApiRow,
+  variants: ProductVariantApi[],
+): { price: number; priceLabel?: string } {
+  if (variants.length === 0) {
+    return { price: Number(item.price), priceLabel: undefined };
+  }
+  const activePrices = variants
+    .filter((v) => v.active)
+    .map((v) => Number(v.price))
+    .filter((p) => Number.isFinite(p));
+  if (activePrices.length === 0) {
+    return { price: Number(item.price), priceLabel: "base" };
+  }
+  const min = Math.min(...activePrices);
+  const max = Math.max(...activePrices);
+  if (min === max) {
+    return { price: min };
+  }
+  return { price: min, priceLabel: "desde" };
+}
+
 function mapProductRow(item: ProductApiRow): CatalogProduct {
+  const variants = item.variants ?? [];
+  const hasVariants = variants.length > 0;
+  const stock = resolveCatalogStock(item, variants);
+  const { price, priceLabel } = resolveCatalogPrice(item, variants);
+
   const status: ProductStatus = item.active
-    ? item.availableQuantity > 0
+    ? stock > 0
       ? "activo"
       : "agotado"
     : "inactivo";
@@ -37,12 +82,17 @@ function mapProductRow(item: ProductApiRow): CatalogProduct {
     name: item.name,
     description: item.description ?? "",
     category: "General",
-    price: Number(item.price),
+    price,
+    basePrice: Number(item.price),
+    priceLabel,
     imageUrl: item.imageUrl ?? "",
-    stock: item.availableQuantity,
+    stock,
     status,
     active: item.active,
     updatedAt: new Date(item.createdAt).toISOString().slice(0, 10),
+    hasVariants,
+    variantCount: variants.length,
+    variants,
   };
 }
 
@@ -74,6 +124,50 @@ export async function listMyProducts(
   return mapped;
 }
 
+export type ProductUpsertBody = {
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string | null;
+  availableQuantity: number;
+  active: boolean;
+  variants: Array<{
+    id: number | null;
+    sku: string | null;
+    title: string;
+    imageUrl: string;
+    price: number;
+    availableQuantity: number;
+    active: boolean;
+    sortOrder: number;
+  }>;
+};
+
+export async function upsertMyProduct(
+  token: string,
+  storeId: number,
+  body: ProductUpsertBody,
+  productId?: number,
+): Promise<void> {
+  const isEdit = productId != null;
+  const response = await fetch(
+    isEdit ? `${API_URL}/me/products/${productId}` : `${API_URL}/me/products`,
+    {
+      method: isEdit ? "PUT" : "POST",
+      headers: buildAuthRequestHeaders({
+        token,
+        storeId,
+        contentType: "application/json",
+        requireStore: true,
+      }),
+      body: JSON.stringify(body),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(isEdit ? "update_product_error" : "create_product_error");
+  }
+}
+
 /** Baja o alta lógica: DELETE /me/products/{id}?active=true|false */
 export async function setMyProductActive(
   token: string,
@@ -92,3 +186,16 @@ export async function setMyProductActive(
     throw new Error("set_product_active_error");
   }
 }
+
+/** Utilidad para etiqueta de precio en catálogo */
+export function formatCatalogPrice(product: CatalogProduct): string {
+  const cop = new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(product.price);
+  if (product.priceLabel === "desde") return `Desde ${cop}`;
+  return cop;
+}
+
+export { totalVariantStock, minVariantPrice };

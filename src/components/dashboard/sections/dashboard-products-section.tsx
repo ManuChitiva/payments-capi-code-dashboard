@@ -3,19 +3,19 @@
 import { ProductsTable } from "@/components/dashboard/products-table";
 import { SectionHeader } from "@/components/dashboard/section-header";
 import { primaryButtonClass } from "@/lib/dashboard/constants";
-import type { DashboardProduct } from "@/types/dashboard";
+import type { CatalogProduct } from "@/components/dashboard/products-table";
 import type { ProductStatus } from "@/components/dashboard/products-table";
 
 export type DashboardProductsSectionProps = {
   title: string;
   description: string;
-  products: DashboardProduct[];
-  catalogStats: DashboardProduct[];
+  products: CatalogProduct[];
+  catalogStats: CatalogProduct[];
   query: string;
   statusFilter: "todos" | ProductStatus;
   onQueryChange: (value: string) => void;
   onStatusFilterChange: (value: "todos" | ProductStatus) => void;
-  onEdit: (product: DashboardProduct) => void;
+  onEdit: (product: CatalogProduct) => void;
   onToggleActive: (productId: number, active: boolean) => void;
   onCreate: () => void;
 };

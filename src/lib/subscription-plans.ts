@@ -24,7 +24,7 @@ export const PLAN_MARKETING: Record<string, PlanMarketing> = {
     tagline: "Empieza hoy sin tarjeta",
     badge: "Incluido al registrarte",
     features: [
-      "1 tienda online con catálogo y variantes",
+      "1 negocio online con catálogo y variantes",
       "Checkout y pagos PayU configurables",
       "Panel de pedidos y analytics básicos",
       "Puntos de recogida y personalización de marca",
@@ -32,15 +32,15 @@ export const PLAN_MARKETING: Record<string, PlanMarketing> = {
     ],
     ctaLabel: "Crear cuenta gratis",
     ctaHref: "/register",
-    footnote: "Sin código de invitación. Tu primera tienda queda activa al registrarte.",
+    footnote: "Sin código de invitación. Tu primer negocio queda activo al registrarte.",
   },
   PRO: {
     tagline: "Para quienes venden en serio",
     badge: "Más popular",
     highlighted: true,
     features: [
-      "Hasta 5 tiendas bajo una misma cuenta",
-      "Todo lo del plan Gratis en cada tienda",
+      "Hasta 5 negocios bajo una misma cuenta",
+      "Todo lo del plan Gratis en cada negocio",
       "Múltiples métodos PayU y reportes ampliados",
       "Prioridad en nuevas funciones del panel",
       "Acompañamiento en migración de catálogo",
@@ -51,13 +51,13 @@ export const PLAN_MARKETING: Record<string, PlanMarketing> = {
   },
   ENTERPRISE: {
     tagline: "Automatiza ventas con IA",
-    badge: "Tiendas ilimitadas",
+    badge: "Negocios ilimitados",
     features: [
-      "Tiendas ilimitadas bajo una sola cuenta",
+      "Negocios ilimitados bajo una sola cuenta",
       "Agente de IA para atención, ventas y seguimiento 24/7",
       "Bot de WhatsApp conectado a tu catálogo y pedidos",
       "Bot de Telegram para consultas, carrito y notificaciones",
-      "Todo lo del plan Profesional en cada tienda",
+      "Todo lo del plan Profesional en cada negocio",
       "Onboarding dedicado y soporte prioritario",
     ],
     ctaLabel: "Hablar con ventas",
@@ -83,7 +83,7 @@ export type PlatformBenefit = {
 export const PLATFORM_BENEFITS: PlatformBenefit[] = [
   {
     label: "Marca",
-    headline: "Tu tienda, con identidad propia.",
+    headline: "Tu negocio, con identidad propia.",
     description:
       "Logo, colores, slug propio y catálogo con variantes e imágenes por SKU. Todo desde un panel claro.",
     visual: "brand",
@@ -99,7 +99,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     label: "Operación",
     headline: "Pedidos y métricas en un solo lugar.",
     description:
-      "Pedidos, ingresos, pickups y analytics por tienda. Cambia de contexto con un selector cuando crezcas.",
+      "Pedidos, ingresos, pickups y analytics por negocio. Cambia de contexto con un selector cuando crezcas.",
     visual: "operations",
   },
   {
@@ -113,7 +113,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     label: "Escala",
     headline: "Crece cuando tu negocio lo pida.",
     description:
-      "Empieza gratis con una tienda. Escala a Profesional o Empresarial cuando necesites más tiendas, IA o automatización.",
+      "Empieza gratis con un negocio. Escala a Profesional o Empresarial cuando necesites más negocios, IA o automatización.",
     visual: "scale",
   },
 ];
@@ -138,9 +138,9 @@ export function formatPlanPrice(price: number, currency: string): string {
 }
 
 export function formatStoreLimit(maxStores: number | null): string {
-  if (maxStores == null) return "Tiendas ilimitadas";
-  if (maxStores === 1) return "1 tienda";
-  return `Hasta ${maxStores} tiendas`;
+  if (maxStores == null) return "Negocios ilimitados";
+  if (maxStores === 1) return "1 negocio";
+  return `Hasta ${maxStores} negocios`;
 }
 
 export function mergePlanWithMarketing(plan: SubscriptionPlan) {
@@ -149,7 +149,7 @@ export function mergePlanWithMarketing(plan: SubscriptionPlan) {
     features: [
       formatStoreLimit(plan.maxStores),
       plan.maxProducts != null
-        ? `Hasta ${plan.maxProducts} productos por tienda`
+        ? `Hasta ${plan.maxProducts} productos por negocio`
         : "Productos sin límite fijo",
     ],
     ctaLabel: plan.code === "FREE" ? "Crear cuenta" : "Más información",

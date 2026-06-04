@@ -21,11 +21,11 @@ export function SiteFooter() {
           <div className="lg:col-span-5">
             <div>
               <p className={brandWordmarkClass}>CapiCode</p>
-              <p className={brandWordmarkSubClass}>Gestión de tiendas online</p>
+              <p className={brandWordmarkSubClass}>Gestión de negocios online</p>
             </div>
             <p className={`mt-6 max-w-md text-sm leading-relaxed ${brandTextTertiary}`}>
               Plataforma administrativa para catálogo, inventario y operaciones
-              comerciales. Registro gratuito con tu primera tienda incluida.
+              comerciales. Registro gratuito con tu primer negocio incluido.
             </p>
           </div>
 
@@ -77,7 +77,7 @@ export function SiteFooter() {
             <ul className={`mt-5 space-y-3.5 text-sm ${brandTextTertiary}`}>
               <li>Protección de datos según políticas de tu organización</li>
               <li>Uso interno con credencial única por administrador</li>
-              <li>Plan Gratis: 1 tienda · upgrade disponible</li>
+              <li>Plan Gratis: 1 negocio · upgrade disponible</li>
             </ul>
           </div>
 

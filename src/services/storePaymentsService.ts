@@ -44,7 +44,7 @@ function buildAuthQuery(filters: AuthFilters) {
 }
 
 /**
- * Todos los pagos de la tienda activa (cualquier gateway). Filtros opcionales.
+ * Todos los pagos del negocio activo (cualquier gateway). Filtros opcionales.
  */
 export async function listMyPayments(
   token: string,
@@ -105,7 +105,7 @@ export async function listMyPayuPayments(
 }
 
 /**
- * Resumen monetario de pagos pagados para la tienda activa.
+ * Resumen monetario de pagos pagados para el negocio activo.
  * El backend usa PAYU por defecto.
  */
 export async function getMyPaymentsRevenueSummary(

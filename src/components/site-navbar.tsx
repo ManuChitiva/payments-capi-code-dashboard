@@ -57,7 +57,7 @@ export function SiteNavbar() {
           onClick={closeMenu}
         >
           <span className={brandWordmarkClass}>CapiCode</span>
-          <span className={brandWordmarkSubClass}>Gestión de tiendas online</span>
+          <span className={brandWordmarkSubClass}>Gestión de negocios online</span>
         </Link>
 
         <div className="flex items-center gap-2">

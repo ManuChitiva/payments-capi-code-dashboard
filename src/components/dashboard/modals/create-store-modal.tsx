@@ -43,21 +43,21 @@ export function CreateStoreModal({
     <div className={brandModalOverlay} onClick={onClose}>
       <div className={brandModalPanelMd} onClick={(e) => e.stopPropagation()}>
         <div className={brandModalHeader}>
-          <h3 className={brandModalTitle}>Nueva tienda</h3>
+          <h3 className={brandModalTitle}>Nuevo negocio</h3>
           <p className={brandModalDesc}>
-            Añade otra tienda a tu cuenta. Podrás cambiar entre ellas desde el
+            Añade otro negocio a tu cuenta. Podrás cambiar entre ellos desde el
             selector superior.
           </p>
         </div>
         <div className="space-y-4 px-6 py-5">
           <label className="block space-y-1.5 text-sm">
-            <span className={brandFormLabel}>Nombre de la tienda</span>
+            <span className={brandFormLabel}>Nombre del negocio</span>
             <input
               type="text"
               value={values.storeName}
               onChange={(e) => onChange({ storeName: e.target.value })}
               className={`${brandInputClass} px-3 py-2.5 text-sm`}
-              placeholder="Mi segunda tienda"
+              placeholder="Mi segundo negocio"
               disabled={creating}
             />
           </label>
@@ -82,7 +82,7 @@ export function CreateStoreModal({
               value={values.storeSlug}
               onChange={(e) => onChange({ storeSlug: e.target.value })}
               className={`${brandInputClass} px-3 py-2.5 text-sm`}
-              placeholder="mi-segunda-tienda"
+              placeholder="mi-segundo-negocio"
               disabled={creating}
             />
           </label>
@@ -102,7 +102,7 @@ export function CreateStoreModal({
             disabled={creating}
             className={`${brandActionButtonSolid} disabled:opacity-60`}
           >
-            {creating ? "Creando…" : "Crear tienda"}
+            {creating ? "Creando…" : "Crear negocio"}
           </button>
         </div>
       </div>
