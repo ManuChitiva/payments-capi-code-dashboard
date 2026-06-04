@@ -1,17 +1,214 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { LoginAmbientBackground } from "@/components/login-ambient-background";
+import { LoginPhoneShell } from "@/components/login-phone-shell";
 import { postAuthLogin } from "@/lib/auth-api";
 import { persistAuthSession } from "@/lib/auth-session";
+import {
+  brandAlertError,
+  brandCtaMd,
+  brandEyebrow,
+  brandInputClass,
+  brandLoginFeatureCard,
+  brandLoginFeatureIcon,
+  brandLinkHover,
+  brandGridOverlayClass,
+  brandPageBg,
+  brandRadialAccent,
+  brandTextPrimary,
+  brandTextSecondary,
+  brandTextTertiary,
+} from "@/lib/brand-theme";
 
-const LOGO_URL =
-  "https://static.wixstatic.com/media/5dd8a0_d965965b0850412f90639a9c9081723b~mv2.jpg";
+const FEATURES = [
+  {
+    title: "Catálogo centralizado",
+    description: "Productos, variantes e inventario desde un solo panel.",
+    icon: CatalogIcon,
+  },
+  {
+    title: "Operaciones en tiempo real",
+    description: "Stock, pedidos y métricas actualizadas al instante.",
+    icon: PulseIcon,
+  },
+  {
+    title: "Acceso seguro",
+    description: "Sesiones cifradas y control por cuenta de administrador.",
+    icon: ShieldIcon,
+  },
+] as const;
 
-/** Fondo del asset JPG del logo; alinear el contenedor evita el “recorte” visible */
-const LOGO_MATTE_BG = "#0a0c0f";
+function CatalogIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 7h16M4 12h16M4 17h10"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M18 17v4M16 19h4"
+      />
+    </svg>
+  );
+}
+
+function PulseIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 12h4l2-7 4 14 2-7h6"
+      />
+    </svg>
+  );
+}
+
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3l8 4v6c0 5-3.5 7.5-8 8-4.5-.5-8-3-8-8V7l8-4z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12l2 2 4-4"
+      />
+    </svg>
+  );
+}
+
+function MailIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+      />
+    </svg>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 11V8a5 5 0 0110 0v3M6 11h12v10H6V11z"
+      />
+    </svg>
+  );
+}
+
+function EyeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"
+      />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+function EyeOffIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 3l18 18M10.5 10.7A3 3 0 0012 15a3 3 0 002.3-4.3M7.2 7.2C8.6 6.3 10.2 5.8 12 5.8c6.5 0 10 6.2 10 6.2a17.8 17.8 0 01-3.4 4.2M6.1 6.1C4.2 7.4 2.7 9.1 2 12s3.5 7 10 7c1.5 0 2.9-.3 4.1-.8"
+      />
+    </svg>
+  );
+}
+
+function Spinner({ className }: { className?: string }) {
+  return (
+    <svg
+      className={`animate-spin ${className ?? ""}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <path
+        className="opacity-90"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
+    </svg>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -58,168 +255,168 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-[#06080c] text-slate-100">
-      {/* Ambient layers */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.45]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(45,212,191,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(45,212,191,0.04) 1px, transparent 1px)
-          `,
-          backgroundSize: "48px 48px",
-        }}
-      />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-15%,rgba(45,212,191,0.14),transparent_55%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_100%_50%,rgba(245,158,11,0.06),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_45%_35%_at_0%_80%,rgba(34,211,238,0.05),transparent_55%)]" />
+    <main
+      className={`relative flex min-h-0 flex-1 flex-col overflow-x-hidden ${brandPageBg}`}
+    >
+      <LoginAmbientBackground />
 
-      <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center gap-12 px-5 py-14 sm:px-8 lg:flex-row lg:items-center lg:gap-16 xl:gap-24 lg:py-16">
-        {/* Brand column */}
-        <div className="flex flex-1 flex-col items-center text-center lg:max-w-lg lg:items-start lg:text-left">
-          <div className="relative mb-8 w-full max-w-[280px] sm:max-w-[320px] lg:max-w-none lg:mb-10">
-            <div
-              aria-hidden
-              className="absolute -inset-3 rounded-[28px] bg-linear-to-br from-teal-400/25 via-cyan-500/10 to-amber-400/15 blur-2xl"
-            />
-            <div
-              className="relative overflow-hidden rounded-2xl border border-teal-400/35 p-6 shadow-[0_0_0_1px_rgba(45,212,191,0.08)_inset,0_25px_50px_-12px_rgba(0,0,0,0.65)] ring-1 ring-teal-400/20 sm:p-8"
-              style={{ backgroundColor: LOGO_MATTE_BG }}
-            >
-              <Image
-                src={LOGO_URL}
-                alt="CapiCode"
-                width={640}
-                height={360}
-                priority
-                className="relative z-1 mx-auto h-auto w-full max-w-[260px] object-contain drop-shadow-[0_8px_32px_rgba(45,212,191,0.15)] sm:max-w-[300px]"
-                sizes="(max-width: 1024px) 280px, 320px"
-              />
-            </div>
+      <section className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-10 px-5 py-12 sm:px-8 lg:flex-row lg:items-center lg:gap-16 lg:py-16 xl:max-w-7xl xl:gap-20">
+        {/* Panel informativo */}
+        <div className="flex flex-1 flex-col justify-center space-y-8 lg:max-w-lg">
+          <div className="space-y-4">
+            <p className={brandEyebrow}>Gestión comercial integrada</p>
+            <h1 className={`text-3xl font-semibold leading-[1.12] tracking-tight sm:text-4xl sm:text-[2.35rem] ${brandTextPrimary}`}>
+              Operaciones comerciales bajo control
+            </h1>
+            <p className={`text-base leading-relaxed ${brandTextSecondary}`}>
+              Gestiona catálogo, inventario, pedidos y configuración de tu tienda
+              desde un panel diseñado para equipos de retail.
+            </p>
           </div>
 
-          <p
-            className="font-(family-name:--font-rajdhani) text-xs font-semibold tracking-[0.28em] text-teal-300/95 uppercase"
-          >
-            CapiCode · Panel administrativo
-          </p>
-          <h1
-            className="mt-4 font-(family-name:--font-rajdhani) text-3xl leading-[1.12] font-bold tracking-tight text-white sm:text-4xl sm:text-[2.5rem]"
-          >
-            Gestión centralizada de tu catálogo
-          </h1>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-slate-400">
-            Inicia sesión para administrar productos, stock y tiendas desde un
-            único lugar, con acceso seguro para tu equipo.
-          </p>
-
-          <ul className="mt-8 hidden max-w-md space-y-3 border-l border-teal-500/25 pl-5 text-left text-sm text-slate-400 sm:block">
-            <li className="relative before:absolute before:-left-5 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-teal-400/90">
-              Catálogo e inventario en tiempo real
-            </li>
-            <li className="relative before:absolute before:-left-5 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-amber-400/85">
-              Cambios auditables y flujo claro de trabajo
-            </li>
-            <li className="relative before:absolute before:-left-5 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-teal-400/90">
-              Conexión cifrada (HTTPS) en producción
-            </li>
+          <ul className="hidden space-y-4 sm:block">
+            {FEATURES.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <li
+                  key={feature.title}
+                  className={`flex gap-4 px-4 py-3.5 ${brandLoginFeatureCard}`}
+                >
+                  <span className={brandLoginFeatureIcon}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-medium ${brandTextPrimary}`}>
+                      {feature.title}
+                    </p>
+                    <p className={`mt-0.5 text-sm leading-relaxed ${brandTextSecondary}`}>
+                      {feature.description}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
+
+          <p className={`hidden text-xs sm:block ${brandTextTertiary}`}>
+            Uso exclusivo para cuentas autorizadas por tu organización.
+          </p>
         </div>
 
-        {/* Form column */}
-        <div className="flex w-full flex-1 flex-col justify-center lg:max-w-xl xl:max-w-2xl">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800/90 bg-slate-900/75 p-9 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-11 lg:p-12">
-            <div
-              aria-hidden
-              className="absolute top-0 right-0 left-0 h-0.5 bg-linear-to-r from-transparent via-amber-400/70 to-teal-400/80"
-            />
-            <div className="space-y-2">
-              <h2
-                className="font-(family-name:--font-rajdhani) text-2xl font-semibold tracking-tight text-white sm:text-[1.65rem]"
-              >
-                Iniciar sesión
-              </h2>
-              <p className="text-base text-slate-500">
-                Usa las credenciales de tu cuenta de administrador.
-              </p>
-            </div>
-
+        {/* Formulario estilo celular */}
+        <div className="flex w-full flex-1 flex-col items-center justify-center lg:max-w-md">
+          <LoginPhoneShell>
             <form
-              className="mt-10 space-y-6"
+              className="relative space-y-6"
               onSubmit={handleSubmit}
               noValidate
+              aria-label="Iniciar sesión"
             >
-              <label className="block space-y-2.5 text-base">
-                <span className="font-medium text-slate-300">
+              <label className="block space-y-2 text-sm">
+                <span className={`text-xs font-medium ${brandTextSecondary}`}>
                   Correo electrónico
                 </span>
-                <input
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2 sm:px-5 sm:py-4"
-                  placeholder="tu@empresa.com"
-                  disabled={loading}
-                  aria-invalid={Boolean(error)}
-                />
+                <div className="relative">
+                  <span className={`pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 ${brandTextTertiary}`}>
+                    <MailIcon className="h-5 w-5" />
+                  </span>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className={`${brandInputClass} rounded-2xl py-3.5 pl-11 pr-4 text-sm`}
+                    placeholder="tu@empresa.com"
+                    disabled={loading}
+                    aria-invalid={Boolean(error)}
+                  />
+                </div>
               </label>
 
-              <label className="block space-y-2.5 text-base">
-                <span className="font-medium text-slate-300">Contraseña</span>
+              <label className="block space-y-2 text-sm">
+                <span className={`text-xs font-medium ${brandTextSecondary}`}>Contraseña</span>
                 <div className="relative">
+                  <span className={`pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 ${brandTextTertiary}`}>
+                    <LockIcon className="h-5 w-5" />
+                  </span>
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     autoComplete="current-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 pr-29 text-base text-slate-100 outline-none ring-teal-500/25 transition focus:border-teal-500/55 focus:ring-2 sm:px-5 sm:py-4 sm:pr-32"
+                    className={`${brandInputClass} rounded-2xl py-3.5 pl-11 pr-12 text-sm`}
+                    placeholder="••••••••"
                     disabled={loading}
                     aria-invalid={Boolean(error)}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg px-3.5 py-2 text-sm font-medium text-amber-200/80 transition hover:bg-slate-800/90 hover:text-amber-100"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg p-2 text-brand-secondary transition hover:bg-brand-hover hover:text-brand-primary"
+                    aria-label={
+                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                    }
                   >
-                    {showPassword ? "Ocultar" : "Mostrar"}
+                    {showPassword ? (
+                      <EyeOffIcon className="h-5 w-5" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </label>
 
               {error ? (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-rose-500/40 bg-rose-950/45 px-4 py-3.5 text-base text-rose-100"
-                >
-                  {error}
-                </p>
+                <div role="alert" className={`flex gap-2.5 rounded-2xl px-3.5 py-3 text-xs ${brandAlertError}`}>
+                  <span
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500/15 text-xs font-bold text-rose-600 dark:bg-rose-500/20 dark:text-rose-300"
+                    aria-hidden
+                  >
+                    !
+                  </span>
+                  <p className="leading-relaxed">{error}</p>
+                </div>
               ) : null}
 
               <button
                 type="submit"
                 disabled={loading}
                 aria-busy={loading}
-                className="w-full rounded-xl bg-linear-to-r from-teal-400 to-cyan-500 px-4 py-4 text-base font-semibold text-slate-950 shadow-[0_0_24px_-4px_rgba(45,212,191,0.45)] transition hover:from-teal-300 hover:to-cyan-400 hover:shadow-[0_0_28px_-4px_rgba(45,212,191,0.55)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 disabled:cursor-not-allowed disabled:opacity-60 sm:py-4.5"
+                className={`flex w-full items-center justify-center gap-2.5 ${brandCtaMd}`}
               >
-                {loading ? "Iniciando sesión…" : "Continuar"}
+                {loading ? (
+                  <>
+                    <Spinner className="h-4 w-4" />
+                    Verificando credenciales…
+                  </>
+                ) : (
+                  "Acceder al panel"
+                )}
               </button>
+            </form>
 
-              <p className="pt-2 text-center text-base text-slate-400">
-                ¿No tienes cuenta?{" "}
+            <div className="relative mt-10 space-y-3 border-t border-brand-separator pt-8">
+              <p className={`text-center text-sm leading-relaxed ${brandTextSecondary}`}>
+                ¿Primera vez?{" "}
                 <Link
                   href="/register"
-                  className="font-medium text-teal-300 underline-offset-4 hover:text-amber-300 hover:underline"
+                  className={`font-semibold text-brand-accent hover:underline dark:text-brand-accent-soft ${brandLinkHover}`}
                 >
                   Crear cuenta
                 </Link>
               </p>
-            </form>
-          </div>
-          <p className="mt-5 max-w-md text-center text-sm leading-relaxed text-slate-600 lg:mx-auto">
-            Si olvidaste tu acceso, contacta a tu administrador.
+              <p className={`text-center text-sm leading-relaxed ${brandTextTertiary}`}>
+                ¿Olvidaste tu acceso? Contacta al administrador de tu
+                organización.
+              </p>
+            </div>
+          </LoginPhoneShell>
+
+          <p className={`mt-8 flex items-center justify-center gap-2 text-center text-[11px] sm:hidden ${brandTextTertiary}`}>
+            <ShieldIcon className={`h-3.5 w-3.5 shrink-0 ${brandTextSecondary}`} />
+            Conexión cifrada · Solo cuentas autorizadas
           </p>
         </div>
       </section>

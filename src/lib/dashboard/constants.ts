@@ -21,5 +21,6 @@ export const SECTION_META: Record<DashboardSection, DashboardSectionMeta> = {
   },
 };
 
-export const primaryButtonClass =
-  "rounded-xl border border-emerald-400/35 bg-emerald-500/15 px-4 py-2.5 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/25";
+import { brandActionButtonSolid } from "@/lib/brand-theme";
+
+export const primaryButtonClass = brandActionButtonSolid;

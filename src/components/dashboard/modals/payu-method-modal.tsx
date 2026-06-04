@@ -1,5 +1,18 @@
 ﻿"use client";
 
+import {
+  brandActionButtonSolid,
+  brandFormLabel,
+  brandInputClass,
+  brandModalCancelBtn,
+  brandModalDesc,
+  brandModalFooter,
+  brandModalHeader,
+  brandModalOverlay,
+  brandModalPanelLg,
+  brandModalTitle,
+  dashboardNoticeWarn,
+} from "@/lib/brand-theme";
 import type { PayuFormState } from "@/types/dashboard";
 
 export type { PayuFormState };
@@ -25,22 +38,25 @@ export function PayuMethodModal({
 }: PayuMethodModalProps) {
   if (!open) return null;
 
+  const inputClass = `${brandInputClass} rounded-2xl px-4 py-3 text-sm`;
+
   return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-              <div className="w-full max-w-2xl rounded-3xl border border-white/15 bg-[#0d1320] p-0 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
-                <div className="mb-4 flex items-start justify-between">
-                  <div className="w-full rounded-t-3xl border-b border-white/10 bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-violet-500/10 px-6 py-5">
-                    <h3 className="text-2xl font-semibold">
-                      {mode === "edit" ? "Editar PayU" : "Crear PayU"}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-300">
-                      Configura credenciales del gateway y su estado operativo.
-                    </p>
-                  </div>
-                </div>
+    <div className={brandModalOverlay} onClick={onClose}>
+      <div
+        className={`${brandModalPanelLg} p-0`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={`${brandModalHeader} rounded-t-3xl`}>
+          <h3 className={`${brandModalTitle} text-2xl`}>
+            {mode === "edit" ? "Editar PayU" : "Crear PayU"}
+          </h3>
+          <p className={brandModalDesc}>
+            Configura credenciales del gateway y su estado operativo.
+          </p>
+        </div>
                 <div className="space-y-4 px-6 pb-6">
                   {mode === "edit" ? (
-                    <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/95">
+                    <p className={dashboardNoticeWarn}>
                       El servidor no devuelve credenciales en listados ni al
                       guardar. Para rotar API Key, API Login o llave publica,
                       escribe los valores nuevos; deja esos campos vacios para no
@@ -49,60 +65,60 @@ export function PayuMethodModal({
                   ) : null}
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-1.5">
-                      <span className="text-xs text-slate-400">Nombre</span>
+                      <span className={`text-xs ${brandFormLabel}`}>Nombre</span>
                       <input
                         value={values.name}
                         onChange={(event) =>
                           onChange({ name: event.target.value })
                         }
-                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                        className={inputClass}
                       />
                     </label>
                     <label className="space-y-1.5">
-                      <span className="text-xs text-slate-400">Merchant ID</span>
+                      <span className="text-xs text-brand-secondary">Merchant ID</span>
                       <input
                         value={values.merchantId}
                         onChange={(event) =>
                           onChange({ merchantId: event.target.value })
                         }
-                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                        className={inputClass}
                       />
                     </label>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-1.5">
-                      <span className="text-xs text-slate-400">Account ID</span>
+                      <span className="text-xs text-brand-secondary">Account ID</span>
                       <input
                         value={values.accountId}
                         onChange={(event) =>
                           onChange({ accountId: event.target.value })
                         }
-                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                        className={inputClass}
                       />
                     </label>
                     <label className="space-y-1.5">
-                      <span className="text-xs text-slate-400">API Login</span>
+                      <span className="text-xs text-brand-secondary">API Login</span>
                       <input
                         value={values.apiLogin}
                         onChange={(event) =>
                           onChange({ apiLogin: event.target.value })
                         }
-                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                        className={inputClass}
                       />
                     </label>
                   </div>
                   <label className="space-y-1.5">
-                    <span className="text-xs text-slate-400">API Key</span>
+                    <span className="text-xs text-brand-secondary">API Key</span>
                     <input
                       value={values.apiKey}
                       onChange={(event) =>
                         onChange({ apiKey: event.target.value })
                       }
-                      className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                      className={inputClass}
                     />
                   </label>
                   <label className="space-y-1.5">
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-brand-secondary">
                       Llave publica (public key)
                     </span>
                     <input
@@ -111,11 +127,11 @@ export function PayuMethodModal({
                         onChange({ keyPublic: event.target.value })
                       }
                       placeholder="PK en checkout / Web Checkout"
-                      className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                      className={inputClass}
                     />
                   </label>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className="flex items-center justify-between rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+                    <label className="flex items-center justify-between rounded-2xl border border-brand-input-border bg-brand-input px-4 py-3 text-sm text-brand-primary">
                       <span>Sandbox</span>
                       <button
                         type="button"
@@ -123,7 +139,7 @@ export function PayuMethodModal({
                         aria-checked={values.sandbox}
                         onClick={() => onChange({ sandbox: !values.sandbox })}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                          values.sandbox ? "bg-emerald-500/80" : "bg-slate-600/70"
+                          values.sandbox ? "bg-brand-accent" : "bg-brand-tertiary"
                         }`}
                       >
                         <span
@@ -133,7 +149,7 @@ export function PayuMethodModal({
                         />
                       </button>
                     </label>
-                    <label className="flex items-center justify-between rounded-2xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+                    <label className="flex items-center justify-between rounded-2xl border border-brand-input-border bg-brand-input px-4 py-3 text-sm text-brand-primary">
                       <span>Activo</span>
                       <button
                         type="button"
@@ -141,7 +157,7 @@ export function PayuMethodModal({
                         aria-checked={values.active}
                         onClick={() => onChange({ active: !values.active })}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                          values.active ? "bg-emerald-500/80" : "bg-slate-600/70"
+                          values.active ? "bg-brand-accent" : "bg-brand-tertiary"
                         }`}
                       >
                         <span
@@ -153,11 +169,11 @@ export function PayuMethodModal({
                     </label>
                   </div>
                 </div>
-                <div className="mt-1 flex justify-end gap-2 border-t border-white/10 px-6 py-4">
+                <div className={brandModalFooter}>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                    className={brandModalCancelBtn}
                   >
                     Cancelar
                   </button>
@@ -165,7 +181,7 @@ export function PayuMethodModal({
                     type="button"
                     onClick={onSave}
                     disabled={saving}
-                    className="rounded-2xl border border-emerald-300/40 bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-500/30 disabled:opacity-60"
+                    className={`${brandActionButtonSolid} disabled:opacity-60`}
                   >
                     {saving
                       ? mode === "edit"

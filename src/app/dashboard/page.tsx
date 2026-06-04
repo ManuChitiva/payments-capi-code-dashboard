@@ -10,14 +10,15 @@ import { DashboardSummarySection } from "@/components/dashboard/sections/dashboa
 import { DashboardProductsSection } from "@/components/dashboard/sections/dashboard-products-section";
 import { DashboardPaymentsSection } from "@/components/dashboard/sections/dashboard-payments-section";
 import { useDashboardPage } from "@/hooks/use-dashboard-page";
+import { brandPageBg, brandTextSecondary } from "@/lib/brand-theme";
 
 export default function DashboardPage() {
   const d = useDashboardPage();
 
   if (d.loading) {
     return (
-      <main className="flex min-h-0 flex-1 items-center justify-center bg-[#06080c] text-slate-100">
-        <p className="text-sm text-slate-400">Cargando panel…</p>
+      <main className={`flex min-h-0 flex-1 items-center justify-center ${brandPageBg}`}>
+        <p className={`text-sm ${brandTextSecondary}`}>Cargando panel…</p>
       </main>
     );
   }
@@ -76,7 +77,7 @@ export default function DashboardPage() {
       ) : null}
 
       {d.activeSection === "tienda" ? (
-        <section className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur sm:p-6">
+        <section className="rounded-2xl border border-brand-separator bg-brand-surface/90 p-4 backdrop-blur sm:p-6">
           <SectionHeader
             title={d.sectionMeta.title}
             description={d.sectionMeta.description}

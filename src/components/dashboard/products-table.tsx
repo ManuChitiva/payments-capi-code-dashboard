@@ -2,6 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { ConfirmActionModal } from "@/components/dashboard/modals/confirm-action-modal";
+import {
+  brandActionButtonSolid,
+  brandInputClass,
+  brandTextPrimary,
+  brandTextSecondary,
+  brandTextTertiary,
+  dashboardFilterActive,
+  dashboardFilterIdle,
+  dashboardInputFocus,
+  dashboardStatusBadge,
+} from "@/lib/brand-theme";
 
 const PAGE_SIZE = 5;
 
@@ -47,18 +58,18 @@ const statusConfig: Record<
 > = {
   activo: {
     label: "Activo",
-    dot: "bg-emerald-400",
-    badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+    dot: "bg-brand-accent dark:bg-emerald-400",
+    badge: `${dashboardStatusBadge} dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200`,
   },
   inactivo: {
     label: "Inactivo",
-    dot: "bg-slate-400",
-    badge: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+    dot: "bg-brand-tertiary",
+    badge: dashboardStatusBadge,
   },
   agotado: {
     label: "Agotado",
-    dot: "bg-rose-400",
-    badge: "border-rose-500/30 bg-rose-500/10 text-rose-200",
+    dot: "bg-brand-tertiary dark:bg-rose-400",
+    badge: `${dashboardStatusBadge} dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200`,
   },
 };
 
@@ -140,23 +151,23 @@ export function ProductsTable({
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Total" value={stats.total} />
-        <StatCard label="Activos" value={stats.activo} accent="emerald" />
-        <StatCard label="Agotados" value={stats.agotado} accent="rose" />
-        <StatCard label="Inactivos" value={stats.inactivo} accent="amber" />
+        <StatCard label="Activos" value={stats.activo} />
+        <StatCard label="Agotados" value={stats.agotado} />
+        <StatCard label="Inactivos" value={stats.inactivo} />
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1 lg:max-w-md">
-          <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-tertiary" />
           <input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Buscar por nombre o SKU..."
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/10"
+            className={`w-full rounded-xl border border-brand-separator bg-brand-surface py-2.5 pl-10 pr-4 text-sm text-brand-primary outline-none transition placeholder:text-brand-tertiary ${dashboardInputFocus}`}
           />
         </div>
-        <div className="flex flex-wrap gap-1.5 rounded-xl border border-white/8 bg-white/[0.02] p-1">
+        <div className="flex flex-wrap gap-1.5 rounded-xl border border-brand-separator bg-brand-hover p-1">
           {STATUS_FILTERS.map((filter) => {
             const active = statusFilter === filter.id;
             const count =
@@ -168,15 +179,11 @@ export function ProductsTable({
                 key={filter.id}
                 type="button"
                 onClick={() => onStatusFilterChange(filter.id)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  active
-                    ? "bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-500/30"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
-                }`}
+                className={active ? dashboardFilterActive : dashboardFilterIdle}
               >
                 {filter.label}
                 <span
-                  className={`ml-1.5 tabular-nums ${active ? "text-emerald-300/80" : "text-slate-600"}`}
+                  className={`ml-1.5 tabular-nums ${active ? "text-white/80" : "text-brand-tertiary"}`}
                 >
                   {count}
                 </span>
@@ -198,13 +205,13 @@ export function ProductsTable({
         />
       ) : (
         <>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-brand-tertiary">
             Mostrando{" "}
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-brand-secondary">
               {rangeStart}–{rangeEnd}
             </span>{" "}
             de{" "}
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-brand-secondary">
               {filtered.length}
             </span>
             {filtered.length !== products.length ? (
@@ -213,7 +220,7 @@ export function ProductsTable({
           </p>
 
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-xl border border-white/8 md:block">
+          <div className="hidden overflow-hidden rounded-xl border border-brand-separator md:block">
             <table className="w-full table-fixed text-left text-sm">
               <colgroup>
                 <col className="w-[32%] sm:w-[28%]" />
@@ -224,7 +231,7 @@ export function ProductsTable({
                 <col className="w-[16%]" />
               </colgroup>
               <thead>
-                <tr className="border-b border-white/8 bg-white/[0.03] text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                <tr className="border-b border-brand-separator bg-brand-hover text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-tertiary">
                   <th className="px-4 py-3.5">Producto</th>
                   <th className="px-4 py-3.5 text-right">Precio</th>
                   <th className="px-4 py-3.5 text-center">Stock</th>
@@ -284,7 +291,7 @@ export function ProductsTable({
           pendingToggle ? (
             <>
               <span
-                className="font-medium text-slate-200 wrap-anywhere"
+                className="font-medium text-brand-primary wrap-anywhere"
                 title={pendingToggle.product.name}
               >
                 &ldquo;{pendingToggle.product.name}&rdquo;
@@ -330,7 +337,7 @@ function ProductRow({
 
   if (layout === "card") {
     return (
-      <article className="rounded-xl border border-white/8 bg-white/[0.02] p-4">
+      <article className="rounded-xl border border-brand-separator bg-brand-hover p-4">
         <div className="flex gap-3">
           <ProductThumb product={product} size="lg" />
           <div className="min-w-0 flex-1">
@@ -340,14 +347,14 @@ function ProductRow({
                   name={product.name}
                   className="max-w-[200px] sm:max-w-none"
                 />
-                <p className="mt-0.5 font-mono text-[11px] text-slate-500">
+                <p className="mt-0.5 font-mono text-[11px] text-brand-tertiary">
                   {product.sku}
                 </p>
               </div>
               <StatusBadge status={product.status} />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-              <span className="font-semibold text-white">
+              <span className={`font-semibold ${brandTextPrimary}`}>
                 {formatCop(product.price)}
               </span>
               <span className={stockLevel.className}>
@@ -368,19 +375,19 @@ function ProductRow({
   }
 
   return (
-    <tr className="group transition hover:bg-white/[0.02]">
+    <tr className="group transition hover:bg-brand-hover">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <ProductThumb product={product} size="md" />
           <div className="min-w-0 flex-1 overflow-hidden">
             <ProductName name={product.name} />
-            <p className="mt-0.5 truncate font-mono text-[11px] text-slate-500">
+            <p className="mt-0.5 truncate font-mono text-[11px] text-brand-tertiary">
               {product.sku}
             </p>
           </div>
         </div>
       </td>
-      <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-100">
+      <td className="px-4 py-3 text-right font-medium tabular-nums text-brand-primary">
         {formatCop(product.price)}
       </td>
       <td className="px-4 py-3 text-center">
@@ -394,7 +401,7 @@ function ProductRow({
       <td className="px-4 py-3">
         <StatusBadge status={product.status} />
       </td>
-      <td className="hidden px-4 py-3 text-slate-500 lg:table-cell">
+      <td className="hidden px-4 py-3 text-brand-tertiary lg:table-cell">
         {formatDate(product.updatedAt)}
       </td>
       <td className="px-4 py-3">
@@ -422,18 +429,18 @@ function ProductsPagination({
   onPageChange: (page: number) => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-t border-white/8 pt-4 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs text-slate-500">
-        Página <span className="font-medium text-slate-300">{page + 1}</span> de{" "}
-        <span className="font-medium text-slate-300">{totalPages}</span>
-        <span className="text-slate-600"> · {totalItems} productos</span>
+    <div className="flex flex-col gap-3 border-t border-brand-separator pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs text-brand-tertiary">
+        Página <span className="font-medium text-brand-secondary">{page + 1}</span> de{" "}
+        <span className="font-medium text-brand-secondary">{totalPages}</span>
+        <span className="text-brand-tertiary"> · {totalItems} productos</span>
       </p>
       <div className="flex items-center gap-2">
         <button
           type="button"
           disabled={page <= 0}
           onClick={() => onPageChange(page - 1)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-brand-separator bg-brand-hover px-3 py-1.5 text-sm text-brand-primary transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           Anterior
         </button>
@@ -444,7 +451,7 @@ function ProductsPagination({
             if (!show) {
               if (i === page - 2 || i === page + 2) {
                 return (
-                  <span key={i} className="px-1 text-slate-600">
+                  <span key={i} className="px-1 text-brand-tertiary">
                     …
                   </span>
                 );
@@ -458,8 +465,8 @@ function ProductsPagination({
                 onClick={() => onPageChange(i)}
                 className={`min-w-8 rounded-lg px-2 py-1.5 text-xs font-medium tabular-nums transition ${
                   i === page
-                    ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-500/30"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                    ? "bg-brand-primary text-white"
+                    : "text-brand-secondary hover:bg-brand-hover hover:text-brand-primary"
                 }`}
                 aria-current={i === page ? "page" : undefined}
               >
@@ -472,7 +479,7 @@ function ProductsPagination({
           type="button"
           disabled={page >= totalPages - 1}
           onClick={() => onPageChange(page + 1)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-brand-separator bg-brand-hover px-3 py-1.5 text-sm text-brand-primary transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           Siguiente
         </button>
@@ -492,7 +499,7 @@ function ProductName({
   return (
     <p
       title={name}
-      className={`line-clamp-2 text-sm font-medium leading-snug text-slate-100 ${className}`.trim()}
+      className={`line-clamp-2 text-sm font-medium leading-snug text-brand-primary ${className}`.trim()}
     >
       {name}
     </p>
@@ -512,13 +519,13 @@ function ProductThumb({
       <img
         src={product.imageUrl}
         alt=""
-        className={`${dim} shrink-0 rounded-lg border border-white/10 bg-black/30 object-cover`}
+        className={`${dim} shrink-0 rounded-lg border border-brand-separator bg-brand-surface-hover object-cover`}
       />
     );
   }
   return (
     <div
-      className={`${dim} flex shrink-0 items-center justify-center rounded-lg border border-dashed border-white/12 bg-white/[0.03] text-slate-600`}
+      className={`${dim} flex shrink-0 items-center justify-center rounded-lg border border-dashed border-brand-separator bg-brand-hover text-brand-tertiary`}
       aria-hidden
     >
       <ImagePlaceholderIcon className={size === "lg" ? "h-6 w-6" : "h-5 w-5"} />
@@ -553,13 +560,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       title={label}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
-        isEdit
-          ? "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-          : isActivate
-            ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20"
-            : "border-rose-500/25 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20"
-      }`}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-separator bg-brand-surface px-2.5 py-1.5 text-xs font-medium text-brand-secondary transition hover:bg-brand-hover hover:text-brand-primary dark:bg-brand-hover"
     >
       {isEdit ? (
         <>
@@ -581,40 +582,13 @@ function ActionButton({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: "emerald" | "rose" | "amber";
-}) {
-  const accentBorder =
-    accent === "emerald"
-      ? "border-emerald-500/20"
-      : accent === "rose"
-        ? "border-rose-500/20"
-        : accent === "amber"
-          ? "border-amber-500/20"
-          : "border-white/8";
-  const accentText =
-    accent === "emerald"
-      ? "text-emerald-300"
-      : accent === "rose"
-        ? "text-rose-300"
-        : accent === "amber"
-          ? "text-amber-300"
-          : "text-white";
-
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div
-      className={`rounded-xl border bg-white/[0.02] px-4 py-3 ${accentBorder}`}
-    >
-      <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+    <div className="rounded-2xl border border-brand-separator/80 bg-[var(--brand-surface-glass)] px-4 py-3 shadow-[var(--brand-shadow-card)] backdrop-blur-xl">
+      <p className="text-[11px] font-medium tracking-wide text-brand-tertiary uppercase">
         {label}
       </p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${accentText}`}>
+      <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular-nums text-brand-primary">
         {value}
       </p>
     </div>
@@ -631,14 +605,14 @@ function EmptyState({
   onClearFilters: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/12 bg-white/[0.02] px-6 py-16 text-center">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 text-slate-500">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-brand-separator bg-brand-hover px-6 py-16 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-hover text-brand-tertiary">
         <ImagePlaceholderIcon className="h-7 w-7" />
       </div>
-      <h3 className="text-base font-medium text-slate-200">
+      <h3 className="text-base font-medium text-brand-primary">
         {hasProducts ? "Sin resultados" : "Aún no hay productos"}
       </h3>
-      <p className="mt-2 max-w-sm text-sm text-slate-500">
+      <p className="mt-2 max-w-sm text-sm text-brand-tertiary">
         {hasProducts
           ? "Prueba otro término de búsqueda o cambia el filtro de estado."
           : "Publica tu primer producto para que aparezca en la tienda y en este listado."}
@@ -648,7 +622,7 @@ function EmptyState({
           <button
             type="button"
             onClick={onClearFilters}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+            className="rounded-xl border border-brand-separator bg-brand-hover px-4 py-2 text-sm text-brand-primary hover:bg-brand-hover"
           >
             Limpiar filtros
           </button>
@@ -656,7 +630,7 @@ function EmptyState({
         <button
           type="button"
           onClick={onCreate}
-          className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-400"
+          className={brandActionButtonSolid}
         >
           {hasProducts ? "Nuevo producto" : "Crear primer producto"}
         </button>
@@ -669,24 +643,24 @@ function stockIndicator(stock: number) {
   if (stock <= 0) {
     return {
       label: "Sin stock",
-      className: "text-rose-300",
-      chipClass: "border-rose-500/30 bg-rose-500/10 text-rose-200",
-      dotClass: "bg-rose-400",
+      className: "text-brand-secondary",
+      chipClass: dashboardStatusBadge,
+      dotClass: "bg-brand-tertiary dark:bg-rose-400",
     };
   }
   if (stock <= 5) {
     return {
       label: "Stock bajo",
-      className: "text-amber-300",
-      chipClass: "border-amber-500/30 bg-amber-500/10 text-amber-200",
-      dotClass: "bg-amber-400",
+      className: "text-brand-secondary",
+      chipClass: dashboardStatusBadge,
+      dotClass: "bg-brand-tertiary dark:bg-amber-400",
     };
   }
   return {
     label: "Disponible",
-    className: "text-slate-400",
-    chipClass: "border-white/10 bg-white/[0.03] text-slate-300",
-    dotClass: "bg-emerald-400",
+    className: "text-brand-secondary",
+    chipClass: dashboardStatusBadge,
+    dotClass: "bg-brand-accent dark:bg-emerald-400",
   };
 }
 

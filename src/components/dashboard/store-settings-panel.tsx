@@ -2,6 +2,14 @@
 
 import type { MyStoreFormPayload } from "@/services/storeSettingsService";
 import type { PickupPoint } from "@/services/storePickupsService";
+import {
+  brandActionButtonSolid,
+  brandInputClass,
+  brandStoreHero,
+  brandTextPrimary,
+  brandTextSecondary,
+  brandTextTertiary,
+} from "@/lib/brand-theme";
 
 type ActiveStorePreview = {
   slug: string;
@@ -40,8 +48,7 @@ export type StoreSettingsPanelProps = {
   onDeletePickup: (pickupId: number) => void;
 };
 
-const inputClass =
-  "w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition placeholder:text-slate-600 focus:border-emerald-400/60 focus:bg-black/60 focus:ring-2 focus:ring-emerald-500/20";
+const inputClass = `${brandInputClass} px-4 text-sm`;
 
 export function StoreSettingsPanel({
   activeStore,
@@ -78,12 +85,12 @@ export function StoreSettingsPanel({
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-44 animate-pulse rounded-2xl bg-white/5" />
+        <div className="h-44 animate-pulse rounded-2xl bg-brand-surface-hover" />
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="h-64 animate-pulse rounded-2xl bg-white/5" />
-          <div className="h-64 animate-pulse rounded-2xl bg-white/5" />
+          <div className="h-64 animate-pulse rounded-2xl bg-brand-hover" />
+          <div className="h-64 animate-pulse rounded-2xl bg-brand-hover" />
         </div>
-        <div className="h-48 animate-pulse rounded-2xl bg-white/5" />
+        <div className="h-48 animate-pulse rounded-2xl bg-brand-hover" />
       </div>
     );
   }
@@ -91,13 +98,13 @@ export function StoreSettingsPanel({
   return (
     <div className="space-y-8">
       {/* Vista previa / hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] via-black/40 to-black/60 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)]">
+      <div className={brandStoreHero}>
         <div
           className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-30 blur-3xl"
           style={{ backgroundColor: accent }}
         />
         <div
-          className="pointer-events-none absolute -bottom-16 left-1/4 h-40 w-40 rounded-full bg-emerald-500/15 blur-3xl"
+          className="pointer-events-none absolute -bottom-16 left-1/4 h-40 w-40 rounded-full bg-brand-accent/10 blur-3xl"
         />
         <div
           className="absolute inset-x-0 top-0 h-1"
@@ -109,7 +116,7 @@ export function StoreSettingsPanel({
         <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 items-center gap-5">
             <div
-              className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-black/50 shadow-lg sm:h-24 sm:w-24"
+              className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-separator bg-brand-input shadow-lg sm:h-24 sm:w-24"
               style={{
                 boxShadow: `0 0 0 1px ${accent}33, 0 12px 40px -12px ${accent}44`,
               }}
@@ -123,7 +130,7 @@ export function StoreSettingsPanel({
                 />
               ) : (
                 <span
-                  className="font-(family-name:--font-rajdhani) text-3xl font-bold text-white/90"
+                  className="font-(family-name:--font-rajdhani) text-3xl font-bold text-brand-primary/90"
                   style={{ color: accent }}
                 >
                   {displayName.charAt(0).toUpperCase()}
@@ -131,20 +138,20 @@ export function StoreSettingsPanel({
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-emerald-400/90">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-brand-secondary dark:text-emerald-400/90">
                 Vista previa
               </p>
-              <h3 className="font-(family-name:--font-rajdhani) truncate text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              <h3 className="font-(family-name:--font-rajdhani) truncate text-2xl font-semibold tracking-tight text-brand-primary sm:text-3xl">
                 {displayName}
               </h3>
               {displayLabel ? (
-                <p className="mt-0.5 truncate text-sm text-slate-400">
+                <p className="mt-0.5 truncate text-sm text-brand-secondary">
                   {displayLabel}
                 </p>
               ) : null}
               {slugPath ? (
-                <p className="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1 font-mono text-xs text-slate-300">
-                  <LinkIcon className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" />
+                <p className="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg border border-brand-separator bg-brand-input/30 px-2.5 py-1 font-mono text-xs text-brand-secondary">
+                  <LinkIcon className="h-3.5 w-3.5 shrink-0 text-brand-tertiary" />
                   <span className="truncate">{slugPath}</span>
                 </p>
               ) : null}
@@ -152,16 +159,16 @@ export function StoreSettingsPanel({
           </div>
 
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-2.5">
+            <div className="flex items-center gap-3 rounded-xl border border-brand-separator bg-brand-input/30 px-4 py-2.5">
               <span
-                className="h-8 w-8 shrink-0 rounded-lg border border-white/20 shadow-inner"
+                className="h-8 w-8 shrink-0 rounded-lg border border-brand-separator/20 shadow-inner"
                 style={{ backgroundColor: accent }}
               />
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                <p className="text-[10px] uppercase tracking-wider text-brand-tertiary">
                   Color de marca
                 </p>
-                <p className="font-mono text-xs text-slate-300">
+                <p className="font-mono text-xs text-brand-secondary">
                   {activeStore?.primaryColor ?? "Por defecto"}
                 </p>
               </div>
@@ -170,7 +177,7 @@ export function StoreSettingsPanel({
               type="button"
               onClick={onSave}
               disabled={saving || uploadingLogo}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400 hover:shadow-emerald-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50 ${brandActionButtonSolid}`}
             >
               {saving ? (
                 <>
@@ -285,7 +292,7 @@ export function StoreSettingsPanel({
             onFile={onLogoUpload}
             onClear={() => onFormChange((p) => ({ ...p, logoUrl: "" }))}
           />
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/25 p-6">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-brand-separator bg-brand-input/25 p-6">
             {logoPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -295,15 +302,15 @@ export function StoreSettingsPanel({
               />
             ) : (
               <div className="text-center">
-                <ImageIcon className="mx-auto h-10 w-10 text-slate-600" />
-                <p className="mt-2 text-xs text-slate-500">
+                <ImageIcon className="mx-auto h-10 w-10 text-brand-tertiary" />
+                <p className="mt-2 text-xs text-brand-tertiary">
                   La vista previa aparecerá aquí
                 </p>
               </div>
             )}
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-brand-tertiary">
               JPG, PNG, WEBP o GIF. Tras subir, pulsa{" "}
-              <span className="text-emerald-400/90">Guardar cambios</span>.
+              <span className="text-brand-secondary dark:text-emerald-400/90">Guardar cambios</span>.
             </p>
           </div>
         </div>
@@ -314,13 +321,13 @@ export function StoreSettingsPanel({
         title="Puntos de recogida"
         description="Direcciones donde los clientes pueden retirar pedidos. Actívalos o desactívalos sin borrarlos."
       >
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4 sm:p-5">
-          <p className="text-xs font-medium text-emerald-200/90">
+        <div className="rounded-xl border border-brand-separator bg-brand-hover p-4 sm:p-5">
+          <p className="text-xs font-medium text-brand-secondary dark:text-emerald-200/90">
             Añadir nuevo punto
           </p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="min-w-0 flex-1 space-y-1.5">
-              <span className="text-xs text-slate-400">Dirección</span>
+              <span className="text-xs text-brand-secondary">Dirección</span>
               <input
                 value={newPickupAddress}
                 onChange={(e) => onNewPickupAddressChange(e.target.value)}
@@ -337,7 +344,7 @@ export function StoreSettingsPanel({
               type="button"
               onClick={onAddPickup}
               disabled={pickupActionLoading || !newPickupAddress.trim()}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/15 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/25 disabled:opacity-50"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-brand-separator bg-brand-hover dark:border-emerald-400/30 dark:bg-emerald-500/15 px-5 py-3 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/25 disabled:opacity-50"
             >
               <PlusIcon className="h-4 w-4" />
               Añadir
@@ -346,7 +353,7 @@ export function StoreSettingsPanel({
         </div>
 
         {pickupsLoading ? (
-          <p className="mt-6 text-sm text-slate-500">Cargando puntos…</p>
+          <p className="mt-6 text-sm text-brand-tertiary">Cargando puntos…</p>
         ) : pickups.length === 0 ? (
           <EmptyPickups />
         ) : (
@@ -371,12 +378,12 @@ export function StoreSettingsPanel({
         )}
       </SettingsCard>
 
-      <div className="flex justify-end border-t border-white/8 pt-6">
+      <div className="flex justify-end border-t border-brand-separator pt-6">
         <button
           type="button"
           onClick={onSave}
           disabled={saving || uploadingLogo}
-          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 disabled:opacity-50 lg:hidden"
+          className="inline-flex items-center gap-2 rounded-xl border border-brand-separator bg-brand-hover px-5 py-2.5 text-sm font-medium text-brand-primary transition hover:bg-brand-hover disabled:opacity-50 lg:hidden"
         >
           {saving ? "Guardando…" : "Guardar cambios"}
         </button>
@@ -400,17 +407,17 @@ function SettingsCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-5 shadow-lg shadow-black/20 sm:p-6 ${className}`.trim()}
+      className={`rounded-2xl border border-brand-separator bg-gradient-to-b from-white/[0.04] to-transparent p-5 shadow-lg shadow-black/20 sm:p-6 ${className}`.trim()}
     >
       <div className="mb-5 flex gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 text-emerald-300">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-separator bg-brand-hover dark:border-emerald-500/25 dark:bg-emerald-500/10 text-emerald-300">
           {icon}
         </div>
         <div>
-          <h3 className="font-(family-name:--font-rajdhani) text-lg font-semibold text-white">
+          <h3 className="font-(family-name:--font-rajdhani) text-lg font-semibold text-brand-primary">
             {title}
           </h3>
-          <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+          <p className="mt-0.5 text-xs leading-relaxed text-brand-tertiary">
             {description}
           </p>
         </div>
@@ -433,14 +440,14 @@ function FormField({
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-sm font-medium text-slate-200">
+      <span className="text-sm font-medium text-brand-primary">
         {label}
         {required ? (
           <span className="ml-1 text-rose-400/90">*</span>
         ) : null}
       </span>
       {children}
-      {hint ? <p className="text-[11px] text-slate-500">{hint}</p> : null}
+      {hint ? <p className="text-[11px] text-brand-tertiary">{hint}</p> : null}
     </label>
   );
 }
@@ -456,11 +463,11 @@ function ReadonlyField({
 }) {
   return (
     <div className="space-y-1.5">
-      <span className="text-sm font-medium text-slate-200">{label}</span>
-      <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 font-mono text-sm text-slate-300">
+      <span className="text-sm font-medium text-brand-primary">{label}</span>
+      <div className="rounded-xl border border-brand-separator bg-brand-hover px-4 py-3 font-mono text-sm text-brand-secondary">
         {value}
       </div>
-      {hint ? <p className="text-[11px] text-slate-500">{hint}</p> : null}
+      {hint ? <p className="text-[11px] text-brand-tertiary">{hint}</p> : null}
     </div>
   );
 }
@@ -477,7 +484,7 @@ function LogoDropzone({
   onClear: () => void;
 }) {
   return (
-    <div className="relative rounded-2xl border border-dashed border-white/20 bg-black/30 p-6 transition hover:border-emerald-400/30 hover:bg-black/40">
+    <div className="relative rounded-2xl border border-dashed border-brand-separator/20 bg-brand-input/30 p-6 transition hover:border-brand-input-border hover:bg-brand-surface-hover">
       <input
         type="file"
         accept="image/*"
@@ -491,21 +498,21 @@ function LogoDropzone({
         aria-label="Subir logo"
       />
       <div className="pointer-events-none flex flex-col items-center text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-separator bg-brand-hover">
           {uploading ? (
-            <SpinnerIcon className="h-6 w-6 text-emerald-400" />
+            <SpinnerIcon className="h-6 w-6 text-brand-accent dark:text-emerald-400" />
           ) : (
-            <UploadIcon className="h-6 w-6 text-slate-400" />
+            <UploadIcon className="h-6 w-6 text-brand-secondary" />
           )}
         </div>
-        <p className="mt-4 text-sm font-medium text-slate-200">
+        <p className="mt-4 text-sm font-medium text-brand-primary">
           {uploading
             ? "Subiendo imagen…"
             : hasLogo
               ? "Haz clic para cambiar el logo"
               : "Arrastra o haz clic para subir"}
         </p>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-brand-tertiary">
           Recomendado: PNG con fondo transparente
         </p>
       </div>
@@ -516,7 +523,7 @@ function LogoDropzone({
             e.stopPropagation();
             onClear();
           }}
-          className="relative z-20 mt-4 w-full rounded-lg border border-white/15 bg-white/5 py-2 text-xs text-slate-300 transition hover:bg-white/10"
+          className="relative z-20 mt-4 w-full rounded-lg border border-brand-separator bg-brand-hover py-2 text-xs text-brand-secondary transition hover:bg-brand-hover"
         >
           Quitar logo (sin guardar aún)
         </button>
@@ -550,10 +557,10 @@ function PickupCard({
 }) {
   if (isEditing) {
     return (
-      <div className="rounded-xl border border-emerald-500/25 bg-black/40 p-4">
+      <div className="rounded-xl border border-brand-separator bg-brand-hover dark:border-emerald-500/25 dark:bg-brand-input/40 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="min-w-0 flex-1 space-y-1.5">
-            <span className="text-xs text-slate-400">Dirección</span>
+            <span className="text-xs text-brand-secondary">Dirección</span>
             <input
               value={draft.address}
               onChange={(e) =>
@@ -572,14 +579,14 @@ function PickupCard({
               type="button"
               onClick={onSaveEdit}
               disabled={loading}
-              className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-emerald-950 disabled:opacity-50"
+              className="rounded-lg bg-brand-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
             >
               Guardar
             </button>
             <button
               type="button"
               onClick={onCancelEdit}
-              className="rounded-lg border border-white/15 px-4 py-2 text-xs text-slate-300"
+              className="rounded-lg border border-brand-separator px-4 py-2 text-xs text-brand-secondary"
             >
               Cancelar
             </button>
@@ -590,24 +597,24 @@ function PickupCard({
   }
 
   return (
-    <div className="group flex flex-col gap-3 rounded-xl border border-white/10 bg-black/30 p-4 transition hover:border-white/15 hover:bg-black/40 sm:flex-row sm:items-center sm:justify-between">
+    <div className="group flex flex-col gap-3 rounded-xl border border-brand-separator bg-brand-input/30 p-4 transition hover:border-brand-separator hover:bg-brand-input/40 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400">
+        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-separator bg-brand-hover text-brand-secondary">
           <MapPinIcon className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-100">
+          <p className="text-sm font-medium text-brand-primary">
             {pickup.address?.trim() || "Sin dirección"}
           </p>
           <span
             className={`mt-1 inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
               pickup.status
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
-                : "border-slate-500/30 bg-slate-500/10 text-slate-400"
+                : "border-brand-separator bg-brand-hover text-brand-secondary"
             }`}
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${pickup.status ? "bg-emerald-400" : "bg-slate-500"}`}
+              className={`h-1.5 w-1.5 rounded-full ${pickup.status ? "bg-emerald-400" : "bg-brand-tertiary"}`}
             />
             {pickup.status ? "Activo" : "Inactivo"}
           </span>
@@ -618,7 +625,7 @@ function PickupCard({
           type="button"
           onClick={onToggleStatus}
           disabled={loading}
-          className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-50"
+          className="rounded-lg border border-brand-separator bg-brand-hover px-3 py-1.5 text-xs text-brand-primary hover:bg-brand-hover disabled:opacity-50"
         >
           {pickup.status ? "Desactivar" : "Activar"}
         </button>
@@ -626,7 +633,7 @@ function PickupCard({
           type="button"
           onClick={onStartEdit}
           disabled={loading}
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-50"
+          className="rounded-lg border border-brand-separator px-3 py-1.5 text-xs text-brand-secondary hover:bg-brand-hover disabled:opacity-50"
         >
           Editar
         </button>
@@ -653,12 +660,12 @@ function TogglePill({
   label: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-slate-300">
+    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-brand-separator bg-brand-input/30 px-4 py-3 text-sm text-brand-secondary">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-white/20 bg-black/50 text-emerald-500 focus:ring-emerald-500/30"
+        className="h-4 w-4 rounded border-brand-separator/20 bg-brand-input text-emerald-500 focus:ring-emerald-500/30"
       />
       {label}
     </label>
@@ -667,12 +674,12 @@ function TogglePill({
 
 function EmptyPickups() {
   return (
-    <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-white/12 bg-black/20 px-6 py-10 text-center">
-      <MapPinIcon className="h-8 w-8 text-slate-600" />
-      <p className="mt-3 text-sm font-medium text-slate-300">
+    <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-brand-separator/12 bg-brand-input/20 px-6 py-10 text-center">
+      <MapPinIcon className="h-8 w-8 text-brand-tertiary" />
+      <p className="mt-3 text-sm font-medium text-brand-secondary">
         Sin puntos de recogida
       </p>
-      <p className="mt-1 max-w-xs text-xs text-slate-500">
+      <p className="mt-1 max-w-xs text-xs text-brand-tertiary">
         Añade la primera dirección arriba para que tus clientes sepan dónde
         retirar.
       </p>

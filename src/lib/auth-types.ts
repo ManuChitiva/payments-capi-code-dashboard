@@ -25,7 +25,6 @@ export type AuthRegisterPayload = {
   email: string;
   password: string;
   storeName: string;
-  registrationCode: string;
   storeLabel?: string;
   storeSlug?: string;
 };

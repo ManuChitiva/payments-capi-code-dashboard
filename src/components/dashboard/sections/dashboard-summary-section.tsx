@@ -4,12 +4,24 @@ import type { RefObject } from "react";
 import { AnalyticsLineChart } from "@/components/dashboard/analytics-stat-card";
 import { DashboardStatCard } from "@/components/dashboard/dashboard-stat-card";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { SubscriptionPlanBanner } from "@/components/dashboard/subscription-plan-banner";
 import { buildDailySeries } from "@/lib/dashboard/analytics-api";
 import {
   formatCompactCopCurrency,
   formatCompactNumber,
   formatCopCurrency,
 } from "@/lib/dashboard/format";
+import {
+  brandChartArea,
+  brandCountAccent,
+  brandDashboardPanel,
+  brandInsetBox,
+  brandListRow,
+  brandMetricHint,
+  brandTextPrimary,
+  brandTextSecondary,
+  brandTextTertiary,
+} from "@/lib/brand-theme";
 import type {
   AnalyticsDashboard,
   TopProductInterest,
@@ -44,76 +56,81 @@ export function DashboardSummarySection({
   return (
     <>
       <SectionHeader title={title} description={description} />
+      <SubscriptionPlanBanner />
       <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <DashboardStatCard
           title="Productos"
           value={formatCompactNumber(productCount)}
           fullValue={String(productCount)}
-          tone="cyan"
-          icon="$"
+          tone="blue"
+          icon="products"
         />
         <DashboardStatCard
           title="Interacciones totales"
           value={formatCompactNumber(analytics?.totalEvents ?? 0)}
           fullValue={String(analytics?.totalEvents ?? 0)}
-          tone="emerald"
-          icon="◉"
+          tone="blue"
+          icon="interactions"
         />
         <DashboardStatCard
           title="Visualizaciones"
           value={formatCompactNumber(analytics?.productViews ?? 0)}
           fullValue={String(analytics?.productViews ?? 0)}
-          tone="violet"
-          icon="▣"
+          tone="blue"
+          icon="views"
         />
         <DashboardStatCard
           title="Interes de compra"
           value={formatCompactNumber(analytics?.purchaseIntents ?? 0)}
           fullValue={String(analytics?.purchaseIntents ?? 0)}
-          tone="amber"
-          icon="◎"
+          tone="blue"
+          icon="purchase-intent"
         />
         <DashboardStatCard
           title="Ganancias pagadas"
           value={formatCompactCopCurrency(revenueSummary?.totalPaidAmount ?? 0)}
           fullValue={formatCopCurrency(revenueSummary?.totalPaidAmount ?? 0)}
-          tone="emerald"
-          icon="💰"
+          tone="blue"
+          icon="revenue"
         />
       </section>
 
       <section className="mb-6 grid gap-4 xl:grid-cols-3">
-        <article className="min-w-0 rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur xl:col-span-2">
-          <h3 className="text-sm text-slate-400">Actividad de clientes por dia</h3>
-          <p className="mt-1 text-2xl font-semibold">
+        <article className={`min-w-0 p-5 xl:col-span-2 ${brandDashboardPanel}`}>
+          <h3 className={`text-sm ${brandTextSecondary}`}>
+            Actividad de clientes por dia
+          </h3>
+          <p className={`mt-1 text-2xl font-semibold ${brandTextPrimary}`}>
             {analytics?.totalEvents ?? 0}
           </p>
-          <p className="mt-2 text-sm text-emerald-300">
+          <p className={brandMetricHint}>
             Mide como los clientes interactuan con tus productos.
           </p>
-          <div className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
-            <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className={brandInsetBox}>
               Visualizaciones: {analytics?.productViews ?? 0}
             </div>
-            <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <div className={brandInsetBox}>
               Clics en producto: {analytics?.productClicks ?? 0}
             </div>
-            <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <div className={brandInsetBox}>
               Agregados al carrito: {analytics?.addToCart ?? 0}
             </div>
-            <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <div className={brandInsetBox}>
               Interes de compra: {analytics?.purchaseIntents ?? 0}
             </div>
           </div>
-          <div className="mt-5 min-w-0 rounded-2xl border border-white/10 bg-[#081225]/70 p-3 sm:p-4">
+          <div className={brandChartArea}>
             <AnalyticsLineChart
               series={buildDailySeries(analytics?.dailyMetrics ?? [])}
             />
           </div>
         </article>
-        <article className="rounded-2xl border border-white/10 bg-black/35 p-5 backdrop-blur">
-          <h3 className="text-sm text-slate-400">Productos con mayor interes</h3>
-          <p className="mt-1 text-xs text-slate-500">
+        <article className={`p-5 ${brandDashboardPanel}`}>
+          <h3 className={`text-sm ${brandTextSecondary}`}>
+            Productos con mayor interes
+          </h3>
+          <p className={`mt-1 text-xs ${brandTextTertiary}`}>
             Ordenados por cantidad total de interacciones (todas las trazas con
             producto).
           </p>
@@ -128,35 +145,33 @@ export function DashboardSummarySection({
                 return (
                   <li
                     key={item.productId}
-                    className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5"
+                    className={`flex items-start justify-between gap-3 ${brandListRow}`}
                   >
                     <span
-                      className="min-w-0 flex-1 font-medium leading-snug text-slate-200"
+                      className={`min-w-0 flex-1 font-medium leading-snug ${brandTextPrimary}`}
                       title={label}
                     >
                       {label}
                     </span>
-                    <span className="shrink-0 tabular-nums font-semibold text-emerald-200">
-                      {item.count}
-                    </span>
+                    <span className={brandCountAccent}>{item.count}</span>
                   </li>
                 );
               })}
               {topInterestItems.length === 0 && !topInterestLoading ? (
-                <li className="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-slate-500">
+                <li className={`px-3 py-3 ${brandListRow} ${brandTextTertiary}`}>
                   Sin eventos registrados aun.
                 </li>
               ) : null}
             </ul>
             {topInterestLoading && topInterestItems.length > 0 ? (
-              <p className="py-3 text-center text-xs text-slate-400">
+              <p className={`py-3 text-center text-xs ${brandTextSecondary}`}>
                 Cargando mas...
               </p>
             ) : null}
             {topInterestLast &&
             topInterestItems.length > 0 &&
             !topInterestLoading ? (
-              <p className="pb-2 pt-1 text-center text-[11px] text-slate-500">
+              <p className={`pt-1 pb-2 text-center text-[11px] ${brandTextTertiary}`}>
                 Fin de la lista
               </p>
             ) : null}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { brandChipOff, brandChipOn, brandTextTertiary } from "@/lib/brand-theme";
 
 export function AnalyticsLineChart({
   series,
@@ -35,7 +36,9 @@ export function AnalyticsLineChart({
 
   if (!series.length) {
     return (
-      <div className="flex min-h-40 items-center justify-center px-1 text-center text-sm text-slate-500 sm:min-h-[210px]">
+      <div
+        className={`flex min-h-40 items-center justify-center px-1 text-center text-sm sm:min-h-[210px] ${brandTextTertiary}`}
+      >
         Sin datos de actividad en el periodo.
       </div>
     );
@@ -46,10 +49,10 @@ export function AnalyticsLineChart({
     label: string;
     color: string;
   }> = [
-    { key: "PRODUCT_VIEW", label: "Visualizaciones", color: "rgb(34 211 238)" },
-    { key: "PRODUCT_CLICK", label: "Clics", color: "rgb(167 139 250)" },
-    { key: "ADD_TO_CART", label: "Carrito", color: "rgb(52 211 153)" },
-    { key: "PURCHASE_INTENT", label: "Interes", color: "rgb(251 191 36)" },
+    { key: "PRODUCT_VIEW", label: "Visualizaciones", color: "var(--brand-chart-1)" },
+    { key: "PRODUCT_CLICK", label: "Clics", color: "var(--brand-chart-2)" },
+    { key: "ADD_TO_CART", label: "Carrito", color: "var(--brand-chart-3)" },
+    { key: "PURCHASE_INTENT", label: "Interes", color: "var(--brand-chart-4)" },
   ];
 
   const visibleTypes = typeMeta.filter((type) => enabledTypes[type.key]);
@@ -76,7 +79,7 @@ export function AnalyticsLineChart({
 
   return (
     <div className="w-full min-w-0 space-y-3">
-      <div className="flex flex-wrap gap-2 text-[11px] text-slate-300">
+      <div className="flex flex-wrap gap-2 text-[11px]">
         {typeMeta.map((type) => (
           <button
             key={type.key}
@@ -87,11 +90,9 @@ export function AnalyticsLineChart({
                 [type.key]: !prev[type.key],
               }))
             }
-            className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 transition ${
-              enabledTypes[type.key]
-                ? "border-white/15 bg-white/10 text-slate-100"
-                : "border-white/10 bg-white/0 text-slate-500"
-            }`}
+            className={
+              enabledTypes[type.key] ? brandChipOn : brandChipOff
+            }
           >
             <span
               className="inline-block h-2 w-2 rounded-full"
@@ -113,7 +114,7 @@ export function AnalyticsLineChart({
               x2={width - paddingX}
               y1={tick.y}
               y2={tick.y}
-              stroke="rgba(148,163,184,0.14)"
+              stroke="var(--brand-chart-grid)"
               strokeWidth="1"
             />
             <text
@@ -121,7 +122,7 @@ export function AnalyticsLineChart({
               y={tick.y + 3}
               textAnchor="end"
               fontSize="10"
-              fill="rgb(148 163 184)"
+              fill="var(--brand-chart-axis)"
             >
               {tick.value}
             </text>
@@ -132,7 +133,7 @@ export function AnalyticsLineChart({
           x2={width - paddingX}
           y1={paddingTop + chartHeight}
           y2={paddingTop + chartHeight}
-          stroke="rgba(148,163,184,0.25)"
+          stroke="var(--brand-chart-grid)"
           strokeWidth="1"
         />
 
@@ -195,7 +196,7 @@ export function AnalyticsLineChart({
               y={height - 8}
               textAnchor="middle"
               fontSize="10"
-              fill="rgb(148 163 184)"
+              fill="var(--brand-chart-axis)"
             >
               {new Date(entry.label).toLocaleDateString("es-CO", {
                 day: "numeric",
