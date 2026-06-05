@@ -48,7 +48,10 @@ const PHASES = [
 function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const wantsPro = searchParams.get("plan") === "pro";
+  const planParam = searchParams.get("plan");
+  const wantsPro = planParam === "pro";
+  const wantsEnterprise = planParam === "enterprise";
+  const wantsPaidPlan = wantsPro || wantsEnterprise;
   const [phase, setPhase] = useState(0);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -111,7 +114,13 @@ function RegisterPageContent() {
         return;
       }
       persistAuthSession(result.data);
-      router.push(wantsPro ? "/subscription/pro/checkout" : "/dashboard");
+      if (wantsEnterprise) {
+        router.push("/subscription/enterprise/checkout");
+      } else if (wantsPro) {
+        router.push("/subscription/pro/checkout");
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
       setError(
         "No hay conexión con el servidor. Comprueba tu red o inténtalo más tarde.",
@@ -155,15 +164,27 @@ function RegisterPageContent() {
         <div className="flex flex-1 flex-col justify-center space-y-6 lg:max-w-lg">
           <div className="space-y-4">
             <p className={brandEyebrow}>
-              {wantsPro ? "Alta con plan Profesional" : "Alta gratuita"}
+              {wantsEnterprise
+                ? "Alta con plan Empresarial"
+                : wantsPro
+                  ? "Alta con plan Profesional"
+                  : "Alta gratuita"}
             </p>
             <h1 className={brandHeroTitle}>
-              {wantsPro
-                ? "Crea tu cuenta y pasa a PRO"
-                : "Tu negocio online en dos pasos"}
+              {wantsEnterprise
+                ? "Crea tu cuenta y pasa a Empresarial"
+                : wantsPro
+                  ? "Crea tu cuenta y pasa a PRO"
+                  : "Tu negocio online en dos pasos"}
             </h1>
             <p className={`text-base leading-relaxed ${brandTextSecondary}`}>
-              {wantsPro ? (
+              {wantsEnterprise ? (
+                <>
+                  Registro gratuito con tu primer negocio. Al terminar te llevamos
+                  al pago seguro del plan{" "}
+                  <span className={brandHighlightPro}>Empresarial</span>.
+                </>
+              ) : wantsPro ? (
                 <>
                   Registro gratuito con tu primer negocio. Al terminar te llevamos
                   al pago seguro del plan{" "}
@@ -198,10 +219,12 @@ function RegisterPageContent() {
           <div className={`${brandSurfaceElevated} p-8 sm:p-10`}>
             <div aria-hidden className={brandCardTopLine} />
 
-            {wantsPro ? (
+            {wantsPaidPlan ? (
               <p className={registerProBanner}>
-                <span className="font-semibold">Plan Profesional</span> — tras
-                crear la cuenta irás al checkout PayU ($ 99.000 / mes).
+                <span className="font-semibold">
+                  {wantsEnterprise ? "Plan Empresarial" : "Plan Profesional"}
+                </span>{" "}
+                — tras crear la cuenta irás al checkout seguro PayU.
               </p>
             ) : null}
 
@@ -401,9 +424,11 @@ function RegisterPageContent() {
                     ? "Creando cuenta…"
                     : phase < 1
                       ? "Continuar"
-                      : wantsPro
-                        ? "Crear cuenta y pagar PRO"
-                        : "Crear cuenta y entrar"}
+                      : wantsEnterprise
+                        ? "Crear cuenta y pagar Empresarial"
+                        : wantsPro
+                          ? "Crear cuenta y pagar PRO"
+                          : "Crear cuenta y entrar"}
                 </button>
               </div>
             </form>

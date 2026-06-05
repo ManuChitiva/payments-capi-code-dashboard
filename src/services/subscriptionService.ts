@@ -10,6 +10,7 @@ export type MySubscription = {
   maxStores: number | null;
   maxProducts: number | null;
   canUpgradeToPro: boolean;
+  canUpgradeToEnterprise: boolean;
   status: string;
   startedAt: string;
   expiresAt: string | null;
@@ -53,6 +54,12 @@ export type PayuPaymentStartResponse = {
   fields: PayuWebCheckoutFields;
 };
 
+export type PurchasablePlanCode = "PRO" | "ENTERPRISE";
+
+export type StartSubscriptionCheckoutInput =
+  | { planCode: PurchasablePlanCode }
+  | { planId: number };
+
 export async function fetchMySubscription(token: string): Promise<MySubscription> {
   const response = await fetch(`${publicApiBaseUrl}/me/subscription`, {
     headers: buildAuthRequestHeaders({ token }),
@@ -77,22 +84,50 @@ export async function fetchMySubscriptionPayments(
   return (await response.json()) as SubscriptionPaymentItem[];
 }
 
-export async function startProSubscriptionCheckout(
+export async function startSubscriptionCheckout(
   token: string,
+  input: StartSubscriptionCheckoutInput,
 ): Promise<PayuPaymentStartResponse> {
-  const response = await fetch(`${publicApiBaseUrl}/me/subscription/checkout/pro`, {
+  const body =
+    "planCode" in input ? { planCode: input.planCode } : { planId: input.planId };
+  const planCode = "planCode" in input ? input.planCode : undefined;
+  const response = await fetch(`${publicApiBaseUrl}/me/subscription/checkout`, {
     method: "POST",
-    headers: buildAuthRequestHeaders({ token }),
+    headers: {
+      ...buildAuthRequestHeaders({ token }),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
   });
   if (!response.ok) {
-    let message = "No se pudo iniciar el pago del plan PRO.";
+    const defaultMessage =
+      planCode === "ENTERPRISE"
+        ? "No se pudo iniciar el pago del plan Empresarial."
+        : planCode === "PRO"
+          ? "No se pudo iniciar el pago del plan PRO."
+          : "No se pudo iniciar el pago de la suscripción.";
+    let message = defaultMessage;
     try {
-      const body = (await response.json()) as { message?: string };
-      if (body.message) message = body.message;
+      const payload = (await response.json()) as { message?: string };
+      if (payload.message) message = payload.message;
     } catch {
       /* ignore */
     }
     throw new Error(message);
   }
   return (await response.json()) as PayuPaymentStartResponse;
+}
+
+/** @deprecated Usa {@link startSubscriptionCheckout} con `{ planCode: "PRO" }`. */
+export async function startProSubscriptionCheckout(
+  token: string,
+): Promise<PayuPaymentStartResponse> {
+  return startSubscriptionCheckout(token, { planCode: "PRO" });
+}
+
+/** @deprecated Usa {@link startSubscriptionCheckout} con `{ planCode: "ENTERPRISE" }`. */
+export async function startEnterpriseSubscriptionCheckout(
+  token: string,
+): Promise<PayuPaymentStartResponse> {
+  return startSubscriptionCheckout(token, { planCode: "ENTERPRISE" });
 }

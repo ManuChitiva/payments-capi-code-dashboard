@@ -8,6 +8,13 @@ import {
   normalizeStorePrimaryColor,
 } from "@/lib/brand-store-defaults";
 import {
+  FALLBACK_STORE_CATEGORIES,
+  normalizeStoreCategory,
+  storeCategoryLabel,
+  type StoreCategoryOption,
+} from "@/lib/store-categories";
+import { fetchStoreCategories } from "@/services/storeCategoryService";
+import {
   brandActionButtonSolid,
   brandCtaSm,
   brandInputClass,
@@ -89,7 +96,43 @@ export function StoreSettingsPanel({
 }: StoreSettingsPanelProps) {
   const accent = normalizeStorePrimaryColor(form.primaryColor);
   const displayName = form.name.trim() || "Tu negocio";
+  const [categoryOptions, setCategoryOptions] = useState<StoreCategoryOption[]>(
+    FALLBACK_STORE_CATEGORIES,
+  );
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCategoriesLoading(true);
+    void fetchStoreCategories()
+      .then((options) => {
+        if (!cancelled) setCategoryOptions(options);
+      })
+      .finally(() => {
+        if (!cancelled) setCategoriesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const displayLabel = form.label.trim();
+  const categoryName = storeCategoryLabel(form.category, categoryOptions);
+  const selectCategoryOptions = useMemo(() => {
+    if (
+      form.category &&
+      !categoryOptions.some((c) => c.code === form.category)
+    ) {
+      return [
+        {
+          code: form.category,
+          label: storeCategoryLabel(form.category, categoryOptions),
+        },
+        ...categoryOptions,
+      ];
+    }
+    return categoryOptions;
+  }, [form.category, categoryOptions]);
   const slugPath = activeStore ? `/stores/${activeStore.slug}` : null;
   const logoPreview = form.logoUrl.trim();
   const coverPreview = form.coverImageUrl.trim();
@@ -173,6 +216,9 @@ export function StoreSettingsPanel({
                   {displayLabel}
                 </p>
               ) : null}
+              <p className="mt-2 inline-flex max-w-full items-center rounded-full border border-brand-separator bg-brand-hover/80 px-2.5 py-0.5 text-xs font-medium text-brand-secondary">
+                {categoryName}
+              </p>
               {slugPath ? (
                 <p className="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg border border-brand-separator bg-brand-input/30 px-2.5 py-1 font-mono text-xs text-brand-secondary">
                   <LinkIcon className="h-3.5 w-3.5 shrink-0 text-brand-tertiary" />
@@ -251,7 +297,43 @@ export function StoreSettingsPanel({
               }
               placeholder="Ej. Moda Urbana"
               className={inputClass}
+              disabled={loading}
             />
+          </FormField>
+          <FormField
+            label="Categoría del negocio"
+            hint="Al crear tu cuenta el negocio queda como Nuevo; elige el rubro que mejor describe tu actividad."
+          >
+            <div className="relative">
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  onFormChange((p) => ({
+                    ...p,
+                    category: normalizeStoreCategory(e.target.value),
+                  }))
+                }
+                disabled={loading || categoriesLoading}
+                className={`${inputClass} appearance-none pr-10`}
+                aria-busy={categoriesLoading}
+              >
+                {selectCategoryOptions.map((option) => (
+                  <option
+                    key={option.code}
+                    value={option.code}
+                    className="bg-brand-surface text-brand-primary"
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span
+                className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] text-brand-tertiary"
+                aria-hidden
+              >
+                ▼
+              </span>
+            </div>
           </FormField>
           <FormField
             label="Etiqueta visible"

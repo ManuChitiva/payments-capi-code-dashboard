@@ -148,7 +148,7 @@ function BenefitVisual({ variant }: { variant: PlatformBenefitVisual }) {
       return (
         <div className="absolute inset-0 flex items-end justify-center" aria-hidden>
           <div className="mb-8 flex items-end gap-2">
-            {["1 negocio", "5 negocios", "∞"].map((label, i) => (
+            {["1 negocio", "10 negocios", "200"].map((label, i) => (
               <div
                 key={label}
                 className="flex flex-col items-center justify-end rounded-xl border border-white/10 bg-white/5 px-3 pb-2 text-center"

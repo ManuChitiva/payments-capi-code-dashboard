@@ -7,6 +7,8 @@ export type SubscriptionPlan = {
   currency: string;
   maxProducts: number | null;
   maxStores: number | null;
+  /** true para PRO y ENTERPRISE (pago PayU en línea). */
+  purchasable: boolean;
 };
 
 export type PlanMarketing = {
@@ -21,10 +23,12 @@ export type PlanMarketing = {
 
 export const PLAN_MARKETING: Record<string, PlanMarketing> = {
   FREE: {
-    tagline: "Empieza hoy sin tarjeta",
+    tagline: "1 negocio · hasta 15 productos",
     badge: "Incluido al registrarte",
     features: [
-      "1 negocio online con catálogo y variantes",
+      "1 negocio (1 tienda) por cuenta",
+      "Hasta 15 productos en ese negocio",
+      "Catálogo con variantes e imágenes",
       "Checkout y pagos PayU configurables",
       "Panel de pedidos y analytics básicos",
       "Puntos de atención y personalización de marca",
@@ -39,7 +43,8 @@ export const PLAN_MARKETING: Record<string, PlanMarketing> = {
     badge: "Más popular",
     highlighted: true,
     features: [
-      "Hasta 5 negocios bajo una misma cuenta",
+      "Hasta 10 negocios bajo una misma cuenta",
+      "Hasta 150 productos por cada negocio",
       "Todo lo del plan Gratis en cada negocio",
       "Múltiples métodos PayU y reportes ampliados",
       "Prioridad en nuevas funciones del panel",
@@ -51,18 +56,19 @@ export const PLAN_MARKETING: Record<string, PlanMarketing> = {
   },
   ENTERPRISE: {
     tagline: "Automatiza ventas con IA",
-    badge: "Negocios ilimitados",
+    badge: "Hasta 200 negocios",
     features: [
-      "Negocios ilimitados bajo una sola cuenta",
+      "Hasta 200 negocios bajo una sola cuenta",
+      "Hasta 500 productos por cada negocio",
       "Agente de IA para atención, ventas y seguimiento 24/7",
       "Bot de WhatsApp conectado a tu catálogo y pedidos",
       "Bot de Telegram para consultas, carrito y notificaciones",
       "Todo lo del plan Profesional en cada negocio",
       "Onboarding dedicado y soporte prioritario",
     ],
-    ctaLabel: "Hablar con ventas",
-    ctaHref: "mailto:soporte@capicode.com?subject=Plan%20Empresarial%20CapiCode",
-    footnote: "Incluye configuración asistida de bots e IA. Cotización según volumen.",
+    ctaLabel: "Comprar plan Empresarial",
+    ctaHref: "/subscription/enterprise/checkout",
+    footnote: "Pago seguro con PayU. Tras aprobarse, tu cuenta pasa a Empresarial al instante.",
   },
 };
 
@@ -141,6 +147,19 @@ export function formatStoreLimit(maxStores: number | null): string {
   if (maxStores == null) return "Negocios ilimitados";
   if (maxStores === 1) return "1 negocio";
   return `Hasta ${maxStores} negocios`;
+}
+
+/** Resumen corto de límites para tarjetas y panel (datos del API). */
+export function formatPlanLimitsSummary(
+  maxStores: number | null,
+  maxProducts: number | null,
+): string {
+  const stores = formatStoreLimit(maxStores);
+  if (maxProducts == null) return stores;
+  if (maxStores === 1) {
+    return `${stores} · hasta ${maxProducts} productos`;
+  }
+  return `${stores} · hasta ${maxProducts} productos por negocio`;
 }
 
 export function mergePlanWithMarketing(plan: SubscriptionPlan) {

@@ -1,5 +1,6 @@
 import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { normalizeStorePrimaryColor } from "@/lib/brand-store-defaults";
+import { normalizeStoreCategory, type StoreCategoryCode } from "@/lib/store-categories";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type PickupRow = {
@@ -21,6 +22,7 @@ export type MyStoreDetail = {
   whatsapp: string | null;
   cellPhone: string | null;
   address: string | null;
+  category: string;
   createdAt: string;
   pickups: PickupRow[];
 };
@@ -35,6 +37,7 @@ export type MyStoreFormPayload = {
   whatsapp: string;
   cellPhone: string;
   address: string;
+  category: StoreCategoryCode;
 };
 
 export async function getMyStore(
@@ -72,6 +75,7 @@ export async function updateMyStore(
       whatsapp: payload.whatsapp.trim(),
       cellPhone: payload.cellPhone.trim(),
       address: payload.address.trim(),
+      category: payload.category,
     }),
   });
   if (!response.ok) {

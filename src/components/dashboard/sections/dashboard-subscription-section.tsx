@@ -7,7 +7,7 @@ import { formatCopCurrency } from "@/lib/dashboard/format";
 import {
   PLAN_MARKETING,
   formatPlanPrice,
-  formatStoreLimit,
+  formatPlanLimitsSummary,
   type SubscriptionPlan,
 } from "@/lib/subscription-plans";
 import {
@@ -203,7 +203,10 @@ export function DashboardSubscriptionSection({
       ? subscriptionBannerPro
       : subscriptionBannerFree;
   const checkClass = isEnterprise ? planCheckPro : isPro ? planCheckPro : planCheckFree;
-  const storeLimitLabel = formatStoreLimit(subscription.maxStores);
+  const storeLimitLabel = formatPlanLimitsSummary(
+    subscription.maxStores,
+    subscription.maxProducts,
+  );
   const usageLabel =
     subscription.maxStores == null
       ? `${subscription.currentStoreCount} negocios · sin límite fijo`
@@ -224,14 +227,14 @@ export function DashboardSubscriptionSection({
             Plan Empresarial
           </h3>
           <p className={`mt-2 text-sm ${brandTextSecondary}`}>
-            {PLAN_MARKETING.ENTERPRISE.tagline}. Negocios ilimitados, IA y bots en WhatsApp y
-            Telegram.
+            {PLAN_MARKETING.ENTERPRISE.tagline}. Hasta 200 negocios y 500 productos por negocio, con
+            IA y bots en WhatsApp y Telegram.
           </p>
           <Link
-            href="mailto:soporte@capicode.com?subject=Plan%20Empresarial%20CapiCode"
-            className={`mt-4 inline-block ${subscriptionEnterpriseCta}`}
+            href="/subscription/enterprise/checkout"
+            className={`mt-4 inline-block ${brandCtaMd}`}
           >
-            Hablar con ventas
+            Comprar plan Empresarial
           </Link>
         </article>
       ) : null}
@@ -275,6 +278,13 @@ export function DashboardSubscriptionSection({
               >
                 Comprar plan PRO
               </Link>
+            ) : subscription.canUpgradeToEnterprise ? (
+              <Link
+                href="/subscription/enterprise/checkout"
+                className={`px-5 py-3 text-center ${brandCtaMd}`}
+              >
+                Comprar plan Empresarial
+              </Link>
             ) : isEnterprise ? (
               <span className={dashboardStatusBadge}>Plan máximo activo</span>
             ) : null}
@@ -304,8 +314,8 @@ export function DashboardSubscriptionSection({
           <h4 className={`text-sm font-medium ${brandTextSecondary}`}>Productos por negocio</h4>
           <p className={`mt-2 text-xl font-semibold ${brandTextPrimary}`}>
             {subscription.maxProducts == null
-              ? "Sin límite fijo"
-              : `Hasta ${subscription.maxProducts}`}
+              ? "Sin límite fijo por negocio"
+              : `Hasta ${subscription.maxProducts} por negocio`}
           </p>
         </article>
       </section>
@@ -329,11 +339,23 @@ export function DashboardSubscriptionSection({
         </article>
       ) : null}
 
-      {isFree ? (
+      {isFree || isPro ? (
         <section className="mb-6">
           <h4 className={`mb-3 text-sm font-medium ${brandTextSecondary}`}>
-            También disponible
+            {isFree ? "También disponible" : "Mejora tu plan"}
           </h4>
+          {isFree ? (
+          <article className={`mb-4 p-5 ${brandDashboardPanel}`}>
+            <p className={`text-xs font-semibold uppercase ${brandTextTertiary}`}>
+              {PLAN_MARKETING.PRO.badge}
+            </p>
+            <h5 className={`mt-1 text-lg font-semibold ${brandTextPrimary}`}>Profesional</h5>
+            <p className={`mt-1 text-sm ${brandTextSecondary}`}>{PLAN_MARKETING.PRO.tagline}</p>
+            <Link href="/subscription/pro/checkout" className={`mt-4 inline-block ${brandCtaMd}`}>
+              {PLAN_MARKETING.PRO.ctaLabel}
+            </Link>
+          </article>
+          ) : null}
           <article className={`p-5 ${brandDashboardPanel}`}>
             <p className={`text-xs font-semibold uppercase ${brandTextTertiary}`}>
               {PLAN_MARKETING.ENTERPRISE.badge}
@@ -343,8 +365,8 @@ export function DashboardSubscriptionSection({
               {PLAN_MARKETING.ENTERPRISE.tagline}
             </p>
             <Link
-              href={PLAN_MARKETING.ENTERPRISE.ctaHref}
-              className={`mt-4 inline-block ${brandSecondaryButton}`}
+              href="/subscription/enterprise/checkout"
+              className={`mt-4 inline-block ${isPro ? brandCtaMd : brandSecondaryButton}`}
             >
               {PLAN_MARKETING.ENTERPRISE.ctaLabel}
             </Link>

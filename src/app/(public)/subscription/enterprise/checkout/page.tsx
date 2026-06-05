@@ -2,12 +2,12 @@
 
 import { SubscriptionCheckoutFlow } from "@/components/subscription/subscription-checkout-flow";
 
-export default function ProSubscriptionCheckoutPage() {
+export default function EnterpriseSubscriptionCheckoutPage() {
   return (
     <SubscriptionCheckoutFlow
-      planCode="PRO"
-      planTitle="Plan Profesional"
-      registerPlanQuery="pro"
+      planCode="ENTERPRISE"
+      planTitle="Plan Empresarial"
+      registerPlanQuery="enterprise"
     />
   );
 }

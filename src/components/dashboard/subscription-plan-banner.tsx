@@ -15,7 +15,6 @@ import {
   subscriptionBannerEnterprise,
   subscriptionBannerFree,
   subscriptionBannerPro,
-  subscriptionEnterpriseCta,
 } from "@/lib/brand-theme";
 
 export function SubscriptionPlanBanner() {
@@ -99,8 +98,8 @@ export function SubscriptionPlanBanner() {
             Pasar a PRO
           </Link>
         ) : isPro ? (
-          <Link href="mailto:soporte@capicode.com?subject=Plan%20Empresarial%20CapiCode" className={subscriptionEnterpriseCta}>
-            Subir a Empresarial
+          <Link href="/subscription/enterprise/checkout" className={brandCtaMd}>
+            Comprar Empresarial
           </Link>
         ) : isEnterprise ? (
           <span className="shrink-0 rounded-full border border-brand-separator bg-brand-hover px-4 py-2 text-xs font-semibold tracking-wide text-brand-secondary uppercase">

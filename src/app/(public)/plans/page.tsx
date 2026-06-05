@@ -49,32 +49,35 @@ const FALLBACK_PLANS: SubscriptionPlan[] = [
     id: 1,
     code: "FREE",
     name: "Gratis",
-    description: "Ideal para lanzar tu primer negocio online sin costo.",
+    description: "1 negocio con hasta 15 productos. Sin tarjeta.",
     price: 0,
     currency: "COP",
-    maxProducts: null,
+    maxProducts: 15,
     maxStores: 1,
+    purchasable: false,
   },
   {
     id: 2,
     code: "PRO",
     name: "Profesional",
-    description: "Escala tu operación con varios negocios y más capacidad.",
+    description: "Hasta 10 negocios con 150 productos por negocio.",
     price: 99000,
     currency: "COP",
-    maxProducts: null,
-    maxStores: 5,
+    maxProducts: 150,
+    maxStores: 10,
+    purchasable: true,
   },
   {
     id: 3,
     code: "ENTERPRISE",
     name: "Empresarial",
     description:
-      "Negocios ilimitados con agente de IA y bots en WhatsApp y Telegram.",
-    price: 249000,
+      "Hasta 200 negocios con 500 productos por negocio, IA y bots.",
+    price: 499000,
     currency: "COP",
-    maxProducts: null,
-    maxStores: null,
+    maxProducts: 500,
+    maxStores: 200,
+    purchasable: true,
   },
 ];
 
@@ -145,10 +148,11 @@ export default function PlansPage() {
 
   const cards = plans.map(mergePlanWithMarketing);
 
-  const resolveCtaHref = (planCode: string, href: string) => {
-    if (planCode === "PRO" && !loggedIn) return "/register?plan=pro";
-    if (planCode === "PRO" && loggedIn) return "/subscription/pro/checkout";
-    return href;
+  const resolveCtaHref = (plan: SubscriptionPlan, href: string) => {
+    if (!plan.purchasable) return href;
+    const slug = plan.code === "ENTERPRISE" ? "enterprise" : "pro";
+    if (!loggedIn) return `/register?plan=${slug}`;
+    return `/subscription/${slug}/checkout`;
   };
 
   return (
@@ -283,7 +287,7 @@ export default function PlansPage() {
                   </p>
                 ) : null}
                 <Link
-                  href={resolveCtaHref(plan.code, marketing.ctaHref)}
+                  href={resolveCtaHref(plan, marketing.ctaHref)}
                   className={`block w-full rounded-xl py-3.5 text-center text-sm font-semibold transition ${ctaClass}`}
                 >
                   {marketing.ctaLabel}

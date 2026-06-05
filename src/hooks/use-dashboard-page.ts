@@ -61,6 +61,7 @@ import {
   updateMyStore,
   type MyStoreFormPayload,
 } from "@/services/storeSettingsService";
+import { DEFAULT_STORE_CATEGORY, normalizeStoreCategory } from "@/lib/store-categories";
 import { buildAuthFilters } from "@/lib/dashboard/auth-filters";
 import { SECTION_META } from "@/lib/dashboard/constants";
 import {
@@ -116,6 +117,7 @@ export function useDashboardPage() {
       whatsapp: "",
       cellPhone: "",
       address: "",
+      category: DEFAULT_STORE_CATEGORY,
     });
   const [pickupsList, setPickupsList] = useState<PickupPoint[]>([]);
   const [newPickupAddress, setNewPickupAddress] = useState("");
@@ -470,6 +472,7 @@ export function useDashboardPage() {
         whatsapp: detail.whatsapp ?? "",
         cellPhone: detail.cellPhone ?? "",
         address: detail.address ?? "",
+        category: normalizeStoreCategory(detail.category),
       });
     } catch {
       setError("No se pudo cargar la configuracion del negocio.");
