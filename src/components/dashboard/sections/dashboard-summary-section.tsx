@@ -4,23 +4,20 @@ import type { RefObject } from "react";
 import { AnalyticsLineChart } from "@/components/dashboard/analytics-stat-card";
 import { DashboardStatCard } from "@/components/dashboard/dashboard-stat-card";
 import { SectionHeader } from "@/components/dashboard/section-header";
-import { SubscriptionPlanBanner } from "@/components/dashboard/subscription-plan-banner";
 import { buildDailySeries } from "@/lib/dashboard/analytics-api";
 import {
   formatCompactCopCurrency,
   formatCompactNumber,
   formatCopCurrency,
 } from "@/lib/dashboard/format";
+import { TopProductsInterestPanel } from "@/components/dashboard/top-products-interest-panel";
 import {
   brandChartArea,
-  brandCountAccent,
   brandDashboardPanel,
   brandInsetBox,
-  brandListRow,
   brandMetricHint,
   brandTextPrimary,
   brandTextSecondary,
-  brandTextTertiary,
 } from "@/lib/brand-theme";
 import type {
   AnalyticsDashboard,
@@ -37,6 +34,8 @@ export type DashboardSummarySectionProps = {
   topInterestItems: TopProductInterest[];
   topInterestLoading: boolean;
   topInterestLast: boolean;
+  topInterestTotal: number;
+  onLoadMoreTopInterest: () => void;
   topInterestScrollRef: RefObject<HTMLDivElement | null>;
   topInterestSentinelRef: RefObject<HTMLDivElement | null>;
 };
@@ -50,13 +49,14 @@ export function DashboardSummarySection({
   topInterestItems,
   topInterestLoading,
   topInterestLast,
+  topInterestTotal,
+  onLoadMoreTopInterest,
   topInterestScrollRef,
   topInterestSentinelRef,
 }: DashboardSummarySectionProps) {
   return (
     <>
       <SectionHeader title={title} description={description} />
-      <SubscriptionPlanBanner />
       <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <DashboardStatCard
           title="Productos"
@@ -126,61 +126,16 @@ export function DashboardSummarySection({
             />
           </div>
         </article>
-        <article className={`p-5 ${brandDashboardPanel}`}>
-          <h3 className={`text-sm ${brandTextSecondary}`}>
-            Productos con mayor interes
-          </h3>
-          <p className={`mt-1 text-xs ${brandTextTertiary}`}>
-            Ordenados por cantidad total de interacciones (todas las trazas con
-            producto).
-          </p>
-          <div
-            ref={topInterestScrollRef}
-            className="mt-4 max-h-[min(52vh,420px)] overflow-y-auto overscroll-contain pr-1"
-          >
-            <ul className="space-y-2 text-sm">
-              {topInterestItems.map((item) => {
-                const label =
-                  item.productName?.trim() || `Producto #${item.productId}`;
-                return (
-                  <li
-                    key={item.productId}
-                    className={`flex items-start justify-between gap-3 ${brandListRow}`}
-                  >
-                    <span
-                      className={`min-w-0 flex-1 font-medium leading-snug ${brandTextPrimary}`}
-                      title={label}
-                    >
-                      {label}
-                    </span>
-                    <span className={brandCountAccent}>{item.count}</span>
-                  </li>
-                );
-              })}
-              {topInterestItems.length === 0 && !topInterestLoading ? (
-                <li className={`px-3 py-3 ${brandListRow} ${brandTextTertiary}`}>
-                  Sin eventos registrados aun.
-                </li>
-              ) : null}
-            </ul>
-            {topInterestLoading && topInterestItems.length > 0 ? (
-              <p className={`py-3 text-center text-xs ${brandTextSecondary}`}>
-                Cargando mas...
-              </p>
-            ) : null}
-            {topInterestLast &&
-            topInterestItems.length > 0 &&
-            !topInterestLoading ? (
-              <p className={`pt-1 pb-2 text-center text-[11px] ${brandTextTertiary}`}>
-                Fin de la lista
-              </p>
-            ) : null}
-            <div
-              ref={topInterestSentinelRef}
-              className="h-3 w-full shrink-0"
-              aria-hidden
-            />
-          </div>
+        <article className={`flex min-h-0 flex-col p-5 sm:p-6 ${brandDashboardPanel}`}>
+          <TopProductsInterestPanel
+            items={topInterestItems}
+            loading={topInterestLoading}
+            last={topInterestLast}
+            totalElements={topInterestTotal}
+            onLoadMore={onLoadMoreTopInterest}
+            scrollRef={topInterestScrollRef}
+            sentinelRef={topInterestSentinelRef}
+          />
         </article>
       </section>
     </>

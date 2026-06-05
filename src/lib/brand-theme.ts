@@ -198,6 +198,25 @@ export const brandMetricHint = "mt-2 text-sm text-brand-secondary";
 export const brandCountAccent =
   "shrink-0 tabular-nums font-semibold text-brand-primary";
 
+/** Filas de ranking en analítica (productos con mayor interés) */
+export const analyticsInterestRow =
+  "group flex items-center gap-3 rounded-2xl border border-brand-separator/70 bg-brand-hover/50 px-3 py-3 transition hover:border-brand-input-border hover:bg-brand-hover sm:gap-4 sm:px-4";
+
+export const analyticsInterestRank =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-brand-separator bg-brand-surface text-sm font-semibold tabular-nums text-brand-tertiary";
+
+export const analyticsInterestRankTop =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-brand-accent/20 bg-brand-accent/8 text-sm font-semibold tabular-nums text-brand-accent dark:border-brand-accent-soft/30 dark:bg-brand-accent-soft/12 dark:text-brand-accent-soft";
+
+export const analyticsInterestBarTrack =
+  "h-1.5 w-full overflow-hidden rounded-full bg-brand-separator/80";
+
+export const analyticsInterestBarFill =
+  "h-full rounded-full bg-brand-accent transition-[width] duration-500 ease-out dark:bg-brand-accent-soft";
+
+export const analyticsLoadMoreBtn =
+  "w-full rounded-xl border border-brand-separator bg-brand-hover py-2.5 text-sm font-medium text-brand-accent transition hover:bg-brand-surface-hover hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-accent-soft";
+
 /** Tarjetas KPI — vidrio Apple en claro; acento en badge solo en oscuro */
 export const dashboardStatCardClass =
   "group relative overflow-hidden rounded-2xl border border-brand-separator/80 bg-[var(--brand-surface-glass)] px-4 py-3.5 shadow-[var(--brand-shadow-card)] backdrop-blur-xl transition hover:border-brand-input-border hover:shadow-[var(--brand-shadow-card-hover)] dark:border-brand-separator dark:hover:border-brand-accent-soft/20";

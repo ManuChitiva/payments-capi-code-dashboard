@@ -27,7 +27,7 @@ export const PLAN_MARKETING: Record<string, PlanMarketing> = {
       "1 negocio online con catálogo y variantes",
       "Checkout y pagos PayU configurables",
       "Panel de pedidos y analytics básicos",
-      "Puntos de recogida y personalización de marca",
+      "Puntos de atención y personalización de marca",
       "Soporte por correo en horario laboral",
     ],
     ctaLabel: "Crear cuenta gratis",
@@ -99,7 +99,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     label: "Operación",
     headline: "Pedidos y métricas en un solo lugar.",
     description:
-      "Pedidos, ingresos, pickups y analytics por negocio. Cambia de contexto con un selector cuando crezcas.",
+      "Pedidos, ingresos, puntos de atención y analytics por negocio. Cambia de contexto con un selector cuando crezcas.",
     visual: "operations",
   },
   {

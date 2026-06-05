@@ -184,6 +184,7 @@ export function useDashboardPage() {
     TopProductInterest[]
   >([]);
   const [topInterestLast, setTopInterestLast] = useState(true);
+  const [topInterestTotal, setTopInterestTotal] = useState(0);
   const [topInterestLoading, setTopInterestLoading] = useState(false);
   const topInterestScrollRef = useRef<HTMLDivElement | null>(null);
   const topInterestSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -487,7 +488,7 @@ export function useDashboardPage() {
       const list = await listMyPickups(token, activeStore.id);
       setPickupsList(list);
     } catch {
-      setError("No se pudieron cargar los puntos de recogida.");
+      setError("No se pudieron cargar los puntos de atención.");
     } finally {
       setPickupsLoading(false);
     }
@@ -555,7 +556,7 @@ export function useDashboardPage() {
       return;
     }
     if (!newPickupAddress.trim()) {
-      setError("Indica la dirección del punto de recogida.");
+      setError("Indica la dirección del punto de atención.");
       return;
     }
     setPickupActionLoading(true);
@@ -567,7 +568,7 @@ export function useDashboardPage() {
       });
       setNewPickupAddress("");
       setNewPickupActive(true);
-      setActionMessage("Punto de recogida creado.");
+      setActionMessage("Punto de atención creado.");
       await loadPickups();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo crear el punto.");
@@ -609,7 +610,7 @@ export function useDashboardPage() {
     if (!token || !activeStore) {
       return;
     }
-    if (!window.confirm("Eliminar este punto de recogida?")) {
+    if (!window.confirm("¿Eliminar este punto de atención?")) {
       return;
     }
     setPickupActionLoading(true);
@@ -667,11 +668,13 @@ export function useDashboardPage() {
     try {
       const data = await loadTopProductsInterestPage(token, slug, 0, 20);
       setTopInterestItems(data.content);
+      setTopInterestTotal(data.totalElements);
       topInterestPageRef.current = 0;
       setTopInterestLast(data.last);
       topInterestLastRef.current = data.last;
     } catch {
       setTopInterestItems([]);
+      setTopInterestTotal(0);
       setTopInterestLast(true);
       topInterestLastRef.current = true;
     } finally {
@@ -691,6 +694,7 @@ export function useDashboardPage() {
     try {
       const data = await loadTopProductsInterestPage(token, slug, nextPage, 20);
       setTopInterestItems((prev) => [...prev, ...data.content]);
+      setTopInterestTotal(data.totalElements);
       topInterestPageRef.current = nextPage;
       setTopInterestLast(data.last);
       topInterestLastRef.current = data.last;
@@ -705,6 +709,7 @@ export function useDashboardPage() {
   useEffect(() => {
     if (!activeStore?.slug) {
       setTopInterestItems([]);
+      setTopInterestTotal(0);
       setTopInterestLast(true);
       topInterestLastRef.current = true;
       topInterestPageRef.current = 0;
@@ -1399,8 +1404,10 @@ export function useDashboardPage() {
     topInterestItems,
     topInterestLoading,
     topInterestLast,
+    topInterestTotal,
     topInterestScrollRef,
     topInterestSentinelRef,
+    appendTopInterestPage,
     productModalOpen,
     setProductModalOpen,
     productModalMode,

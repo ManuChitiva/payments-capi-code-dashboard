@@ -58,7 +58,10 @@ export async function postAuthRegister(
   });
   if (!response.ok) {
     let fallback = "No se pudo crear la cuenta. Intenta de nuevo.";
-    if (response.status === 409) {
+    if (response.status === 403) {
+      fallback =
+        "El navegador bloqueó la petición (CORS). Reinicia la API stores, quita NEXT_PUBLIC_API_BASE_URL en local para usar /api, o abre el panel en http://localhost:3000. El registro es público en el servidor.";
+    } else if (response.status === 409) {
       fallback = "El correo o el identificador de negocio ya están en uso.";
     } else if (response.status >= 500) {
       fallback = "El servicio no está disponible. Intenta más tarde.";

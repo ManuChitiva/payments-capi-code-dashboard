@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { MyStoreFormPayload } from "@/services/storeSettingsService";
 import type { PickupPoint } from "@/services/storePickupsService";
 import {
@@ -323,26 +324,29 @@ export function StoreSettingsPanel({
       <SettingsCard
         icon={<PaletteIcon />}
         title="Marca visual"
-        description="Portada, logo y color de acento de tu negocio público."
+        description="Sube dos imágenes distintas: un banner ancho (portada) y un icono cuadrado (logo)."
         className="lg:col-span-2"
       >
-        <div className="space-y-8">
-          <div>
-            <p className="mb-3 text-sm font-medium text-brand-primary">
-              Foto de portada
-            </p>
-            <p className="mb-4 text-xs text-brand-tertiary">
-              Banner horizontal para el encabezado del catálogo. Recomendado 1200×400 px o
-              similar.
-            </p>
-            <div className="grid gap-4 lg:grid-cols-[1fr,minmax(240px,1fr)]">
+        <BrandVisualGuide accent={accent} />
+
+        <div className="mt-6 grid gap-6 xl:grid-cols-2">
+          <section className="overflow-hidden rounded-2xl border-2 border-brand-accent/30 bg-brand-accent/[0.04]">
+            <BrandAssetHeader
+              badge="Portada"
+              badgeClass="border-brand-accent/30 bg-brand-accent/10 text-brand-accent dark:text-brand-accent-soft"
+              icon={<CoverBannerIcon className="h-5 w-5 text-brand-accent dark:text-brand-accent-soft" />}
+              title="Foto de portada"
+              subtitle="Imagen ancha de fondo en el catálogo (banner 3:1). No uses el mismo archivo que el logo."
+              aspectHint="Formato horizontal · ~1200×400 px"
+            />
+            <div className="space-y-4 p-4 pt-0 sm:p-5 sm:pt-0">
               <CoverDropzone
                 uploading={uploadingCover}
                 hasCover={Boolean(coverPreview)}
                 onFile={onCoverUpload}
                 onClear={() => onFormChange((p) => ({ ...p, coverImageUrl: "" }))}
               />
-              <div className="relative aspect-[3/1] overflow-hidden rounded-2xl border border-dashed border-brand-separator bg-brand-input/25">
+              <div className="relative aspect-3/1 overflow-hidden rounded-xl border border-dashed border-brand-accent/25 bg-brand-input/25">
                 {coverPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -352,59 +356,72 @@ export function StoreSettingsPanel({
                   />
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-                    <ImageIcon className="h-8 w-8 text-brand-tertiary" />
-                    <p className="mt-2 text-xs text-brand-tertiary">
-                      Vista previa de portada
+                    <CoverBannerIcon className="h-10 w-10 text-brand-accent/50" />
+                    <p className="mt-2 text-xs font-medium text-brand-secondary">
+                      Previsualización del banner
                     </p>
                   </div>
                 )}
+                <span className="absolute left-2 top-2 rounded-md bg-brand-accent/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                  Portada
+                </span>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div>
-            <p className="mb-3 text-sm font-medium text-brand-primary">Logo</p>
-            <div className="grid gap-6 lg:grid-cols-[1fr,minmax(200px,280px)]">
+          <section className="overflow-hidden rounded-2xl border-2 border-brand-separator bg-brand-hover/50">
+            <BrandAssetHeader
+              badge="Logo"
+              badgeClass="border-brand-separator bg-brand-surface text-brand-primary"
+              icon={<LogoMarkIcon className="h-5 w-5 text-brand-primary" />}
+              title="Logo del negocio"
+              subtitle="Icono cuadrado que aparece sobre la portada, a la izquierda del nombre."
+              aspectHint="Formato cuadrado · PNG transparente recomendado"
+            />
+            <div className="space-y-4 p-4 pt-0 sm:p-5 sm:pt-0">
               <LogoDropzone
                 uploading={uploadingLogo}
                 hasLogo={Boolean(logoPreview)}
                 onFile={onLogoUpload}
                 onClear={() => onFormChange((p) => ({ ...p, logoUrl: "" }))}
               />
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-brand-separator bg-brand-input/25 p-6">
+              <div className="relative mx-auto flex aspect-square w-full max-w-[11rem] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-brand-separator bg-brand-input/25 p-4 sm:max-w-[12.5rem]">
                 {logoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={logoPreview}
                     alt="Vista previa del logo"
-                    className="max-h-28 max-w-full object-contain"
+                    className="max-h-full max-w-full object-contain"
                   />
                 ) : (
                   <div className="text-center">
-                    <ImageIcon className="mx-auto h-10 w-10 text-brand-tertiary" />
-                    <p className="mt-2 text-xs text-brand-tertiary">
-                      La vista previa aparecerá aquí
+                    <LogoMarkIcon className="mx-auto h-10 w-10 text-brand-tertiary" />
+                    <p className="mt-2 text-xs font-medium text-brand-secondary">
+                      Previsualización del logo
                     </p>
                   </div>
                 )}
-                <p className="mt-4 text-center text-[11px] leading-relaxed text-brand-tertiary">
-                  JPG, PNG, WEBP o GIF. Tras subir, pulsa{" "}
-                  <span className="text-brand-secondary">Guardar cambios</span>.
-                </p>
+                <span className="absolute left-2 top-2 rounded-md border border-brand-separator bg-brand-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary shadow-sm">
+                  Logo
+                </span>
               </div>
+              <p className="text-center text-[11px] leading-relaxed text-brand-tertiary">
+                Tras subir portada o logo, pulsa{" "}
+                <span className="text-brand-secondary">Guardar cambios</span> arriba.
+              </p>
             </div>
-          </div>
+          </section>
         </div>
       </SettingsCard>
 
       <SettingsCard
         icon={<MapPinIcon />}
-        title="Puntos de recogida"
-        description="Direcciones donde los clientes pueden retirar pedidos. Actívalos o desactívalos sin borrarlos."
+        title="Puntos de atención"
+        description="Direcciones donde atiendes a tus clientes o entregas pedidos. Actívalos o desactívalos sin borrarlos."
       >
         <div className="rounded-xl border border-brand-separator bg-brand-hover p-4 sm:p-5">
           <p className="text-xs font-medium text-brand-primary">
-            Añadir nuevo punto
+            Añadir punto de atención
           </p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
             <label className="min-w-0 flex-1 space-y-1.5">
@@ -434,28 +451,22 @@ export function StoreSettingsPanel({
         </div>
 
         {pickupsLoading ? (
-          <p className="mt-6 text-sm text-brand-tertiary">Cargando puntos…</p>
+          <p className="mt-6 text-sm text-brand-tertiary">Cargando puntos de atención…</p>
         ) : pickups.length === 0 ? (
           <EmptyPickups />
         ) : (
-          <ul className="mt-6 space-y-3">
-            {pickups.map((p) => (
-              <li key={p.id}>
-                <PickupCard
-                  pickup={p}
-                  isEditing={editingPickupId === p.id}
-                  draft={editPickupDraft}
-                  onDraftChange={onEditPickupDraftChange}
-                  loading={pickupActionLoading}
-                  onStartEdit={() => onStartEditPickup(p)}
-                  onCancelEdit={onCancelEditPickup}
-                  onSaveEdit={onSavePickupEdit}
-                  onToggleStatus={() => onTogglePickupStatus(p)}
-                  onDelete={() => onDeletePickup(p.id)}
-                />
-              </li>
-            ))}
-          </ul>
+          <PickupsList
+            pickups={pickups}
+            editingPickupId={editingPickupId}
+            editPickupDraft={editPickupDraft}
+            pickupActionLoading={pickupActionLoading}
+            onEditPickupDraftChange={onEditPickupDraftChange}
+            onStartEditPickup={onStartEditPickup}
+            onCancelEditPickup={onCancelEditPickup}
+            onSavePickupEdit={onSavePickupEdit}
+            onTogglePickupStatus={onTogglePickupStatus}
+            onDeletePickup={onDeletePickup}
+          />
         )}
       </SettingsCard>
 
@@ -553,6 +564,79 @@ function ReadonlyField({
   );
 }
 
+function BrandVisualGuide({ accent }: { accent: string }) {
+  return (
+    <div className="rounded-xl border border-brand-separator bg-brand-hover/80 p-4 sm:p-5">
+      <p className="text-sm font-medium text-brand-primary">
+        ¿Cuál es cuál?
+      </p>
+      <p className="mt-1 text-xs text-brand-secondary">
+        En tu tienda pública la <strong className="font-medium text-brand-primary">portada</strong> ocupa todo el ancho arriba; el{" "}
+        <strong className="font-medium text-brand-primary">logo</strong> es el cuadrado que va encima, a la izquierda.
+      </p>
+      <div
+        className="relative mt-4 overflow-hidden rounded-xl border border-brand-separator"
+        aria-hidden
+      >
+        <div
+          className="flex h-[4.5rem] items-center justify-center sm:h-20"
+          style={{
+            background: `linear-gradient(135deg, ${accent}33, ${accent}18 40%, transparent)`,
+          }}
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-tertiary/80">
+            Zona de portada (banner)
+          </span>
+        </div>
+        <div
+          className="absolute bottom-2 left-3 flex h-11 w-11 items-center justify-center rounded-lg border-2 border-brand-surface bg-brand-surface text-[9px] font-bold uppercase tracking-wide text-brand-accent shadow-md sm:h-12 sm:w-12"
+          style={{ boxShadow: `0 4px 14px ${accent}33` }}
+        >
+          Logo
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrandAssetHeader({
+  badge,
+  badgeClass,
+  icon,
+  title,
+  subtitle,
+  aspectHint,
+}: {
+  badge: string;
+  badgeClass: string;
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+  aspectHint: string;
+}) {
+  return (
+    <div className="flex gap-3 border-b border-brand-separator/80 p-4 sm:p-5">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-separator bg-brand-surface">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeClass}`}
+          >
+            {badge}
+          </span>
+          <h4 className="text-sm font-semibold text-brand-primary">{title}</h4>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-brand-secondary">
+          {subtitle}
+        </p>
+        <p className="mt-1.5 text-[11px] text-brand-tertiary">{aspectHint}</p>
+      </div>
+    </div>
+  );
+}
+
 function CoverDropzone({
   uploading,
   hasCover,
@@ -565,7 +649,7 @@ function CoverDropzone({
   onClear: () => void;
 }) {
   return (
-    <div className="relative rounded-2xl border border-dashed border-brand-separator/20 bg-brand-input/30 p-6 transition hover:border-brand-input-border hover:bg-brand-surface-hover">
+    <div className="relative aspect-3/1 min-h-[7.5rem] rounded-xl border-2 border-dashed border-brand-accent/35 bg-brand-input/30 transition hover:border-brand-accent/55 hover:bg-brand-surface-hover sm:min-h-[8.5rem]">
       <input
         type="file"
         accept="image/*"
@@ -576,25 +660,25 @@ function CoverDropzone({
           e.target.value = "";
         }}
         className="absolute inset-0 z-10 cursor-pointer opacity-0 disabled:cursor-not-allowed"
-        aria-label="Subir foto de portada"
+        aria-label="Subir foto de portada (banner horizontal)"
       />
-      <div className="pointer-events-none flex flex-col items-center text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-separator bg-brand-hover">
+      <div className="pointer-events-none flex h-full flex-col items-center justify-center px-4 text-center">
+        <div className="flex h-12 w-20 items-center justify-center rounded-lg border border-brand-accent/30 bg-brand-accent/10">
           {uploading ? (
             <SpinnerIcon className="h-6 w-6 text-brand-accent" />
           ) : (
-            <UploadIcon className="h-6 w-6 text-brand-secondary" />
+            <CoverBannerIcon className="h-7 w-7 text-brand-accent dark:text-brand-accent-soft" />
           )}
         </div>
-        <p className="mt-4 text-sm font-medium text-brand-primary">
+        <p className="mt-3 text-sm font-medium text-brand-primary">
           {uploading
             ? "Subiendo portada…"
             : hasCover
-              ? "Haz clic para cambiar la portada"
-              : "Subir foto de portada"}
+              ? "Clic para cambiar el banner"
+              : "Subir banner de portada"}
         </p>
-        <p className="mt-1 text-xs text-brand-tertiary">
-          JPG, PNG o WEBP · relación 3:1 aprox.
+        <p className="mt-0.5 text-xs text-brand-tertiary">
+          Imagen horizontal · no es el logo
         </p>
       </div>
       {hasCover ? (
@@ -604,9 +688,9 @@ function CoverDropzone({
             e.stopPropagation();
             onClear();
           }}
-          className="relative z-20 mt-4 w-full rounded-lg border border-brand-separator bg-brand-hover py-2 text-xs text-brand-secondary transition hover:bg-brand-hover"
+          className="absolute bottom-2 left-2 right-2 z-20 rounded-lg border border-brand-separator bg-brand-surface/95 py-1.5 text-xs text-brand-secondary backdrop-blur-sm transition hover:bg-brand-hover"
         >
-          Quitar portada (sin guardar aún)
+          Quitar portada
         </button>
       ) : null}
     </div>
@@ -625,7 +709,7 @@ function LogoDropzone({
   onClear: () => void;
 }) {
   return (
-    <div className="relative rounded-2xl border border-dashed border-brand-separator/20 bg-brand-input/30 p-6 transition hover:border-brand-input-border hover:bg-brand-surface-hover">
+    <div className="relative mx-auto aspect-square w-full max-w-[11rem] rounded-2xl border-2 border-dashed border-brand-separator bg-brand-input/30 transition hover:border-brand-input-border hover:bg-brand-surface-hover sm:max-w-[12.5rem]">
       <input
         type="file"
         accept="image/*"
@@ -636,25 +720,25 @@ function LogoDropzone({
           e.target.value = "";
         }}
         className="absolute inset-0 z-10 cursor-pointer opacity-0 disabled:cursor-not-allowed"
-        aria-label="Subir logo"
+        aria-label="Subir logo (imagen cuadrada)"
       />
-      <div className="pointer-events-none flex flex-col items-center text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-separator bg-brand-hover">
+      <div className="pointer-events-none flex h-full flex-col items-center justify-center px-3 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-brand-separator bg-brand-surface shadow-sm">
           {uploading ? (
             <SpinnerIcon className="h-6 w-6 text-brand-accent" />
           ) : (
-            <UploadIcon className="h-6 w-6 text-brand-secondary" />
+            <LogoMarkIcon className="h-7 w-7 text-brand-primary" />
           )}
         </div>
-        <p className="mt-4 text-sm font-medium text-brand-primary">
+        <p className="mt-3 text-sm font-medium text-brand-primary">
           {uploading
-            ? "Subiendo imagen…"
+            ? "Subiendo logo…"
             : hasLogo
-              ? "Haz clic para cambiar el logo"
-              : "Arrastra o haz clic para subir"}
+              ? "Clic para cambiar el logo"
+              : "Subir logo cuadrado"}
         </p>
-        <p className="mt-1 text-xs text-brand-tertiary">
-          Recomendado: PNG con fondo transparente
+        <p className="mt-0.5 text-xs text-brand-tertiary">
+          Icono · no es la portada
         </p>
       </div>
       {hasLogo ? (
@@ -664,10 +748,105 @@ function LogoDropzone({
             e.stopPropagation();
             onClear();
           }}
-          className="relative z-20 mt-4 w-full rounded-lg border border-brand-separator bg-brand-hover py-2 text-xs text-brand-secondary transition hover:bg-brand-hover"
+          className="absolute bottom-2 left-2 right-2 z-20 rounded-lg border border-brand-separator bg-brand-surface/95 py-1.5 text-xs text-brand-secondary backdrop-blur-sm transition hover:bg-brand-hover"
         >
-          Quitar logo (sin guardar aún)
+          Quitar logo
         </button>
+      ) : null}
+    </div>
+  );
+}
+
+const PICKUPS_PER_PAGE = 3;
+
+type PickupsListProps = {
+  pickups: PickupPoint[];
+  editingPickupId: number | null;
+  editPickupDraft: { address: string; status: boolean };
+  pickupActionLoading: boolean;
+  onEditPickupDraftChange: (draft: { address: string; status: boolean }) => void;
+  onStartEditPickup: (pickup: PickupPoint) => void;
+  onCancelEditPickup: () => void;
+  onSavePickupEdit: () => void;
+  onTogglePickupStatus: (pickup: PickupPoint) => void;
+  onDeletePickup: (pickupId: number) => void;
+};
+
+function PickupsList({
+  pickups,
+  editingPickupId,
+  editPickupDraft,
+  pickupActionLoading,
+  onEditPickupDraftChange,
+  onStartEditPickup,
+  onCancelEditPickup,
+  onSavePickupEdit,
+  onTogglePickupStatus,
+  onDeletePickup,
+}: PickupsListProps) {
+  const [page, setPage] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(pickups.length / PICKUPS_PER_PAGE));
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages - 1));
+  }, [pickups.length, totalPages]);
+
+  const visiblePickups = useMemo(
+    () =>
+      pickups.slice(
+        page * PICKUPS_PER_PAGE,
+        page * PICKUPS_PER_PAGE + PICKUPS_PER_PAGE,
+      ),
+    [pickups, page],
+  );
+
+  return (
+    <div className="mt-6">
+      <ul className="space-y-3">
+        {visiblePickups.map((p) => (
+          <li key={p.id}>
+            <PickupCard
+              pickup={p}
+              isEditing={editingPickupId === p.id}
+              draft={editPickupDraft}
+              onDraftChange={onEditPickupDraftChange}
+              loading={pickupActionLoading}
+              onStartEdit={() => onStartEditPickup(p)}
+              onCancelEdit={onCancelEditPickup}
+              onSaveEdit={onSavePickupEdit}
+              onToggleStatus={() => onTogglePickupStatus(p)}
+              onDelete={() => onDeletePickup(p.id)}
+            />
+          </li>
+        ))}
+      </ul>
+
+      {pickups.length > PICKUPS_PER_PAGE ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-brand-separator pt-4 text-xs text-brand-secondary">
+          <span>
+            Página {page + 1} de {totalPages} ({pickups.length} puntos de atención)
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={page <= 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className="rounded-lg border border-brand-separator bg-brand-hover px-3 py-1.5 text-sm text-brand-primary transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages - 1}
+              onClick={() =>
+                setPage((p) => Math.min(totalPages - 1, p + 1))
+              }
+              className="rounded-lg border border-brand-separator bg-brand-hover px-3 py-1.5 text-sm text-brand-primary transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       ) : null}
     </div>
   );
@@ -818,11 +997,11 @@ function EmptyPickups() {
     <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-brand-separator/12 bg-brand-input/20 px-6 py-10 text-center">
       <MapPinIcon className="h-8 w-8 text-brand-tertiary" />
       <p className="mt-3 text-sm font-medium text-brand-secondary">
-        Sin puntos de recogida
+        Sin puntos de atención
       </p>
       <p className="mt-1 max-w-xs text-xs text-brand-tertiary">
         Añade la primera dirección arriba para que tus clientes sepan dónde
-        retirar.
+        encontrarte.
       </p>
     </div>
   );
@@ -882,6 +1061,27 @@ function ImageIcon({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+    </svg>
+  );
+}
+
+/** Icono de banner horizontal (portada). */
+function CoverBannerIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <rect x="2" y="7" width="20" height="10" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 11h4M14 11h4M6 14h8" />
+    </svg>
+  );
+}
+
+/** Icono de logo cuadrado. */
+function LogoMarkIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <rect x="5" y="5" width="14" height="14" rx="3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="10" r="2" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 16.5c1-1.5 2.5-2 3.5-2s2.5.5 3.5 2" />
     </svg>
   );
 }

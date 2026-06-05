@@ -10,6 +10,22 @@ export type MySubscription = {
   maxStores: number | null;
   maxProducts: number | null;
   canUpgradeToPro: boolean;
+  status: string;
+  startedAt: string;
+  expiresAt: string | null;
+  currentStoreCount: number;
+  canCreateMoreStores: boolean;
+};
+
+export type SubscriptionPaymentItem = {
+  id: number;
+  planName: string;
+  amount: number;
+  currency: string;
+  status: string;
+  referenceCode: string;
+  createdAt: string;
+  paidAt: string | null;
 };
 
 export type PayuWebCheckoutFields = {
@@ -46,6 +62,19 @@ export async function fetchMySubscription(token: string): Promise<MySubscription
     throw new Error("fetch_my_subscription_error");
   }
   return (await response.json()) as MySubscription;
+}
+
+export async function fetchMySubscriptionPayments(
+  token: string,
+): Promise<SubscriptionPaymentItem[]> {
+  const response = await fetch(`${publicApiBaseUrl}/me/subscription/payments`, {
+    headers: buildAuthRequestHeaders({ token }),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error("fetch_my_subscription_payments_error");
+  }
+  return (await response.json()) as SubscriptionPaymentItem[];
 }
 
 export async function startProSubscriptionCheckout(

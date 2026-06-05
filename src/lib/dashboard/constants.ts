@@ -2,7 +2,7 @@ import type { DashboardSection, DashboardSectionMeta } from "@/types/dashboard";
 
 export const SECTION_META: Record<DashboardSection, DashboardSectionMeta> = {
   resumen: {
-    title: "Resumen",
+    title: "Analítica",
     description:
       "Métricas, interacciones y productos con mayor interés en tu negocio activo.",
   },
@@ -18,11 +18,16 @@ export const SECTION_META: Record<DashboardSection, DashboardSectionMeta> = {
   tienda: {
     title: "Mi negocio",
     description:
-      "Personaliza la identidad de tu marca, datos de contacto y puntos de recogida.",
+      "Personaliza la identidad de tu marca, datos de contacto y puntos de atención.",
   },
   pagos: {
     title: "Pagos PayU",
     description: "Configura medios de pago y revisa transacciones.",
+  },
+  suscripcion: {
+    title: "Mi suscripción",
+    description:
+      "Consulta tu plan, límites de negocios y opciones para mejorar o comprar un plan.",
   },
 };
 

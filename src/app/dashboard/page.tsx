@@ -10,6 +10,7 @@ import { DashboardSummarySection } from "@/components/dashboard/sections/dashboa
 import { DashboardProductsSection } from "@/components/dashboard/sections/dashboard-products-section";
 import { DashboardOrdersSection } from "@/components/dashboard/sections/dashboard-orders-section";
 import { DashboardPaymentsSection } from "@/components/dashboard/sections/dashboard-payments-section";
+import { DashboardSubscriptionSection } from "@/components/dashboard/sections/dashboard-subscription-section";
 import { OrderDetailModal } from "@/components/dashboard/modals/order-detail-modal";
 import { useDashboardPage } from "@/hooks/use-dashboard-page";
 import { brandPageBg, brandTextSecondary } from "@/lib/brand-theme";
@@ -57,6 +58,8 @@ export default function DashboardPage() {
           topInterestItems={d.topInterestItems}
           topInterestLoading={d.topInterestLoading}
           topInterestLast={d.topInterestLast}
+          topInterestTotal={d.topInterestTotal}
+          onLoadMoreTopInterest={() => void d.appendTopInterestPage()}
           topInterestScrollRef={d.topInterestScrollRef}
           topInterestSentinelRef={d.topInterestSentinelRef}
         />
@@ -154,6 +157,13 @@ export default function DashboardPage() {
             onDeletePickup={(id) => void d.handleDeletePickup(id)}
           />
         </section>
+      ) : null}
+
+      {d.activeSection === "suscripcion" ? (
+        <DashboardSubscriptionSection
+          title={d.sectionMeta.title}
+          description={d.sectionMeta.description}
+        />
       ) : null}
 
       {d.activeSection === "pagos" ? (

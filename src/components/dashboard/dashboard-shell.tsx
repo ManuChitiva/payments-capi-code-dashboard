@@ -64,9 +64,9 @@ export function DashboardShell({
   };
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col bg-brand-bg text-brand-primary">
+    <main className="flex min-h-dvh flex-col bg-brand-bg text-brand-primary">
       <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-[17.5rem] shrink-0 flex-col border-r border-brand-separator bg-brand-bg p-5 backdrop-blur-xl lg:flex xl:w-72 xl:p-6">
+        <aside className="hidden w-[17.5rem] shrink-0 flex-col overflow-hidden border-r border-brand-separator bg-brand-bg p-4 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-dvh lg:max-h-dvh xl:w-72 xl:p-5">
           <DashboardSidebar {...sidebarProps} />
         </aside>
 
@@ -144,7 +144,7 @@ function MobileNavDrawer({
         aria-label="Cerrar menú"
         onClick={onClose}
       />
-      <div className="absolute inset-y-0 left-0 flex w-[min(18rem,88vw)] flex-col border-r border-brand-separator bg-brand-bg p-5 shadow-2xl">
+      <div className="absolute inset-y-0 left-0 flex h-full w-[min(18rem,88vw)] flex-col overflow-hidden border-r border-brand-separator bg-brand-bg p-4 shadow-2xl">
         <DashboardSidebar {...sidebarProps} onClose={onClose} />
       </div>
     </div>
