@@ -12,6 +12,7 @@ type ProductApiRow = {
   name: string;
   description: string | null;
   price: number;
+  discount: number | null;
   imageUrl: string | null;
   active: boolean;
   availableQuantity: number;
@@ -76,6 +77,16 @@ function mapProductRow(item: ProductApiRow): CatalogProduct {
       : "agotado"
     : "inactivo";
 
+  const basePrice = Number(item.price);
+  const discount = item.discount != null && Number.isFinite(item.discount) && item.discount > 0
+    ? item.discount
+    : null;
+  const discountedPrice = discount != null ? Math.max(0, basePrice - discount) : null;
+  const discountPercent =
+    discount != null && basePrice > 0
+      ? Math.round((discount / basePrice) * 100)
+      : null;
+
   return {
     id: item.id,
     sku: `PRD-${item.id}`,
@@ -83,8 +94,11 @@ function mapProductRow(item: ProductApiRow): CatalogProduct {
     description: item.description ?? "",
     category: "General",
     price,
-    basePrice: Number(item.price),
+    basePrice,
     priceLabel,
+    discount,
+    discountedPrice,
+    discountPercent,
     imageUrl: item.imageUrl ?? "",
     stock,
     status,
@@ -128,6 +142,7 @@ export type ProductUpsertBody = {
   name: string;
   description: string;
   price: number;
+  discount: number | null;
   imageUrl: string | null;
   availableQuantity: number;
   active: boolean;
@@ -187,15 +202,44 @@ export async function setMyProductActive(
   }
 }
 
-/** Utilidad para etiqueta de precio en catálogo */
+const copFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
+
+/** Exportado para que componentes (p. ej. catálogo) compongan montos con estilos distintos. */
+export const formatCop = (amount: number): string => copFormatter.format(amount);
+
+/** Etiqueta compacta del precio "visible" (con tachado si hay descuento). */
 export function formatCatalogPrice(product: CatalogProduct): string {
-  const cop = new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(product.price);
+  const cop = copFormatter.format(product.price);
   if (product.priceLabel === "desde") return `Desde ${cop}`;
   return cop;
+}
+
+/**
+ * Desglose de precio para renderizar tachado + precio final + % off.
+ * Siempre devuelve el precio original formateado; si hay descuento,
+ * expone también `final` y `percentOff` (entero) para componer la UI.
+ */
+export function formatCatalogPriceBreakdown(product: CatalogProduct): {
+  original: string;
+  final: string;
+  percentOff?: number;
+  finalWithPercent: string;
+} {
+  const original = copFormatter.format(product.basePrice ?? product.price);
+  if (product.discountedPrice == null || product.discount == null) {
+    return { original, final: original, finalWithPercent: original };
+  }
+  const final = copFormatter.format(product.discountedPrice);
+  return {
+    original,
+    final,
+    percentOff: product.discountPercent ?? undefined,
+    finalWithPercent: final,
+  };
 }
 
 export { totalVariantStock, minVariantPrice };

@@ -239,16 +239,17 @@ export function ProductVariantsEditor({
                           <span className="text-[10px]">Sin foto</span>
                         </div>
                       )}
-                      <label className="flex-1">
+                      <label className="flex-1 cursor-pointer">
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp,image/gif"
-                          className="sr-only"
+                          className="hidden"
+                          tabIndex={-1}
                           disabled={uploadingVariantId === row.localId}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) onVariantImageSelect(row.localId, file);
                             e.target.value = "";
+                            if (file) onVariantImageSelect(row.localId, file);
                           }}
                         />
                         <span

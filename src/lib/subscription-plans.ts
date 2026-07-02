@@ -79,11 +79,19 @@ export type PlatformBenefitVisual =
   | "ai"
   | "scale";
 
+export type PlatformBenefitAccent =
+  | "blue"
+  | "emerald"
+  | "amber"
+  | "violet"
+  | "indigo";
+
 export type PlatformBenefit = {
   label: string;
   headline: string;
   description: string;
   visual: PlatformBenefitVisual;
+  accent?: PlatformBenefitAccent;
 };
 
 export const PLATFORM_BENEFITS: PlatformBenefit[] = [
@@ -93,6 +101,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     description:
       "Logo, colores, slug propio y catálogo con variantes e imágenes por SKU. Todo desde un panel claro.",
     visual: "brand",
+    accent: "blue",
   },
   {
     label: "Pagos",
@@ -100,6 +109,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     description:
       "Integración de checkout y webhooks para confirmar pagos. Sandbox para probar antes de producción.",
     visual: "payments",
+    accent: "emerald",
   },
   {
     label: "Operación",
@@ -107,6 +117,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     description:
       "Pedidos, ingresos, puntos de atención y analytics por negocio. Cambia de contexto con un selector cuando crezcas.",
     visual: "operations",
+    accent: "amber",
   },
   {
     label: "Automatización",
@@ -114,6 +125,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     description:
       "Con el plan Empresarial despliega un agente de IA y bots en WhatsApp y Telegram para vender y atender clientes sin fricción.",
     visual: "ai",
+    accent: "violet",
   },
   {
     label: "Escala",
@@ -121,6 +133,7 @@ export const PLATFORM_BENEFITS: PlatformBenefit[] = [
     description:
       "Empieza gratis con un negocio. Escala a Profesional o Empresarial cuando necesites más negocios, IA o automatización.",
     visual: "scale",
+    accent: "indigo",
   },
 ];
 

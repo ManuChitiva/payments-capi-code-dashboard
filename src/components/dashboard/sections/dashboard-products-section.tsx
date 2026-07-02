@@ -34,7 +34,7 @@ export function DashboardProductsSection({
   onCreate,
 }: DashboardProductsSectionProps) {
   return (
-    <section className="rounded-2xl border border-brand-separator bg-brand-surface/90 p-4 backdrop-blur sm:p-6">
+    <section className="rounded-2xl border border-brand-separator bg-brand-surface/90 p-4 shadow-[0_10px_28px_-10px_rgba(0,0,0,0.14),0_2px_8px_-2px_rgba(0,0,0,0.06)] backdrop-blur sm:p-6 dark:border-brand-separator dark:shadow-[0_0_0_1px_rgba(255,255,255,0.07),0_18px_48px_-12px_rgba(0,0,0,0.6),0_6px_20px_-6px_rgba(41,151,255,0.16)]">
       <SectionHeader
         title={title}
         description={description}

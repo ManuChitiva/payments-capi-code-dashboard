@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { ProductVariantsEditor } from "@/components/dashboard/product-variants-editor";
 import { createEmptyVariantRow } from "@/lib/product-variants";
 import {
@@ -51,6 +51,27 @@ export function ProductFormModal({
 }: ProductFormModalProps) {
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Bloquear scroll del body detrás del modal y resetear el scroll interno
+  // cada vez que el modal se abre, para evitar que el navegador scrollee
+  // automáticamente hacia el input file activo (lo que "subía" el modal).
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const el = bodyRef.current;
+    if (el) el.scrollTop = 0;
+  }, [open, mode]);
 
   if (!open) return null;
 
@@ -113,7 +134,7 @@ export function ProductFormModal({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={bodyRef} className="flex-1 overflow-y-auto">
           <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-5 lg:items-start lg:gap-8">
             {/* Form */}
             <div className="space-y-6 lg:col-span-3">
@@ -191,9 +212,12 @@ export function ProductFormModal({
                     variants: hasVariants
                       ? values.variants.length > 0
                         ? values.variants
-                        : [createEmptyVariantRow()]
+                        : [
+                            createEmptyVariantRow({
+                              availableQuantity: values.availableQuantity,
+                            }),
+                          ]
                       : [],
-                    ...(hasVariants ? { availableQuantity: "0" } : {}),
                   });
                 }}
                 onVariantsChange={(variants) => onChange({ variants })}
@@ -276,6 +300,15 @@ export function ProductFormModal({
                     </Field>
                   ) : null}
                 </div>
+
+                <DiscountFieldPreview
+                  price={values.price}
+                  discount={values.discount}
+                  showError={showErrors}
+                  errorMessage={errors.discount}
+                  onChange={(value) => onChange({ discount: value })}
+                  onBlur={onBlurValidate}
+                />
 
                 <div className="mt-4 flex items-center justify-between rounded-xl border border-brand-separator bg-brand-hover px-4 py-3.5">
                   <div>
@@ -508,5 +541,94 @@ function CharCounter({ current, max }: { current: number; max: number }) {
     >
       {current}/{max}
     </span>
+  );
+}
+
+const copPreviewFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
+
+/**
+ * Campo de descuento con preview del precio final. Calcula en vivo sin
+ * delegar en helpers externos para mantener este componente autocontenido.
+ */
+function DiscountFieldPreview({
+  price,
+  discount,
+  showError,
+  errorMessage,
+  onChange,
+  onBlur,
+}: {
+  price: string;
+  discount: string;
+  showError: boolean;
+  errorMessage?: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+}) {
+  const priceNum = Number(price);
+  const discountRaw = discount.trim();
+  const discountNum = discountRaw === "" ? NaN : Number(discountRaw);
+  const hasPreview =
+    Number.isFinite(priceNum) &&
+    priceNum > 0 &&
+    Number.isFinite(discountNum) &&
+    discountNum > 0 &&
+    discountNum <= priceNum;
+
+  const finalPrice = hasPreview ? Math.max(0, priceNum - discountNum) : null;
+  const percentOff =
+    hasPreview && priceNum > 0 ? Math.round((discountNum / priceNum) * 100) : null;
+
+  return (
+    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <Field
+        label="Descuento (opcional)"
+        error={showError ? errorMessage : undefined}
+      >
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-brand-tertiary">
+            $
+          </span>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            value={discount}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={onBlur}
+            placeholder="0.00"
+            aria-invalid={Boolean(showError && errorMessage)}
+            className={`${productFieldClass(Boolean(showError && errorMessage))} pl-8`}
+          />
+        </div>
+        <p className="pt-1 text-[11px] text-brand-tertiary">
+          Se restará del precio para mostrar el valor final al cliente.
+        </p>
+      </Field>
+      <div className="flex items-end">
+        {finalPrice != null && percentOff != null ? (
+          <div className="w-full rounded-xl border border-brand-accent/30 bg-brand-accent/10 px-3.5 py-2.5 dark:border-brand-accent-soft/40 dark:bg-brand-accent-soft/15">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-brand-accent dark:text-brand-accent-soft">
+              Precio final
+            </p>
+            <p className="mt-0.5 text-sm font-semibold text-brand-primary tabular-nums">
+              {copPreviewFormatter.format(finalPrice)}{" "}
+              <span className="ml-1 text-xs font-medium text-brand-accent dark:text-brand-accent-soft">
+                −{percentOff}%
+              </span>
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-brand-tertiary">
+            Define un descuento mayor a 0 para previsualizar el precio rebajado.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

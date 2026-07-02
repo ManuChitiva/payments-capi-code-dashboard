@@ -6,9 +6,8 @@ import {
   DashboardSidebar,
   type DashboardSection,
 } from "@/components/dashboard/dashboard-sidebar";
+import { AlertModal, type AlertTone } from "@/components/dashboard/alert-modal";
 import {
-  brandAlertErrorInline,
-  brandAlertSuccess,
   brandNavIconButton,
   brandTextPrimary,
   brandTextSecondary,
@@ -29,6 +28,7 @@ type DashboardShellProps = {
   setMobileNavOpen: (open: boolean) => void;
   error: string;
   actionMessage: string;
+  clearMessages: () => void;
   onStoreChange: (storeId: number) => void;
   onNewStore: () => void;
   onSection: (section: DashboardSection) => void;
@@ -45,6 +45,7 @@ export function DashboardShell({
   setMobileNavOpen,
   error,
   actionMessage,
+  clearMessages,
   onStoreChange,
   onNewStore,
   onSection,
@@ -62,6 +63,11 @@ export function DashboardShell({
     onSection,
     onLogout,
   };
+
+  // Priorizar error sobre success si ambos están seteados
+  const alertOpen = Boolean(error || actionMessage);
+  const alertTone: AlertTone = error ? "error" : "success";
+  const alertTitle = error || actionMessage;
 
   return (
     <main className="flex min-h-dvh flex-col bg-brand-bg text-brand-primary">
@@ -115,16 +121,17 @@ export function DashboardShell({
           </header>
 
           <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-            {error ? (
-              <p className={brandAlertErrorInline}>{error}</p>
-            ) : null}
-            {actionMessage ? (
-              <p className={brandAlertSuccess}>{actionMessage}</p>
-            ) : null}
             {children}
           </div>
         </section>
       </div>
+
+      <AlertModal
+        open={alertOpen}
+        tone={alertTone}
+        title={alertTitle}
+        onClose={clearMessages}
+      />
     </main>
   );
 }

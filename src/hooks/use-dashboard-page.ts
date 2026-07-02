@@ -118,6 +118,14 @@ export function useDashboardPage() {
       cellPhone: "",
       address: "",
       category: DEFAULT_STORE_CATEGORY,
+      description: "",
+      email: "",
+      website: "",
+      instagram: "",
+      facebook: "",
+      tiktok: "",
+      schedule: "",
+      paymentMethods: "",
     });
   const [pickupsList, setPickupsList] = useState<PickupPoint[]>([]);
   const [newPickupAddress, setNewPickupAddress] = useState("");
@@ -198,6 +206,7 @@ export function useDashboardPage() {
     name: "",
     description: "",
     price: "",
+    discount: "",
     imageUrl: "",
     availableQuantity: "0",
     active: true,
@@ -473,6 +482,14 @@ export function useDashboardPage() {
         cellPhone: detail.cellPhone ?? "",
         address: detail.address ?? "",
         category: normalizeStoreCategory(detail.category),
+        description: detail.description ?? "",
+        email: detail.email ?? "",
+        website: detail.website ?? "",
+        instagram: detail.instagram ?? "",
+        facebook: detail.facebook ?? "",
+        tiktok: detail.tiktok ?? "",
+        schedule: detail.schedule ?? "",
+        paymentMethods: detail.paymentMethods ?? "",
       });
     } catch {
       setError("No se pudo cargar la configuracion del negocio.");
@@ -509,6 +526,9 @@ export function useDashboardPage() {
     if (!token || !activeStore || !client) {
       return;
     }
+    if (myStoreSaving) {
+      return;
+    }
     if (!storeSettingsForm.name.trim()) {
       setError("El nombre del negocio es obligatorio.");
       return;
@@ -517,7 +537,9 @@ export function useDashboardPage() {
     setError("");
     try {
       await updateMyStore(token, activeStore.id, storeSettingsForm);
-      setActionMessage("Negocio actualizado correctamente.");
+      // Refrescar solo el perfil del cliente (sidebar/header) — NO recargar
+      // el formulario ni el catálogo/analítica/pagos: ya tenemos los datos
+      // recién guardados en `storeSettingsForm` y el resto no cambió.
       const meResponse = await fetch(`${API_URL}/clients/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -527,23 +549,8 @@ export function useDashboardPage() {
       const data = (await meResponse.json()) as ClientDetail;
       setClient(data);
       window.localStorage.setItem("stores_admin_client", JSON.stringify(data));
-      const nextStore =
-        data.stores.find((s) => s.id === data.activeStoreId) ??
-        data.stores.find((s) => s.id === activeStore.id) ??
-        data.stores[0];
-      if (nextStore) {
-        const authFilters = buildAuthFilters(data, nextStore.id);
-        await Promise.all([
-          refreshCatalog(token, nextStore.id, statusFilter),
-          loadAnalytics(token, nextStore.slug).then(setAnalytics),
-        ]);
-        void listPayuPaymentMethods(token, authFilters).then(setPayuMethods);
-        void getMyPaymentsRevenueSummary(token, authFilters).then(
-          setRevenueSummary,
-        );
-      }
-      await loadMyStoreSection();
       await loadPickups();
+      setActionMessage("Negocio actualizado correctamente.");
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "No se pudo guardar el negocio.",
@@ -608,12 +615,25 @@ export function useDashboardPage() {
     }
   };
 
-  const handleDeletePickup = async (pickupId: number) => {
+  const [pendingDeletePickupId, setPendingDeletePickupId] = useState<
+    number | null
+  >(null);
+
+  const requestDeletePickup = (pickupId: number) => {
+    setError("");
+    setPendingDeletePickupId(pickupId);
+  };
+
+  const cancelDeletePickup = useCallback(() => {
+    setPendingDeletePickupId(null);
+  }, []);
+
+  const confirmDeletePickup = async () => {
+    const pickupId = pendingDeletePickupId;
+    if (pickupId == null) return;
     const token = window.localStorage.getItem("stores_admin_token");
     if (!token || !activeStore) {
-      return;
-    }
-    if (!window.confirm("¿Eliminar este punto de atención?")) {
+      setPendingDeletePickupId(null);
       return;
     }
     setPickupActionLoading(true);
@@ -631,6 +651,7 @@ export function useDashboardPage() {
       );
     } finally {
       setPickupActionLoading(false);
+      setPendingDeletePickupId(null);
     }
   };
 
@@ -740,12 +761,12 @@ export function useDashboardPage() {
   }, [activeStore?.slug, appendTopInterestPage, topInterestItems.length]);
 
   const resolvedProductImageUrl = (
-    uploadedMediaUrl || newProduct.imageUrl
+    uploadedMediaUrl || newProduct.imageUrl || ""
   ).trim();
 
   const refreshProductFormValidation = (
     values = newProduct,
-    imageUrl = (uploadedMediaUrl || values.imageUrl).trim(),
+    imageUrl = (uploadedMediaUrl || values.imageUrl || "").trim(),
   ) => {
     const errors = validateProductForm(values, imageUrl);
     setProductFormErrors(errors);
@@ -775,6 +796,9 @@ export function useDashboardPage() {
         productModalMode === "edit" && editingProductId !== null;
       const finalImageUrl = (uploadedMediaUrl || newProduct.imageUrl).trim();
       const basePrice = Number(newProduct.price);
+      const discountRaw = newProduct.discount.trim();
+      const discountValue =
+        discountRaw === "" ? null : Number(discountRaw);
       const variantsPayload = newProduct.hasVariants
         ? toVariantUpsertPayload(newProduct.variants, basePrice)
         : [];
@@ -786,10 +810,12 @@ export function useDashboardPage() {
           name: newProduct.name.trim(),
           description: newProduct.description.trim(),
           price: basePrice,
+          discount:
+            discountValue != null && Number.isFinite(discountValue) && discountValue > 0
+              ? discountValue
+              : null,
           imageUrl: finalImageUrl.length > 0 ? finalImageUrl : null,
-          availableQuantity: newProduct.hasVariants
-            ? 0
-            : Number(newProduct.availableQuantity),
+          availableQuantity: Number(newProduct.availableQuantity) || 0,
           active: newProduct.active,
           variants: variantsPayload,
         },
@@ -845,8 +871,12 @@ export function useDashboardPage() {
       name: product.name,
       description: product.description,
       price: String(product.basePrice),
+      discount:
+        product.discount != null && Number.isFinite(product.discount) && product.discount > 0
+          ? String(product.discount)
+          : "",
       imageUrl: product.imageUrl,
-      availableQuantity: hasVariants ? "0" : String(product.stock),
+      availableQuantity: String(product.stock),
       active: product.active,
       hasVariants,
       variants: hasVariants
@@ -1315,20 +1345,29 @@ export function useDashboardPage() {
         throw new Error("upload_media_error");
       }
       const payload = (await response.json()) as { fileUrl: string };
+      const uploadedUrl =
+        typeof payload?.fileUrl === "string" && payload.fileUrl.length > 0
+          ? payload.fileUrl
+          : null;
+      if (uploadedUrl === null) {
+        setError("El servidor no devolvio la URL de la imagen.");
+        return;
+      }
       setNewProduct((prev) => {
-        const next = {
-          ...prev,
-          variants: prev.variants.map((v) =>
-            v.localId === localId ? { ...v, imageUrl: payload.fileUrl } : v,
-          ),
-        };
+        const nextVariants = prev.variants.map((v) =>
+          v.localId === localId ? { ...v, imageUrl: uploadedUrl } : v,
+        );
+        const next = { ...prev, variants: nextVariants };
         if (productFormShowErrors) {
-          setProductFormErrors(
-            validateProductForm(
-              next,
-              (uploadedMediaUrl || next.imageUrl).trim(),
-            ),
-          );
+          const resolvedImage =
+            uploadedMediaUrl || next.imageUrl || "";
+          try {
+            setProductFormErrors(
+              validateProductForm(next, resolvedImage.trim()),
+            );
+          } catch {
+            /* validación post-subida nunca debe romper el render */
+          }
         }
         return next;
       });
@@ -1366,11 +1405,23 @@ export function useDashboardPage() {
         throw new Error("upload_media_error");
       }
       const payload = (await response.json()) as { fileUrl: string };
-      setUploadedMediaUrl(payload.fileUrl);
+      const uploadedUrl =
+        typeof payload?.fileUrl === "string" && payload.fileUrl.length > 0
+          ? payload.fileUrl
+          : null;
+      if (uploadedUrl === null) {
+        setError("El servidor no devolvio la URL de la imagen.");
+        return;
+      }
+      setUploadedMediaUrl(uploadedUrl);
       setNewProduct((prev) => {
-        const next = { ...prev, imageUrl: payload.fileUrl };
+        const next = { ...prev, imageUrl: uploadedUrl };
         if (productFormShowErrors) {
-          setProductFormErrors(validateProductForm(next, payload.fileUrl));
+          try {
+            setProductFormErrors(validateProductForm(next, uploadedUrl));
+          } catch {
+            /* validación post-subida nunca debe romper el render */
+          }
         }
         return next;
       });
@@ -1384,12 +1435,18 @@ export function useDashboardPage() {
 
   const sectionMeta = SECTION_META[activeSection];
 
+  const clearMessages = useCallback(() => {
+    setError("");
+    setActionMessage("");
+  }, []);
+
   return {
     loading,
     error,
     setError,
     actionMessage,
     setActionMessage,
+    clearMessages,
     client,
     activeStore,
     activeSection,
@@ -1499,7 +1556,10 @@ export function useDashboardPage() {
     handleSaveStoreSettings,
     handleAddPickup,
     handleSavePickupEdit,
-    handleDeletePickup,
+    requestDeletePickup,
+    confirmDeletePickup,
+    cancelDeletePickup,
+    pendingDeletePickupId,
     handleTogglePickupStatus,
     handleSaveProduct,
     openCreateModal,

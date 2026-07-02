@@ -4,6 +4,7 @@ import { ProductFormModal } from "@/components/dashboard/product-form-modal";
 import { StoreSettingsPanel } from "@/components/dashboard/store-settings-panel";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SectionHeader } from "@/components/dashboard/section-header";
+import { ConfirmActionModal } from "@/components/dashboard/modals/confirm-action-modal";
 import { CreateStoreModal } from "@/components/dashboard/modals/create-store-modal";
 import { PayuMethodModal } from "@/components/dashboard/modals/payu-method-modal";
 import { DashboardSummarySection } from "@/components/dashboard/sections/dashboard-summary-section";
@@ -40,6 +41,7 @@ export default function DashboardPage() {
       setMobileNavOpen={d.setMobileNavOpen}
       error={d.error}
       actionMessage={d.actionMessage}
+      clearMessages={d.clearMessages}
       onStoreChange={d.handleStoreChange}
       onNewStore={() => {
         d.setError("");
@@ -109,7 +111,7 @@ export default function DashboardPage() {
       ) : null}
 
       {d.activeSection === "tienda" ? (
-        <section className="rounded-2xl border border-brand-separator bg-brand-surface/90 p-4 backdrop-blur sm:p-6">
+        <section className="rounded-2xl border border-brand-separator bg-brand-surface/90 p-4 shadow-[0_10px_28px_-10px_rgba(0,0,0,0.14),0_2px_8px_-2px_rgba(0,0,0,0.06)] backdrop-blur sm:p-6 dark:border-brand-separator dark:shadow-[0_0_0_1px_rgba(255,255,255,0.07),0_18px_48px_-12px_rgba(0,0,0,0.6),0_6px_20px_-6px_rgba(41,151,255,0.16)]">
           <SectionHeader
             title={d.sectionMeta.title}
             description={d.sectionMeta.description}
@@ -154,7 +156,7 @@ export default function DashboardPage() {
             onCancelEditPickup={() => d.setEditingPickupId(null)}
             onSavePickupEdit={() => void d.handleSavePickupEdit()}
             onTogglePickupStatus={(p) => void d.handleTogglePickupStatus(p)}
-            onDeletePickup={(id) => void d.handleDeletePickup(id)}
+            onDeletePickup={d.requestDeletePickup}
           />
         </section>
       ) : null}
@@ -250,6 +252,30 @@ export default function DashboardPage() {
         onClose={() => d.setNewStoreModalOpen(false)}
         onCreate={() => void d.handleCreateStore()}
         onChange={(patch) => d.setNewStoreForm((f) => ({ ...f, ...patch }))}
+      />
+
+      <ConfirmActionModal
+        open={d.pendingDeletePickupId != null}
+        title="¿Eliminar este punto de atención?"
+        description={
+          <>
+            Vas a eliminar{" "}
+            <span className="font-medium text-brand-primary">
+              “
+              {d.pickupsList.find((p) => p.id === d.pendingDeletePickupId)
+                ?.address?.trim() || "Sin dirección"}
+              ”
+            </span>
+            . Si hay pedidos que lo usan, dejarán de mostrarlo. Esta acción no
+            se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar punto"
+        cancelLabel="Cancelar"
+        confirming={d.pickupActionLoading}
+        variant="danger"
+        onClose={d.cancelDeletePickup}
+        onConfirm={() => void d.confirmDeletePickup()}
       />
     </DashboardShell>
   );

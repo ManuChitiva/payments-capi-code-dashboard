@@ -46,7 +46,10 @@ export function newVariantLocalId(): string {
   return `variant-${variantRowSeq}-${Date.now()}`;
 }
 
-export function createEmptyVariantRow(): ProductVariantFormRow {
+export function createEmptyVariantRow(
+  initial?: { availableQuantity?: string },
+): ProductVariantFormRow {
+  const seededStock = initial?.availableQuantity?.trim();
   return {
     localId: newVariantLocalId(),
     sku: "",
@@ -54,7 +57,7 @@ export function createEmptyVariantRow(): ProductVariantFormRow {
     imageUrl: "",
     price: "",
     pricingMode: "absolute",
-    availableQuantity: "0",
+    availableQuantity: seededStock && seededStock.length > 0 ? seededStock : "0",
     active: true,
   };
 }

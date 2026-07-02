@@ -19,7 +19,7 @@ const PAGE_SIZE = 5;
 export type ProductStatus = "activo" | "inactivo" | "agotado";
 
 import type { ProductVariantApi } from "@/lib/product-variants";
-import { formatCatalogPrice } from "@/services/productService";
+import { formatCatalogPrice, formatCop } from "@/services/productService";
 
 export type CatalogProduct = {
   id: number;
@@ -32,6 +32,12 @@ export type CatalogProduct = {
   basePrice: number;
   /** "desde" cuando hay variantes con precios distintos */
   priceLabel?: string;
+  /** Monto del descuento en COP (null = sin descuento). */
+  discount: number | null;
+  /** Precio final con descuento aplicado (null = sin descuento). */
+  discountedPrice: number | null;
+  /** Porcentaje entero redondeado del descuento respecto al precio base. */
+  discountPercent: number | null;
   imageUrl: string;
   stock: number;
   status: ProductStatus;
@@ -347,7 +353,7 @@ function ProductRow({
 
   if (layout === "card") {
     return (
-      <article className="rounded-xl border border-brand-separator bg-brand-hover p-4">
+      <article className="rounded-xl border border-brand-separator/70 bg-brand-surface/80 p-4 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-shadow hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.18)] dark:border-brand-separator dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_14px_-4px_rgba(0,0,0,0.55)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_22px_-4px_rgba(0,0,0,0.7)]">
         <div className="flex gap-3">
           <ProductThumb product={product} size="lg" />
           <div className="min-w-0 flex-1">
@@ -367,9 +373,28 @@ function ProductRow({
               <StatusBadge status={product.status} />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-              <span className={`font-semibold ${brandTextPrimary}`}>
-                {formatCatalogPrice(product)}
-              </span>
+              {product.discount != null && product.discountedPrice != null ? (
+                <>
+                  <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
+                    <span className="text-[11px] tabular-nums text-brand-tertiary line-through">
+                      {formatCop(product.basePrice)}
+                    </span>
+                    <span className={`font-semibold tabular-nums ${brandTextPrimary}`}>
+                      {product.priceLabel === "desde" ? "Desde " : ""}
+                      {formatCop(product.discountedPrice)}
+                    </span>
+                  </span>
+                  {product.discountPercent != null && product.discountPercent > 0 ? (
+                    <span className="rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand-accent dark:bg-brand-accent-soft/15 dark:text-brand-accent-soft">
+                      −{product.discountPercent}%
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                <span className={`font-semibold ${brandTextPrimary}`}>
+                  {formatCatalogPrice(product)}
+                </span>
+              )}
               <span className={stockLevel.className}>
                 {product.stock} uds · {stockLevel.label}
               </span>
@@ -404,7 +429,24 @@ function ProductRow({
         </div>
       </td>
       <td className="px-4 py-3 text-right font-medium tabular-nums text-brand-primary">
-        {formatCatalogPrice(product)}
+        {product.discount != null && product.discountedPrice != null ? (
+          <span className="inline-flex flex-wrap items-baseline justify-end gap-x-1.5 gap-y-0.5">
+            <span className="text-[11px] text-brand-tertiary line-through">
+              {formatCop(product.basePrice)}
+            </span>
+            <span className="font-semibold">
+              {product.priceLabel === "desde" ? "Desde " : ""}
+              {formatCop(product.discountedPrice)}
+            </span>
+            {product.discountPercent != null && product.discountPercent > 0 ? (
+              <span className="rounded-full bg-brand-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand-accent dark:bg-brand-accent-soft/15 dark:text-brand-accent-soft">
+                −{product.discountPercent}%
+              </span>
+            ) : null}
+          </span>
+        ) : (
+          formatCatalogPrice(product)
+        )}
       </td>
       <td className="px-4 py-3 text-center">
         <span
@@ -678,14 +720,6 @@ function stockIndicator(stock: number) {
     chipClass: dashboardStatusBadge,
     dotClass: "bg-brand-accent dark:bg-emerald-400",
   };
-}
-
-function formatCop(amount: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(amount) ? amount : 0);
 }
 
 function formatDate(isoDate: string): string {

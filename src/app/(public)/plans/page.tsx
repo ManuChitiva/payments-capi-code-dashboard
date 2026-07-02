@@ -40,7 +40,11 @@ import {
   planCtaPro,
   planTaglineEnterprise,
   planTaglinePro,
+  plansCtaEyebrow,
   plansCtaStrip,
+  plansCtaTrustDot,
+  plansCtaTrustItem,
+  plansCtaTrustRow,
   plansHeroGlow,
 } from "@/lib/brand-theme";
 
@@ -302,18 +306,70 @@ export default function PlansPage() {
 
       <section className="relative mx-auto w-full max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
         <div className={plansCtaStrip}>
-          <h2
-            className={`font-(family-name:--font-rajdhani) text-2xl font-bold sm:text-3xl ${brandTextPrimary}`}
-          >
-            Tu primer negocio, en minutos
-          </h2>
-          <p className={`mx-auto mt-3 max-w-xl text-sm sm:text-base ${brandTextSecondary}`}>
-            Crea tu cuenta, define el nombre del negocio y entra al panel. El
-            plan Gratis incluye un negocio activo desde el registro.
-          </p>
-          <Link href="/register" className={`mt-8 inline-block px-8 ${brandCtaMd}`}>
-            Crear cuenta gratis
-          </Link>
+          {/* Ambient backdrop: grid + orbes + radial */}
+          <div className="brand-grid-overlay pointer-events-none absolute inset-0 opacity-[0.18] dark:opacity-[0.22]" />
+          <div className="absolute -top-[35%] left-[10%] h-[60%] w-[55%] rounded-full bg-[#0071e3]/14 blur-3xl animate-login-orb-a dark:bg-[#2997ff]/22" />
+          <div className="absolute -right-[12%] -bottom-[40%] h-[65%] w-[55%] rounded-full bg-[#5e5ce6]/14 blur-3xl animate-login-orb-b dark:bg-[#5e5ce6]/22" />
+          <div className="brand-radial-accent pointer-events-none absolute inset-0" />
+
+          <div className="relative">
+            <span className={plansCtaEyebrow}>
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full bg-[#0071e3] shadow-[0_0_8px_rgba(0,113,227,0.6)] dark:bg-[#2997ff] dark:shadow-[0_0_8px_rgba(41,151,255,0.8)]"
+                aria-hidden
+              />
+              Sin tarjeta de crédito
+            </span>
+
+            <h2
+              className={`mx-auto mt-5 max-w-2xl font-(family-name:--font-rajdhani) text-3xl font-bold tracking-tight sm:text-4xl lg:text-[2.65rem] ${brandTextPrimary}`}
+            >
+              Tu primer negocio, en minutos
+            </h2>
+            <p
+              className={`mx-auto mt-4 max-w-xl text-sm leading-relaxed sm:text-base ${brandTextSecondary}`}
+            >
+              Crea tu cuenta, define el nombre del negocio y entra al panel. El
+              plan Gratis incluye un negocio activo desde el registro — sin
+              código de invitación, sin letra pequeña.
+            </p>
+
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/register" className={`px-7 ${brandCtaMd}`}>
+                Crear cuenta gratis
+              </Link>
+              <Link
+                href="/login"
+                className={`inline-flex items-center gap-1.5 ${brandSecondaryButton}`}
+              >
+                Ya tengo cuenta
+                <span aria-hidden className="text-base leading-none">
+                  →
+                </span>
+              </Link>
+            </div>
+
+            <ul className={plansCtaTrustRow}>
+              <li className={plansCtaTrustItem}>
+                <span className={plansCtaTrustDot} aria-hidden>
+                  ✓
+                </span>
+                Empieza con la Versión Gratuita
+              </li>
+              <li className={plansCtaTrustItem}>
+                <span className={plansCtaTrustDot} aria-hidden>
+                  ✓
+                </span>
+                Sin cláusulas de permanencia
+              </li>
+              <li className={plansCtaTrustItem}>
+                <span className={plansCtaTrustDot} aria-hidden>
+                  ✓
+                </span>
+                Pagos seguros con PayU
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
     </main>

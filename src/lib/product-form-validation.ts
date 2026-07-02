@@ -3,6 +3,7 @@ import {
   parseBasePrice,
   resolveVariantApiPrice,
   type ProductVariantFormRow,
+  type VariantPricingMode,
 } from "@/lib/product-variants";
 
 export const PRODUCT_LIMITS = {
@@ -12,6 +13,7 @@ export const PRODUCT_LIMITS = {
   imageUrlMax: 512,
   priceMin: 0.01,
   priceMax: 99_999_999.99,
+  discountMin: 0,
   stockMin: 0,
   stockMax: 999_999,
   variantTitleMax: 255,
@@ -22,6 +24,7 @@ export type ProductFormValues = {
   name: string;
   description: string;
   price: string;
+  discount: string;
   imageUrl: string;
   availableQuantity: string;
   active: boolean;
@@ -33,6 +36,7 @@ export type ProductFormField =
   | "name"
   | "description"
   | "price"
+  | "discount"
   | "availableQuantity"
   | "imageUrl";
 
@@ -80,44 +84,45 @@ function validateVariantRow(
 ): Partial<Record<VariantFormField, string>> {
   const rowErrors: Partial<Record<VariantFormField, string>> = {};
 
-  const title = row.title.trim();
+  const title = (row.title ?? "").trim();
   if (!title) {
     rowErrors.title = "Nombre de la variante obligatorio.";
   } else if (title.length > PRODUCT_LIMITS.variantTitleMax) {
     rowErrors.title = `Máximo ${PRODUCT_LIMITS.variantTitleMax} caracteres.`;
   }
 
-  if (row.sku.trim().length > PRODUCT_LIMITS.variantSkuMax) {
+  if ((row.sku ?? "").trim().length > PRODUCT_LIMITS.variantSkuMax) {
     rowErrors.sku = `Máximo ${PRODUCT_LIMITS.variantSkuMax} caracteres.`;
   }
 
-  const imageUrl = row.imageUrl.trim();
+  const imageUrl = (row.imageUrl ?? "").trim();
   if (!imageUrl) {
     rowErrors.imageUrl = "Sube una imagen para esta variante.";
   } else if (imageUrl.length > PRODUCT_LIMITS.imageUrlMax) {
     rowErrors.imageUrl = "URL de imagen demasiado larga.";
   }
 
-  const priceLabel =
-    row.pricingMode === "addon" ? "El adicional" : "El precio";
-  const priceErr = validatePriceField(row.price.trim(), {
+  const pricingMode: VariantPricingMode =
+    row.pricingMode === "addon" ? "addon" : "absolute";
+  const priceLabel = pricingMode === "addon" ? "El adicional" : "El precio";
+  const priceErr = validatePriceField((row.price ?? "").trim(), {
     required: true,
-    min: row.pricingMode === "addon" ? 0 : PRODUCT_LIMITS.priceMin,
+    min: pricingMode === "addon" ? 0 : PRODUCT_LIMITS.priceMin,
     label: priceLabel,
   });
   if (priceErr) {
     rowErrors.price = priceErr;
   } else {
-    const resolved = resolveVariantApiPrice(basePrice, row);
+    const resolved = resolveVariantApiPrice(basePrice, { ...row, pricingMode });
     if (!Number.isFinite(resolved) || resolved < PRODUCT_LIMITS.priceMin) {
       rowErrors.price =
-        row.pricingMode === "addon"
+        pricingMode === "addon"
           ? `Base + adicional debe ser al menos ${PRODUCT_LIMITS.priceMin}.`
           : `El precio debe ser al menos ${PRODUCT_LIMITS.priceMin}.`;
     }
   }
 
-  const stockRaw = row.availableQuantity.trim();
+  const stockRaw = (row.availableQuantity ?? "").trim();
   if (!stockRaw) {
     rowErrors.availableQuantity = "Stock obligatorio.";
   } else {
@@ -161,6 +166,24 @@ export function validateProductForm(
     label: values.hasVariants ? "El precio base" : "El precio",
   });
   if (priceErr) errors.price = priceErr;
+
+  const discountRaw = values.discount.trim();
+  if (discountRaw === "") {
+    // Sin descuento: válido, se enviará null al backend.
+  } else {
+    const discount = Number(discountRaw);
+    if (!Number.isFinite(discount)) {
+      errors.discount = "Ingresa un valor numérico válido.";
+    } else if (discount < PRODUCT_LIMITS.discountMin) {
+      errors.discount = "No puede ser negativo.";
+    } else if (!Number.isNaN(basePrice) && basePrice > 0 && discount > basePrice) {
+      errors.discount = "El descuento no puede superar el precio.";
+    } else if (!/^\d+(\.\d{1,2})?$/.test(discountRaw)) {
+      errors.discount = "Usa hasta 2 decimales (ej: 5000.00).";
+    } else if (discount > PRODUCT_LIMITS.priceMax) {
+      errors.discount = `No puede superar ${PRODUCT_LIMITS.priceMax.toLocaleString("es-CO")}.`;
+    }
+  }
 
   if (!values.hasVariants) {
     const stockRaw = values.availableQuantity.trim();

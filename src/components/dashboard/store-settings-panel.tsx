@@ -16,6 +16,12 @@ import {
 import { fetchStoreCategories } from "@/services/storeCategoryService";
 import {
   brandActionButtonSolid,
+  brandAssetDropzoneIdle,
+  brandAssetDropzoneLoaded,
+  brandAssetPreviewLoaded,
+  brandAssetReadyPill,
+  brandAssetRemoveBtn,
+  brandAssetSuccessIcon,
   brandCtaSm,
   brandInputClass,
   brandStoreHero,
@@ -404,6 +410,156 @@ export function StoreSettingsPanel({
       </div>
 
       <SettingsCard
+        icon={<GlobeIcon />}
+        title="Presencia online"
+        description="Cuenta la historia de tu negocio y conecta con tus clientes en todos los canales."
+        className="lg:col-span-2"
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Columna izquierda: descripción + horarios + pagos */}
+          <div className="space-y-4">
+            <FormField
+              label="Sobre la tienda"
+              hint="Texto largo que se muestra en la página pública de tu tienda."
+            >
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  onFormChange((p) => ({ ...p, description: e.target.value }))
+                }
+                placeholder="Cuenta tu historia, qué te hace especial, desde cuándo atiendes…"
+                className={`${inputClass} min-h-28 resize-y py-3 leading-relaxed`}
+                rows={5}
+                maxLength={2000}
+              />
+              <p className="text-right text-[10px] text-brand-tertiary">
+                {form.description.length}/2000
+              </p>
+            </FormField>
+
+            <FormField
+              label="Horarios de atención"
+              hint="Texto libre, ej. 'Lun-Vie 9-18, Sáb 9-13' o '24/7'."
+            >
+              <input
+                value={form.schedule}
+                onChange={(e) =>
+                  onFormChange((p) => ({ ...p, schedule: e.target.value }))
+                }
+                placeholder="Lun-Vie 9-18, Sáb 9-13"
+                className={inputClass}
+                maxLength={255}
+              />
+            </FormField>
+
+            <FormField
+              label="Métodos de pago aceptados"
+              hint="Separa por comas. Ej: efectivo, tarjeta, transferencia, nequi."
+            >
+              <input
+                value={form.paymentMethods}
+                onChange={(e) =>
+                  onFormChange((p) => ({ ...p, paymentMethods: e.target.value }))
+                }
+                placeholder="efectivo, tarjeta, transferencia, nequi"
+                className={inputClass}
+                maxLength={255}
+              />
+              {form.paymentMethods.trim() ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {form.paymentMethods
+                    .split(",")
+                    .map((m) => m.trim().toLowerCase())
+                    .filter(Boolean)
+                    .map((m) => (
+                      <span
+                        key={m}
+                        className="inline-flex items-center gap-1 rounded-full border border-brand-separator bg-brand-hover px-2.5 py-0.5 text-[11px] font-medium text-brand-primary"
+                      >
+                        {m}
+                      </span>
+                    ))}
+                </div>
+              ) : null}
+            </FormField>
+          </div>
+
+          {/* Columna derecha: email + web + redes */}
+          <div className="space-y-4">
+            <FormField
+              label="Email público"
+              hint="Se muestra en la página de tu tienda."
+            >
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) =>
+                  onFormChange((p) => ({ ...p, email: e.target.value }))
+                }
+                placeholder="hola@tubodega.com"
+                className={inputClass}
+                maxLength={255}
+              />
+            </FormField>
+
+            <FormField
+              label="Sitio web"
+              hint="URL completa con https://"
+            >
+              <input
+                type="url"
+                value={form.website}
+                onChange={(e) =>
+                  onFormChange((p) => ({ ...p, website: e.target.value }))
+                }
+                placeholder="https://tubodega.com"
+                className={inputClass}
+                maxLength={512}
+              />
+            </FormField>
+
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium text-brand-primary">
+                Redes sociales
+              </p>
+              <div className="space-y-3">
+                <SocialInput
+                  icon={<InstagramIcon />}
+                  label="Instagram"
+                  value={form.instagram}
+                  placeholder="tubodega"
+                  prefix="instagram.com/"
+                  onChange={(v) =>
+                    onFormChange((p) => ({ ...p, instagram: v }))
+                  }
+                />
+                <SocialInput
+                  icon={<FacebookIcon />}
+                  label="Facebook"
+                  value={form.facebook}
+                  placeholder="tubodega o https://facebook.com/tubodega"
+                  prefix="facebook.com/"
+                  onChange={(v) =>
+                    onFormChange((p) => ({ ...p, facebook: v }))
+                  }
+                />
+                <SocialInput
+                  icon={<TikTokIcon />}
+                  label="TikTok"
+                  value={form.tiktok}
+                  placeholder="tubodega"
+                  prefix="tiktok.com/@"
+                  onChange={(v) =>
+                    onFormChange((p) => ({ ...p, tiktok: v }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
         icon={<PaletteIcon />}
         title="Marca visual"
         description="Sube dos imágenes distintas: un banner ancho (portada) y un icono cuadrado (logo)."
@@ -428,13 +584,20 @@ export function StoreSettingsPanel({
                 onFile={onCoverUpload}
                 onClear={() => onFormChange((p) => ({ ...p, coverImageUrl: "" }))}
               />
-              <div className="relative aspect-3/1 overflow-hidden rounded-xl border border-dashed border-brand-accent/25 bg-brand-input/25">
+              <div
+                className={`relative aspect-3/1 overflow-hidden rounded-xl transition-all duration-300 ${
+                  coverPreview
+                    ? brandAssetPreviewLoaded
+                    : "border border-dashed border-brand-accent/25 bg-brand-input/25"
+                }`}
+              >
                 {coverPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
+                    key={coverPreview}
                     src={coverPreview}
                     alt="Vista previa de portada"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full animate-asset-preview-in object-cover"
                   />
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center px-4 text-center">
@@ -444,9 +607,18 @@ export function StoreSettingsPanel({
                     </p>
                   </div>
                 )}
-                <span className="absolute left-2 top-2 rounded-md bg-brand-accent/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                  Portada
-                </span>
+                {coverPreview ? (
+                  <span
+                    className={`absolute left-2 top-2 ${brandAssetReadyPill}`}
+                  >
+                    <CheckIcon className="h-3 w-3" />
+                    Portada lista
+                  </span>
+                ) : (
+                  <span className="absolute left-2 top-2 rounded-md bg-brand-accent/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase shadow-sm">
+                    Portada
+                  </span>
+                )}
               </div>
             </div>
           </section>
@@ -467,13 +639,20 @@ export function StoreSettingsPanel({
                 onFile={onLogoUpload}
                 onClear={() => onFormChange((p) => ({ ...p, logoUrl: "" }))}
               />
-              <div className="relative mx-auto flex aspect-square w-full max-w-[11rem] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-brand-separator bg-brand-input/25 p-4 sm:max-w-[12.5rem]">
+              <div
+                className={`relative mx-auto flex aspect-square w-full max-w-[11rem] flex-col items-center justify-center overflow-hidden rounded-2xl p-4 transition-all duration-300 sm:max-w-[12.5rem] ${
+                  logoPreview
+                    ? brandAssetPreviewLoaded
+                    : "border border-dashed border-brand-separator bg-brand-input/25"
+                }`}
+              >
                 {logoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
+                    key={logoPreview}
                     src={logoPreview}
                     alt="Vista previa del logo"
-                    className="max-h-full max-w-full object-contain"
+                    className="max-h-full max-w-full animate-asset-preview-in object-contain"
                   />
                 ) : (
                   <div className="text-center">
@@ -483,9 +662,18 @@ export function StoreSettingsPanel({
                     </p>
                   </div>
                 )}
-                <span className="absolute left-2 top-2 rounded-md border border-brand-separator bg-brand-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary shadow-sm">
-                  Logo
-                </span>
+                {logoPreview ? (
+                  <span
+                    className={`absolute left-2 top-2 ${brandAssetReadyPill}`}
+                  >
+                    <CheckIcon className="h-3 w-3" />
+                    Logo listo
+                  </span>
+                ) : (
+                  <span className="absolute left-2 top-2 rounded-md border border-brand-separator bg-brand-surface px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brand-primary uppercase shadow-sm">
+                    Logo
+                  </span>
+                )}
               </div>
               <p className="text-center text-[11px] leading-relaxed text-brand-tertiary">
                 Tras subir portada o logo, pulsa{" "}
@@ -731,7 +919,11 @@ function CoverDropzone({
   onClear: () => void;
 }) {
   return (
-    <div className="relative aspect-3/1 min-h-[7.5rem] rounded-xl border-2 border-dashed border-brand-accent/35 bg-brand-input/30 transition hover:border-brand-accent/55 hover:bg-brand-surface-hover sm:min-h-[8.5rem]">
+    <div
+      className={`group relative aspect-3/1 min-h-[7.5rem] overflow-hidden rounded-xl transition sm:min-h-[8.5rem] ${
+        hasCover ? brandAssetDropzoneLoaded : brandAssetDropzoneIdle
+      }`}
+    >
       <input
         type="file"
         accept="image/*"
@@ -745,34 +937,58 @@ function CoverDropzone({
         aria-label="Subir foto de portada (banner horizontal)"
       />
       <div className="pointer-events-none flex h-full flex-col items-center justify-center px-4 text-center">
-        <div className="flex h-12 w-20 items-center justify-center rounded-lg border border-brand-accent/30 bg-brand-accent/10">
-          {uploading ? (
-            <SpinnerIcon className="h-6 w-6 text-brand-accent" />
-          ) : (
-            <CoverBannerIcon className="h-7 w-7 text-brand-accent dark:text-brand-accent-soft" />
-          )}
-        </div>
-        <p className="mt-3 text-sm font-medium text-brand-primary">
-          {uploading
-            ? "Subiendo portada…"
-            : hasCover
-              ? "Clic para cambiar el banner"
-              : "Subir banner de portada"}
-        </p>
-        <p className="mt-0.5 text-xs text-brand-tertiary">
-          Imagen horizontal · no es el logo
-        </p>
+        {uploading ? (
+          <>
+            <div className="flex h-12 w-20 items-center justify-center rounded-lg border border-brand-accent/30 bg-brand-accent/10">
+              <SpinnerIcon className="h-6 w-6 text-brand-accent" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-brand-primary">
+              Subiendo portada…
+            </p>
+            <p className="mt-0.5 text-xs text-brand-tertiary">
+              Espera unos segundos
+            </p>
+          </>
+        ) : hasCover ? (
+          <>
+            <span
+              className={`h-12 w-12 animate-asset-success-pop ${brandAssetSuccessIcon}`}
+              aria-hidden
+            >
+              <CheckIcon className="h-6 w-6" />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-200">
+              Portada cargada
+            </p>
+            <p className="mt-0.5 text-xs text-brand-secondary">
+              Clic para reemplazar
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex h-12 w-20 items-center justify-center rounded-lg border border-brand-accent/30 bg-brand-accent/10 transition group-hover:scale-[1.03]">
+              <CoverBannerIcon className="h-7 w-7 text-brand-accent dark:text-brand-accent-soft" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-brand-primary">
+              Subir banner de portada
+            </p>
+            <p className="mt-0.5 text-xs text-brand-tertiary">
+              Imagen horizontal · no es el logo
+            </p>
+          </>
+        )}
       </div>
-      {hasCover ? (
+      {hasCover && !uploading ? (
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onClear();
           }}
-          className="absolute bottom-2 left-2 right-2 z-20 rounded-lg border border-brand-separator bg-brand-surface/95 py-1.5 text-xs text-brand-secondary backdrop-blur-sm transition hover:bg-brand-hover"
+          className={`absolute top-2 right-2 z-20 ${brandAssetRemoveBtn}`}
         >
-          Quitar portada
+          <TrashIcon className="h-3 w-3" />
+          Quitar
         </button>
       ) : null}
     </div>
@@ -791,7 +1007,11 @@ function LogoDropzone({
   onClear: () => void;
 }) {
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[11rem] rounded-2xl border-2 border-dashed border-brand-separator bg-brand-input/30 transition hover:border-brand-input-border hover:bg-brand-surface-hover sm:max-w-[12.5rem]">
+    <div
+      className={`group relative mx-auto aspect-square w-full max-w-[11rem] overflow-hidden rounded-2xl transition sm:max-w-[12.5rem] ${
+        hasLogo ? brandAssetDropzoneLoaded : brandAssetDropzoneIdle
+      }`}
+    >
       <input
         type="file"
         accept="image/*"
@@ -805,34 +1025,58 @@ function LogoDropzone({
         aria-label="Subir logo (imagen cuadrada)"
       />
       <div className="pointer-events-none flex h-full flex-col items-center justify-center px-3 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-brand-separator bg-brand-surface shadow-sm">
-          {uploading ? (
-            <SpinnerIcon className="h-6 w-6 text-brand-accent" />
-          ) : (
-            <LogoMarkIcon className="h-7 w-7 text-brand-primary" />
-          )}
-        </div>
-        <p className="mt-3 text-sm font-medium text-brand-primary">
-          {uploading
-            ? "Subiendo logo…"
-            : hasLogo
-              ? "Clic para cambiar el logo"
-              : "Subir logo cuadrado"}
-        </p>
-        <p className="mt-0.5 text-xs text-brand-tertiary">
-          Icono · no es la portada
-        </p>
+        {uploading ? (
+          <>
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-brand-separator bg-brand-surface shadow-sm">
+              <SpinnerIcon className="h-6 w-6 text-brand-accent" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-brand-primary">
+              Subiendo logo…
+            </p>
+            <p className="mt-0.5 text-xs text-brand-tertiary">
+              Espera unos segundos
+            </p>
+          </>
+        ) : hasLogo ? (
+          <>
+            <span
+              className={`h-14 w-14 animate-asset-success-pop ${brandAssetSuccessIcon}`}
+              aria-hidden
+            >
+              <CheckIcon className="h-7 w-7" />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-200">
+              Logo cargado
+            </p>
+            <p className="mt-0.5 text-xs text-brand-secondary">
+              Clic para reemplazar
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-brand-separator bg-brand-surface shadow-sm transition group-hover:scale-[1.03]">
+              <LogoMarkIcon className="h-7 w-7 text-brand-primary" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-brand-primary">
+              Subir logo cuadrado
+            </p>
+            <p className="mt-0.5 text-xs text-brand-tertiary">
+              Icono · no es la portada
+            </p>
+          </>
+        )}
       </div>
-      {hasLogo ? (
+      {hasLogo && !uploading ? (
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onClear();
           }}
-          className="absolute bottom-2 left-2 right-2 z-20 rounded-lg border border-brand-separator bg-brand-surface/95 py-1.5 text-xs text-brand-secondary backdrop-blur-sm transition hover:bg-brand-hover"
+          className={`absolute top-2 right-2 z-20 ${brandAssetRemoveBtn}`}
         >
-          Quitar logo
+          <TrashIcon className="h-3 w-3" />
+          Quitar
         </button>
       ) : null}
     </div>
@@ -1052,6 +1296,45 @@ function PickupCard({
   );
 }
 
+function SocialInput({
+  icon,
+  label,
+  value,
+  placeholder,
+  prefix,
+  onChange,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  placeholder: string;
+  prefix?: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-medium text-brand-secondary">{label}</p>
+      <div className="flex items-stretch overflow-hidden rounded-xl border border-brand-separator bg-brand-input/30 transition focus-within:border-brand-accent/50 focus-within:ring-2 focus-within:ring-brand-accent/20">
+        {prefix ? (
+          <span className="flex items-center border-r border-brand-separator bg-brand-hover px-2.5 text-[11px] font-medium text-brand-tertiary">
+            {prefix}
+          </span>
+        ) : null}
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent px-3 py-2 text-sm text-brand-primary placeholder:text-brand-tertiary focus:outline-none"
+        />
+        <span className="flex items-center pr-2.5 text-brand-tertiary">
+          {icon}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function TogglePill({
   checked,
   onChange,
@@ -1184,11 +1467,54 @@ function CheckIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function TrashIcon({ className = "h-3 w-3" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+    </svg>
+  );
+}
+
 function SpinnerIcon({ className = "h-4 w-4 animate-spin" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5M3.75 15h16.5M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18" />
+    </svg>
+  );
+}
+
+function InstagramIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M22 12.07C22 6.5 17.52 2 12 2S2 6.5 2 12.07C2 17.1 5.66 21.27 10.44 22v-7.03H7.9v-2.9h2.54V9.85c0-2.52 1.5-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34V22C18.34 21.27 22 17.1 22 12.07Z" />
+    </svg>
+  );
+}
+
+function TikTokIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43V8.65a8.16 8.16 0 0 0 4.77 1.52V6.7a4.85 4.85 0 0 1-1.84-.01Z" />
     </svg>
   );
 }

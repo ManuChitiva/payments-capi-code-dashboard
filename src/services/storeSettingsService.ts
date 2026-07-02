@@ -25,6 +25,15 @@ export type MyStoreDetail = {
   category: string;
   createdAt: string;
   pickups: PickupRow[];
+  // Campos extendidos (opcionales, visibles en la página pública)
+  description: string | null;
+  email: string | null;
+  website: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  tiktok: string | null;
+  schedule: string | null;
+  paymentMethods: string | null;
 };
 
 export type MyStoreFormPayload = {
@@ -38,6 +47,15 @@ export type MyStoreFormPayload = {
   cellPhone: string;
   address: string;
   category: StoreCategoryCode;
+  // Campos extendidos
+  description: string;
+  email: string;
+  website: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  schedule: string;
+  paymentMethods: string;
 };
 
 export async function getMyStore(
@@ -76,6 +94,14 @@ export async function updateMyStore(
       cellPhone: payload.cellPhone.trim(),
       address: payload.address.trim(),
       category: payload.category,
+      description: payload.description.trim(),
+      email: payload.email.trim(),
+      website: payload.website.trim(),
+      instagram: payload.instagram.trim(),
+      facebook: payload.facebook.trim(),
+      tiktok: payload.tiktok.trim(),
+      schedule: payload.schedule.trim(),
+      paymentMethods: payload.paymentMethods.trim(),
     }),
   });
   if (!response.ok) {
