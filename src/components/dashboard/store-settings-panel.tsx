@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import type { MyStoreFormPayload } from "@/services/storeSettingsService";
 import type { PickupPoint } from "@/services/storePickupsService";
 import {
@@ -29,6 +30,19 @@ import {
   brandTextSecondary,
   brandTextTertiary,
 } from "@/lib/brand-theme";
+
+// Leaflet accede a `window` al import → carga dinámica sin SSR para evitar
+// errores de hidratación y mismatches con Next 16.
+const StoreLocationPicker = dynamic(
+  () =>
+    import("./store-location-picker").then((m) => ({
+      default: m.StoreLocationPicker,
+    })),
+  {
+    ssr: false,
+    loading: () => <LocationPickerSkeleton />,
+  },
+);
 
 type ActiveStorePreview = {
   slug: string;
@@ -408,6 +422,25 @@ export function StoreSettingsPanel({
           </FormField>
         </SettingsCard>
       </div>
+
+      <SettingsCard
+        icon={<MapPinIcon />}
+        title="Dirección Principal"
+        description="Fija el punto para que tus clientes puedan abrir la ubicación en Google Maps u OpenStreetMap."
+        className="lg:col-span-2"
+      >
+        <StoreLocationPicker
+          latitude={form.latitude}
+          longitude={form.longitude}
+          onChange={(c) =>
+            onFormChange((p) => ({
+              ...p,
+              latitude: c.latitude,
+              longitude: c.longitude,
+            }))
+          }
+        />
+      </SettingsCard>
 
       <SettingsCard
         icon={<GlobeIcon />}
@@ -1403,6 +1436,20 @@ function MapPinIcon({ className = "h-5 w-5" }: { className?: string }) {
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
     </svg>
+  );
+}
+
+/** Placeholder mientras se carga dinámicamente el {@link StoreLocationPicker}. */
+function LocationPickerSkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      <div className="flex gap-2">
+        <div className="h-10 flex-1 animate-pulse rounded-xl bg-brand-hover" />
+        <div className="h-10 w-32 animate-pulse rounded-xl bg-brand-hover" />
+        <div className="h-10 w-24 animate-pulse rounded-xl bg-brand-hover" />
+      </div>
+      <div className="h-[320px] w-full animate-pulse rounded-xl bg-brand-hover sm:h-[400px]" />
+    </div>
   );
 }
 

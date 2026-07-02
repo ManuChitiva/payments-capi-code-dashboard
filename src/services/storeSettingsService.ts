@@ -22,6 +22,8 @@ export type MyStoreDetail = {
   whatsapp: string | null;
   cellPhone: string | null;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   category: string;
   createdAt: string;
   pickups: PickupRow[];
@@ -46,6 +48,8 @@ export type MyStoreFormPayload = {
   whatsapp: string;
   cellPhone: string;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
   category: StoreCategoryCode;
   // Campos extendidos
   description: string;
@@ -93,6 +97,8 @@ export async function updateMyStore(
       whatsapp: payload.whatsapp.trim(),
       cellPhone: payload.cellPhone.trim(),
       address: payload.address.trim(),
+      latitude: payload.latitude,
+      longitude: payload.longitude,
       category: payload.category,
       description: payload.description.trim(),
       email: payload.email.trim(),
