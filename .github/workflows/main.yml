@@ -1,0 +1,27 @@
+name: Docker Build & Push
+
+on:
+  push:
+    branches:
+      - master   # o cambia a main si usas main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: wowlibrepro
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build y Push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: |
+            wowlibrepro/capicode-store:latest
+            wowlibrepro/capicode-store:${{ github.sha }}
