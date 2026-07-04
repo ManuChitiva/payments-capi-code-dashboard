@@ -23,7 +23,7 @@ export type AuthRequestHeadersOptions = {
   requireStore?: boolean;
 };
 
-/** Headers para rutas autenticadas; incluye {@code x-store-id} cuando hay tienda activa. */
+/** Headers para rutas autenticadas; incluye {@code x-store-id} cuando hay negocio activo. */
 export function buildAuthRequestHeaders(
   options: AuthRequestHeadersOptions = {},
 ): Record<string, string> {

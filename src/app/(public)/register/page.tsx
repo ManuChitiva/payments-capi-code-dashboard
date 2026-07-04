@@ -2,20 +2,57 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { postAuthRegister } from "@/lib/auth-api";
 import { persistAuthSession } from "@/lib/auth-session";
+import {
+  brandAlertError,
+  brandCardTopLine,
+  brandCtaMd,
+  brandEyebrow,
+  brandFeatureItem,
+  brandFeatureItemMuted,
+  brandFeatureList,
+  brandFormLabel,
+  brandFormLabelHint,
+  brandGridOverlaySoftClass,
+  brandHeroTitle,
+  brandHighlightAccent,
+  brandHighlightPro,
+  brandInputClass,
+  brandLinkAccent,
+  brandPageBg,
+  brandPasswordToggle,
+  brandRadialAccent,
+  brandSecondaryButton,
+  brandSurfaceElevated,
+  brandTextSecondary,
+  registerConnectorDone,
+  registerConnectorPending,
+  registerPhaseMeta,
+  registerPhaseTitle,
+  registerProBanner,
+  registerStepCurrent,
+  registerStepDone,
+  registerStepPending,
+  registerStepTitleCurrent,
+  registerStepTitleIdle,
+} from "@/lib/brand-theme";
 
 const PHASES = [
-  { id: 0, title: "Invitación", hint: "Valida tu código de acceso" },
-  { id: 1, title: "Tu cuenta", hint: "Datos del administrador" },
-  { id: 2, title: "Tu tienda", hint: "Nombre y URL opcional" },
+  { id: 0, title: "Tu cuenta", hint: "Datos del administrador" },
+  { id: 1, title: "Tu negocio", hint: "Nombre y URL opcional" },
 ] as const;
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan");
+  const wantsPro = planParam === "pro";
+  const wantsEnterprise = planParam === "enterprise";
+  const wantsPaidPlan = wantsPro || wantsEnterprise;
   const [phase, setPhase] = useState(0);
-  const [registrationCode, setRegistrationCode] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,22 +71,8 @@ export default function RegisterPage() {
     }
   }, [router]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get("registrationCode") ?? params.get("code");
-    if (q) {
-      setRegistrationCode(q);
-    }
-  }, []);
-
   const validatePhase = (p: number): string | null => {
     if (p === 0) {
-      if (!registrationCode.trim()) {
-        return "Indica el código de registro que te facilitó tu contacto.";
-      }
-      return null;
-    }
-    if (p === 1) {
       if (!name.trim() || !email.trim() || !password) {
         return "Completa nombre, correo y contraseña.";
       }
@@ -61,9 +84,9 @@ export default function RegisterPage() {
       }
       return null;
     }
-    if (p === 2) {
+    if (p === 1) {
       if (!storeName.trim()) {
-        return "Indica el nombre de la tienda.";
+        return "Indica el nombre del negocio.";
       }
       return null;
     }
@@ -76,19 +99,13 @@ export default function RegisterPage() {
   };
 
   const submitRegister = async () => {
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
-    const trimmedStore = storeName.trim();
-    const trimmedCode = registrationCode.trim();
-
     setLoading(true);
     try {
       const result = await postAuthRegister({
-        name: trimmedName,
-        email: trimmedEmail,
+        name: name.trim(),
+        email: email.trim(),
         password,
-        storeName: trimmedStore,
-        registrationCode: trimmedCode,
+        storeName: storeName.trim(),
         storeLabel: storeLabel.trim() || undefined,
         storeSlug: storeSlug.trim() || undefined,
       });
@@ -97,7 +114,13 @@ export default function RegisterPage() {
         return;
       }
       persistAuthSession(result.data);
-      router.push("/dashboard");
+      if (wantsEnterprise) {
+        router.push("/subscription/enterprise/checkout");
+      } else if (wantsPro) {
+        router.push("/subscription/pro/checkout");
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
       setError(
         "No hay conexión con el servidor. Comprueba tu red o inténtalo más tarde.",
@@ -111,7 +134,7 @@ export default function RegisterPage() {
     event.preventDefault();
     setError("");
 
-    if (phase < 2) {
+    if (phase < 1) {
       const msg = validatePhase(phase);
       if (msg) {
         setError(msg);
@@ -121,7 +144,7 @@ export default function RegisterPage() {
       return;
     }
 
-    const msg = validatePhase(0) ?? validatePhase(1) ?? validatePhase(2);
+    const msg = validatePhase(0) ?? validatePhase(1);
     if (msg) {
       setError(msg);
       return;
@@ -131,58 +154,93 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden bg-[#06080c] text-slate-100">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.4]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(45,212,191,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(45,212,191,0.04) 1px, transparent 1px)
-          `,
-          backgroundSize: "48px 48px",
-        }}
-      />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(45,212,191,0.12),transparent_55%)]" />
+    <main
+      className={`relative flex min-h-0 flex-1 flex-col overflow-x-hidden ${brandPageBg}`}
+    >
+      <div className={brandGridOverlaySoftClass} />
+      <div className={brandRadialAccent} />
 
       <section className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-10 px-5 py-12 sm:px-8 lg:flex-row lg:items-center lg:gap-16 lg:py-16">
         <div className="flex flex-1 flex-col justify-center space-y-6 lg:max-w-lg">
           <div className="space-y-4">
-            <p className="font-(family-name:--font-rajdhani) text-xs font-semibold tracking-[0.22em] text-teal-300/95 uppercase">
-              CapiCode · Alta de cuenta
+            <p className={brandEyebrow}>
+              {wantsEnterprise
+                ? "Alta con plan Empresarial"
+                : wantsPro
+                  ? "Alta con plan Profesional"
+                  : "Alta gratuita"}
             </p>
-            <h1 className="font-(family-name:--font-rajdhani) text-3xl leading-[1.12] font-bold tracking-tight text-white sm:text-4xl sm:text-[2.35rem]">
-              Crea tu espacio en tres pasos
+            <h1 className={brandHeroTitle}>
+              {wantsEnterprise
+                ? "Crea tu cuenta y pasa a Empresarial"
+                : wantsPro
+                  ? "Crea tu cuenta y pasa a PRO"
+                  : "Tu negocio online en dos pasos"}
             </h1>
-            <p className="text-base leading-relaxed text-slate-400">
-              Registro con código de invitación: flujo breve para validar acceso,
-              tu perfil de administrador y los datos de la tienda.
+            <p className={`text-base leading-relaxed ${brandTextSecondary}`}>
+              {wantsEnterprise ? (
+                <>
+                  Registro gratuito con tu primer negocio. Al terminar te llevamos
+                  al pago seguro del plan{" "}
+                  <span className={brandHighlightPro}>Empresarial</span>.
+                </>
+              ) : wantsPro ? (
+                <>
+                  Registro gratuito con tu primer negocio. Al terminar te llevamos
+                  al pago seguro del plan{" "}
+                  <span className={brandHighlightPro}>Profesional</span>.
+                </>
+              ) : (
+                <>
+                  Sin código de invitación. Al registrarte activamos el plan{" "}
+                  <span className={brandHighlightAccent}>Gratis</span> con tu
+                  primer negocio incluido.
+                </>
+              )}
             </p>
           </div>
-          <ul className="hidden space-y-3 border-l border-teal-500/25 pl-5 text-sm text-slate-400 sm:block">
-            <li className="relative before:absolute before:-left-5 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-teal-400/90">
-              Código único por cliente (no reutilizable)
+          <ul className={brandFeatureList}>
+            <li className={brandFeatureItem}>
+              1 negocio incluido en el plan Gratis
             </li>
-            <li className="relative before:absolute before:-left-5 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-amber-400/85">
-              Slug opcional; se puede generar automáticamente
+            <li className={brandFeatureItemMuted}>
+              Catálogo, variantes, PayU y panel administrativo
             </li>
-            <li className="relative before:absolute before:-left-5 before:top-2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-teal-400/90">
-              Acceso al panel al finalizar
+            <li className={brandFeatureItem}>
+              Más negocios con el plan Profesional —{" "}
+              <Link href="/plans" className={brandLinkAccent}>
+                ver planes
+              </Link>
             </li>
           </ul>
         </div>
 
         <div className="flex w-full flex-1 flex-col justify-center lg:max-w-lg">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800/90 bg-slate-900/80 p-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.55)] backdrop-blur-md sm:p-10">
-            <div
-              aria-hidden
-              className="absolute top-0 right-0 left-0 h-0.5 bg-linear-to-r from-transparent via-amber-400/60 to-teal-400/80"
-            />
+          <div className={`${brandSurfaceElevated} p-8 sm:p-10`}>
+            <div aria-hidden className={brandCardTopLine} />
+
+            {wantsPaidPlan ? (
+              <p className={registerProBanner}>
+                <span className="font-semibold">
+                  {wantsEnterprise ? "Plan Empresarial" : "Plan Profesional"}
+                </span>{" "}
+                — tras crear la cuenta irás al checkout seguro PayU.
+              </p>
+            ) : null}
 
             <nav aria-label="Progreso del registro" className="mb-8">
               <ol className="flex w-full list-none items-center gap-0 p-0">
                 {PHASES.map((step, index) => {
                   const done = index < phase;
                   const current = index === phase;
+                  const stepCircleClass = current
+                    ? registerStepCurrent
+                    : done
+                      ? registerStepDone
+                      : registerStepPending;
+                  const stepTitleClass = current
+                    ? registerStepTitleCurrent
+                    : registerStepTitleIdle;
                   return (
                     <li
                       key={step.id}
@@ -190,32 +248,20 @@ export default function RegisterPage() {
                     >
                       <div className="flex shrink-0 flex-col items-center gap-1.5">
                         <span
-                          className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold transition ${
-                            current
-                              ? "border-teal-400/70 bg-teal-500/15 text-teal-200 shadow-[0_0_16px_-4px_rgba(45,212,191,0.5)]"
-                              : done
-                                ? "border-teal-500/35 bg-teal-500/10 text-teal-300"
-                                : "border-slate-600/80 bg-slate-950/50 text-slate-500"
-                          }`}
+                          className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold transition ${stepCircleClass}`}
                           aria-current={current ? "step" : undefined}
                         >
                           {done ? "✓" : index + 1}
                         </span>
-                        <span
-                          className={`hidden max-w-22 truncate text-center text-[10px] font-medium tracking-wide uppercase sm:block ${
-                            current ? "text-teal-200/95" : "text-slate-500"
-                          }`}
-                        >
-                          {step.title}
-                        </span>
+                        <span className={stepTitleClass}>{step.title}</span>
                       </div>
                       {index < PHASES.length - 1 ? (
                         <div
                           aria-hidden
                           className={`mx-2 h-px min-w-3 flex-1 sm:mx-3 ${
                             index < phase
-                              ? "bg-teal-500/40"
-                              : "bg-slate-700/60"
+                              ? registerConnectorDone
+                              : registerConnectorPending
                           }`}
                         />
                       ) : null}
@@ -223,79 +269,48 @@ export default function RegisterPage() {
                   );
                 })}
               </ol>
-              <p className="mt-4 text-sm text-slate-400">
-                <span className="font-medium text-slate-200">
+              <p className={registerPhaseMeta}>
+                <span className={registerPhaseTitle}>
                   {PHASES[phase].title}
                 </span>
-                <span className="text-slate-500"> · </span>
+                <span className="text-brand-tertiary"> · </span>
                 {PHASES[phase].hint}
               </p>
             </nav>
 
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {phase === 0 ? (
-                <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-slate-300">
-                    Código de registro
-                  </span>
-                  <input
-                    type="text"
-                    name="registrationCode"
-                    autoComplete="off"
-                    spellCheck={false}
-                    value={registrationCode}
-                    onChange={(event) =>
-                      setRegistrationCode(event.target.value)
-                    }
-                    className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 font-mono text-sm tracking-wide text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2 sm:text-base"
-                    placeholder="Ej. CLIENTE-2026-A1"
-                    disabled={loading}
-                  />
-                  <span className="text-xs text-slate-500">
-                    Te lo envía quien te da de alta. Mayúsculas y minúsculas dan
-                    igual.
-                  </span>
-                </label>
-              ) : null}
-
-              {phase === 1 ? (
                 <>
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
-                      Nombre y apellido
-                    </span>
+                    <span className={brandFormLabel}>Nombre y apellido</span>
                     <input
                       type="text"
                       name="name"
                       autoComplete="name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2"
+                      className={`${brandInputClass} px-4`}
                       placeholder="María García"
                       disabled={loading}
                     />
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
-                      Correo electrónico
-                    </span>
+                    <span className={brandFormLabel}>Correo electrónico</span>
                     <input
                       type="email"
                       name="email"
                       autoComplete="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2"
+                      className={`${brandInputClass} px-4`}
                       placeholder="tu@empresa.com"
                       disabled={loading}
                     />
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
-                      Contraseña
-                    </span>
+                    <span className={brandFormLabel}>Contraseña</span>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
@@ -303,13 +318,13 @@ export default function RegisterPage() {
                         autoComplete="new-password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
-                        className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 pr-29 text-base text-slate-100 outline-none ring-teal-500/25 transition focus:border-teal-500/55 focus:ring-2 sm:pr-32"
+                        className={`${brandInputClass} px-4 pr-29 sm:pr-32`}
                         disabled={loading}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute top-1/2 right-2 -translate-y-1/2 rounded-lg px-3.5 py-2 text-sm font-medium text-amber-200/80 transition hover:bg-slate-800/90 hover:text-amber-100"
+                        className={brandPasswordToggle}
                       >
                         {showPassword ? "Ocultar" : "Mostrar"}
                       </button>
@@ -317,9 +332,7 @@ export default function RegisterPage() {
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
-                      Confirmar contraseña
-                    </span>
+                    <span className={brandFormLabel}>Confirmar contraseña</span>
                     <input
                       type={showPassword ? "text" : "password"}
                       name="confirmPassword"
@@ -328,61 +341,55 @@ export default function RegisterPage() {
                       onChange={(event) =>
                         setConfirmPassword(event.target.value)
                       }
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition focus:border-teal-500/55 focus:ring-2"
+                      className={`${brandInputClass} px-4`}
                       disabled={loading}
                     />
                   </label>
                 </>
               ) : null}
 
-              {phase === 2 ? (
+              {phase === 1 ? (
                 <>
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
-                      Nombre de la tienda
-                    </span>
+                    <span className={brandFormLabel}>Nombre del negocio</span>
                     <input
                       type="text"
                       name="storeName"
                       value={storeName}
                       onChange={(event) => setStoreName(event.target.value)}
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2"
+                      className={`${brandInputClass} px-4`}
                       placeholder="Mi comercio"
                       disabled={loading}
                     />
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
+                    <span className={brandFormLabel}>
                       Etiqueta visible{" "}
-                      <span className="font-normal text-slate-500">
-                        (opcional)
-                      </span>
+                      <span className={brandFormLabelHint}>(opcional)</span>
                     </span>
                     <input
                       type="text"
                       name="storeLabel"
                       value={storeLabel}
                       onChange={(event) => setStoreLabel(event.target.value)}
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2"
+                      className={`${brandInputClass} px-4`}
                       placeholder="Texto corto para la cabecera"
                       disabled={loading}
                     />
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-slate-300">
+                    <span className={brandFormLabel}>
                       Slug en URL{" "}
-                      <span className="font-normal text-slate-500">
-                        (opcional)
-                      </span>
+                      <span className={brandFormLabelHint}>(opcional)</span>
                     </span>
                     <input
                       type="text"
                       name="storeSlug"
                       value={storeSlug}
                       onChange={(event) => setStoreSlug(event.target.value)}
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/85 px-4 py-3.5 text-base text-slate-100 outline-none ring-teal-500/25 transition placeholder:text-slate-600 focus:border-teal-500/55 focus:ring-2"
+                      className={`${brandInputClass} px-4`}
                       placeholder="mi-comercio (se genera si lo dejas vacío)"
                       disabled={loading}
                     />
@@ -391,10 +398,7 @@ export default function RegisterPage() {
               ) : null}
 
               {error ? (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-rose-500/40 bg-rose-950/45 px-4 py-3.5 text-sm text-rose-100"
-                >
+                <p role="alert" className={brandAlertError}>
                   {error}
                 </p>
               ) : null}
@@ -405,7 +409,7 @@ export default function RegisterPage() {
                     type="button"
                     onClick={goBack}
                     disabled={loading}
-                    className="order-2 w-full rounded-xl border border-slate-600/80 bg-slate-950/50 px-4 py-3.5 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-900/80 disabled:opacity-50 sm:order-1 sm:mr-auto sm:w-auto"
+                    className={`order-2 w-full px-4 py-3.5 sm:order-1 sm:mr-auto sm:w-auto ${brandSecondaryButton} disabled:opacity-50`}
                   >
                     Atrás
                   </button>
@@ -414,29 +418,50 @@ export default function RegisterPage() {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="order-1 w-full rounded-xl bg-linear-to-r from-teal-400 to-cyan-500 px-4 py-3.5 text-sm font-semibold text-slate-950 shadow-[0_0_24px_-4px_rgba(45,212,191,0.4)] transition hover:from-teal-300 hover:to-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 disabled:cursor-not-allowed disabled:opacity-60 sm:order-2 sm:w-auto sm:min-w-[200px]"
+                  className={`order-1 w-full sm:order-2 sm:w-auto sm:min-w-[200px] ${brandCtaMd}`}
                 >
                   {loading
                     ? "Creando cuenta…"
-                    : phase < 2
+                    : phase < 1
                       ? "Continuar"
-                      : "Crear cuenta y entrar"}
+                      : wantsEnterprise
+                        ? "Crear cuenta y pagar Empresarial"
+                        : wantsPro
+                          ? "Crear cuenta y pagar PRO"
+                          : "Crear cuenta y entrar"}
                 </button>
               </div>
             </form>
           </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className={`mt-6 text-center text-sm ${brandTextSecondary}`}>
             ¿Ya tienes cuenta?{" "}
-            <Link
-              href="/"
-              className="font-medium text-teal-300 underline-offset-4 hover:text-amber-300 hover:underline"
-            >
+            <Link href="/" className={brandLinkAccent}>
               Iniciar sesión
+            </Link>
+            {" · "}
+            <Link href="/plans" className={brandLinkAccent}>
+              Ver planes
             </Link>
           </p>
         </div>
       </section>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <main
+          className={`flex flex-1 items-center justify-center ${brandPageBg} ${brandTextSecondary}`}
+        >
+          Cargando…
+        </main>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

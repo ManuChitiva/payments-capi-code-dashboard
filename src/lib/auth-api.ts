@@ -47,7 +47,6 @@ export async function postAuthRegister(
     email: payload.email,
     password: payload.password,
     storeName: payload.storeName,
-    registrationCode: payload.registrationCode.trim(),
   };
   if (payload.storeLabel?.trim()) body.storeLabel = payload.storeLabel.trim();
   if (payload.storeSlug?.trim()) body.storeSlug = payload.storeSlug.trim();
@@ -61,9 +60,9 @@ export async function postAuthRegister(
     let fallback = "No se pudo crear la cuenta. Intenta de nuevo.";
     if (response.status === 403) {
       fallback =
-        "Código de registro inválido o ya utilizado. Solicita un código nuevo.";
+        "El navegador bloqueó la petición (CORS). Reinicia la API stores, quita NEXT_PUBLIC_API_BASE_URL en local para usar /api, o abre el panel en http://localhost:3000. El registro es público en el servidor.";
     } else if (response.status === 409) {
-      fallback = "El correo o el identificador de tienda ya están en uso.";
+      fallback = "El correo o el identificador de negocio ya están en uso.";
     } else if (response.status >= 500) {
       fallback = "El servicio no está disponible. Intenta más tarde.";
     }

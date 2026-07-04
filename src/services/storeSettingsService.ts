@@ -1,4 +1,6 @@
 import { buildAuthRequestHeaders } from "@/lib/api-headers";
+import { normalizeStorePrimaryColor } from "@/lib/brand-store-defaults";
+import { normalizeStoreCategory, type StoreCategoryCode } from "@/lib/store-categories";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 
 export type PickupRow = {
@@ -16,11 +18,24 @@ export type MyStoreDetail = {
   phone: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  coverImageUrl: string | null;
   whatsapp: string | null;
   cellPhone: string | null;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  category: string;
   createdAt: string;
   pickups: PickupRow[];
+  // Campos extendidos (opcionales, visibles en la página pública)
+  description: string | null;
+  email: string | null;
+  website: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  tiktok: string | null;
+  schedule: string | null;
+  paymentMethods: string | null;
 };
 
 export type MyStoreFormPayload = {
@@ -28,9 +43,23 @@ export type MyStoreFormPayload = {
   label: string;
   phone: string;
   logoUrl: string;
+  primaryColor: string;
+  coverImageUrl: string;
   whatsapp: string;
   cellPhone: string;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
+  category: StoreCategoryCode;
+  // Campos extendidos
+  description: string;
+  email: string;
+  website: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  schedule: string;
+  paymentMethods: string;
 };
 
 export async function getMyStore(
@@ -63,13 +92,26 @@ export async function updateMyStore(
       label: payload.label.trim(),
       phone: payload.phone.trim(),
       logoUrl: payload.logoUrl.trim(),
+      primaryColor: normalizeStorePrimaryColor(payload.primaryColor),
+      coverImageUrl: payload.coverImageUrl.trim(),
       whatsapp: payload.whatsapp.trim(),
       cellPhone: payload.cellPhone.trim(),
       address: payload.address.trim(),
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      category: payload.category,
+      description: payload.description.trim(),
+      email: payload.email.trim(),
+      website: payload.website.trim(),
+      instagram: payload.instagram.trim(),
+      facebook: payload.facebook.trim(),
+      tiktok: payload.tiktok.trim(),
+      schedule: payload.schedule.trim(),
+      paymentMethods: payload.paymentMethods.trim(),
     }),
   });
   if (!response.ok) {
-    let message = "No se pudo guardar la tienda.";
+    let message = "No se pudo guardar el negocio.";
     try {
       const body = (await response.json()) as {
         message?: string;

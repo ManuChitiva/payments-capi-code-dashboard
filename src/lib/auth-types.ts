@@ -5,6 +5,7 @@ export type AuthStoreSummary = {
   label: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  coverImageUrl: string | null;
 };
 
 export type AuthClientDetail = {
@@ -25,7 +26,6 @@ export type AuthRegisterPayload = {
   email: string;
   password: string;
   storeName: string;
-  registrationCode: string;
   storeLabel?: string;
   storeSlug?: string;
 };

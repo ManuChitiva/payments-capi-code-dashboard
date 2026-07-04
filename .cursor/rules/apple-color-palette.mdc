@@ -1,0 +1,70 @@
+---
+description: Paleta y UI estilo Apple (CapiCode) — light/dark con tokens de marca
+alwaysApply: true
+---
+
+# Paleta Apple — CapiCode
+
+Toda UI nueva o refactor debe usar la **paleta Apple** del proyecto, con soporte **light** y **dark** (`html.light` / `html.dark`).
+
+## Tokens (fuente de verdad)
+
+- Variables CSS: `src/app/globals.css` (`--brand-*`, `--background`, `--foreground`)
+- Clases semánticas: `src/lib/brand-theme.ts` — **importar y reutilizar**, no inventar colores sueltos
+
+## Colores de referencia
+
+| Uso | Light | Dark |
+|-----|-------|------|
+| Fondo página | `#f5f5f7` | `#000000` |
+| Superficie / tarjeta | `#ffffff` / `#1c1c1e` | idem |
+| Texto principal | `#1d1d1e` | `#f5f5f7` |
+| Texto secundario | `#6e6e73` | `#86868b` |
+| Acento / CTA | `#0071e3` | `#0071e3` / soft `#2997ff` |
+| Índigo secundario | `#5e5ce6` | `#5e5ce6` |
+| Separadores | `rgba(0,0,0,0.1)` | `rgba(255,255,255,0.1)` |
+
+## Prohibido en componentes
+
+- `text-white`, `text-slate-*`, `bg-slate-*`, `bg-black/*` fijos en páginas que cambian de tema
+- `text-amber-*`, violeta Tailwind genérico, cyan/sky sueltos para “destacar”
+- Hex hardcodeados en TSX salvo mocks puntuales en `brand-theme.ts`
+
+## Patrón correcto
+
+```tsx
+import {
+  brandPageBg,
+  brandTextPrimary,
+  brandTextSecondary,
+  brandSurfaceElevated,
+  brandInputClass,
+  brandCtaMd,
+} from "@/lib/brand-theme";
+
+<main className={brandPageBg}>
+  <h1 className={brandTextPrimary}>…</h1>
+  <p className={brandTextSecondary}>…</p>
+</main>
+```
+
+Variantes light/dark: `dark:` en la misma clase de `brand-theme.ts`, no en cada página.
+
+## Marketing / formularios
+
+- Fondo: `brandPageBg` + `brandGridOverlaySoftClass` (no rejilla fuerte en claro)
+- Errores: `brandAlertError`
+- Enlaces y highlights: `brandLinkAccent`, `brandHighlightAccent` (azul marca, nunca dorado)
+
+## Dashboard (modo claro)
+
+- Estilo **Apple Settings**: blanco/gris, una sola acento azul (`brand-accent`) en CTAs y filtros activos
+- KPIs y badges **neutros** en claro (`dashboardStatCardClass`, `dashboardStatusBadge`); color semántico solo en `dark:`
+- Gráficos en claro: escala de grises + azul (`--brand-chart-1` … `--brand-chart-4` en `globals.css`)
+- Evitar arcoíris (emerald/amber/violet/rose) en tarjetas y chips en light mode
+
+## Antes de entregar UI
+
+1. Revisar en **tema claro** y **oscuro**
+2. Contraste legible en badges, pasos y textos secundarios
+3. Si falta un token, añadirlo a `brand-theme.ts` + variable en `globals.css`, no copiar clases en el componente

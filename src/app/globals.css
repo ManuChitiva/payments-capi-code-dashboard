@@ -1,26 +1,298 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* dark: sigue html.light / html.dark, no prefers-color-scheme del SO */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Modo claro (por defecto si no hay .dark) */
+:root,
+.light {
+  color-scheme: light;
+  --background: #f5f5f7;
+  --foreground: #1d1d1e;
+  --brand-bg: #f5f5f7;
+  --brand-nav: rgba(245, 245, 247, 0.82);
+  --brand-nav-solid: #f5f5f7;
+  --brand-surface: #ffffff;
+  --brand-surface-hover: #f0f0f2;
+  --brand-input: #ffffff;
+  --brand-input-border: #d2d2d7;
+  --brand-text-primary: #1d1d1e;
+  --brand-text-secondary: #6e6e73;
+  --brand-text-tertiary: #86868b;
+  --brand-separator: rgba(0, 0, 0, 0.1);
+  --brand-hover: rgba(0, 0, 0, 0.05);
+  --brand-accent: #0071e3;
+  --brand-accent-hover: #0077ed;
+  --brand-accent-soft: #0077ed;
+  --brand-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.1);
+  --brand-surface-glass: rgba(255, 255, 255, 0.72);
+  --brand-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  --brand-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.08);
+  --brand-grid-line: rgba(0, 0, 0, 0.06);
+  --brand-radial-color: rgba(0, 113, 227, 0.1);
+  --brand-ambient-particle: rgb(29 29 30);
+  --brand-ambient-line: rgb(0 113 227);
+  --brand-ambient-orb-1: rgba(0, 113, 227, 0.14);
+  --brand-ambient-orb-2: rgba(94, 92, 230, 0.1);
+  --brand-ambient-orb-3: rgba(0, 0, 0, 0.04);
+  --brand-ambient-vignette: rgba(0, 0, 0, 0.12);
+  --brand-chart-grid: rgba(0, 0, 0, 0.08);
+  --brand-chart-axis: #86868b;
+  --brand-chart-1: #0071e3;
+  --brand-chart-2: #6e6e73;
+  --brand-chart-3: #86868b;
+  --brand-chart-4: #48484a;
+  --login-phone-screen: #f5f5f7;
+  --login-phone-screen-ring: rgba(0, 0, 0, 0.06);
+  --login-phone-bezel-from: #e8e8ed;
+  --login-phone-bezel-via: #d2d2d7;
+  --login-phone-bezel-to: #aeaeb2;
+  --login-phone-button: #aeaeb2;
+  --login-phone-status: #6e6e73;
+  --login-phone-status-icon: #1d1d1e;
+  --login-phone-home-bar: rgba(0, 0, 0, 0.2);
+  --login-phone-bezel-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* Modo oscuro */
+.dark {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --brand-bg: #000000;
+  --brand-nav: rgba(0, 0, 0, 0.72);
+  --brand-nav-solid: #000000;
+  --brand-surface: #1c1c1e;
+  --brand-surface-hover: #2c2c2e;
+  --brand-input: #1c1c1e;
+  --brand-input-border: #424245;
+  --brand-text-primary: #f5f5f7;
+  --brand-text-secondary: #86868b;
+  --brand-text-tertiary: #6e6e73;
+  --brand-separator: rgba(255, 255, 255, 0.1);
+  --brand-hover: rgba(255, 255, 255, 0.06);
+  --brand-accent: #0071e3;
+  --brand-accent-hover: #0077ed;
+  --brand-accent-soft: #2997ff;
+  --brand-shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.45);
+  --brand-surface-glass: rgba(28, 28, 30, 0.55);
+  --brand-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --brand-shadow-card-hover: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 32px rgba(0, 0, 0, 0.45);
+  --brand-grid-line: rgba(255, 255, 255, 0.04);
+  --brand-radial-color: rgba(255, 255, 255, 0.06);
+  --brand-ambient-particle: rgb(245 245 247);
+  --brand-ambient-line: rgb(41 151 255);
+  --brand-ambient-orb-1: rgba(41, 151, 255, 0.14);
+  --brand-ambient-orb-2: rgba(94, 92, 230, 0.1);
+  --brand-ambient-orb-3: rgba(255, 255, 255, 0.04);
+  --brand-ambient-vignette: rgba(0, 0, 0, 0.55);
+  --brand-chart-grid: rgba(255, 255, 255, 0.1);
+  --brand-chart-axis: #86868b;
+  --brand-chart-1: rgb(41 151 255);
+  --brand-chart-2: rgb(52 211 153);
+  --brand-chart-3: rgb(167 139 250);
+  --brand-chart-4: rgb(251 191 36);
+  --login-phone-screen: #000000;
+  --login-phone-screen-ring: rgba(255, 255, 255, 0.1);
+  --login-phone-bezel-from: #3a3a3c;
+  --login-phone-bezel-via: #2c2c2e;
+  --login-phone-bezel-to: #1c1c1e;
+  --login-phone-button: #48484a;
+  --login-phone-status: #86868b;
+  --login-phone-status-icon: #f5f5f7;
+  --login-phone-home-bar: rgba(245, 245, 247, 0.35);
+  --login-phone-bezel-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-nav: var(--brand-nav);
+  --color-brand-nav-solid: var(--brand-nav-solid);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-surface-hover: var(--brand-surface-hover);
+  --color-brand-input: var(--brand-input);
+  --color-brand-input-border: var(--brand-input-border);
+  --color-brand-primary: var(--brand-text-primary);
+  --color-brand-secondary: var(--brand-text-secondary);
+  --color-brand-tertiary: var(--brand-text-tertiary);
+  --color-brand-separator: var(--brand-separator);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-hover: var(--brand-accent-hover);
+  --color-brand-accent-soft: var(--brand-accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --shadow-brand-elevated: var(--brand-shadow-elevated);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+.brand-grid-overlay {
+  background-image: linear-gradient(var(--brand-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--brand-grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.brand-radial-accent {
+  background: radial-gradient(
+    ellipse 80% 55% at 50% -15%,
+    var(--brand-radial-color),
+    transparent 50%
+  );
+}
+
+.brand-ambient-orb-1 {
+  background-color: var(--brand-ambient-orb-1);
+}
+
+.brand-ambient-orb-2 {
+  background-color: var(--brand-ambient-orb-2);
+}
+
+.brand-ambient-orb-3 {
+  background-color: var(--brand-ambient-orb-3);
+}
+
+@keyframes login-orb-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6%, 10%) scale(1.06);
+  }
+}
+
+@keyframes login-orb-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-8%, -6%) scale(1.08);
+  }
+}
+
+@keyframes login-orb-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(5%, -8%) scale(1.05);
+    opacity: 1;
+  }
+}
+
+.animate-login-orb-a {
+  animation: login-orb-a 24s ease-in-out infinite;
+}
+
+.animate-login-orb-b {
+  animation: login-orb-b 28s ease-in-out infinite;
+}
+
+.animate-login-orb-c {
+  animation: login-orb-c 20s ease-in-out infinite;
+}
+
+.benefits-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.benefits-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes asset-preview-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-asset-preview-in {
+  animation: asset-preview-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes asset-success-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-asset-success-pop {
+  animation: asset-success-pop 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes alert-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes alert-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes alert-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes alert-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-login-orb-a,
+  .animate-login-orb-b,
+  .animate-login-orb-c {
+    animation: none;
+  }
 }

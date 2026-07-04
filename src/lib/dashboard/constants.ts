@@ -2,24 +2,35 @@ import type { DashboardSection, DashboardSectionMeta } from "@/types/dashboard";
 
 export const SECTION_META: Record<DashboardSection, DashboardSectionMeta> = {
   resumen: {
-    title: "Resumen",
+    title: "Analítica",
     description:
-      "Métricas, interacciones y productos con mayor interés en tu tienda activa.",
+      "Métricas, interacciones y productos con mayor interés en tu negocio activo.",
   },
   productos: {
     title: "Productos",
     description: "Administra catálogo, precios, stock y estado de publicación.",
   },
-  tienda: {
-    title: "Mi tienda",
+  pedidos: {
+    title: "Pedidos y pagos",
     description:
-      "Personaliza la identidad de tu marca, datos de contacto y puntos de recogida.",
+      "Consulta pedidos del checkout y el historial de pagos cobrados en tu negocio.",
+  },
+  tienda: {
+    title: "Mi negocio",
+    description:
+      "Personaliza la identidad de tu marca, datos de contacto y puntos de atención.",
   },
   pagos: {
     title: "Pagos PayU",
     description: "Configura medios de pago y revisa transacciones.",
   },
+  suscripcion: {
+    title: "Mi suscripción",
+    description:
+      "Consulta tu plan, límites de negocios y opciones para mejorar o comprar un plan.",
+  },
 };
 
-export const primaryButtonClass =
-  "rounded-xl border border-emerald-400/35 bg-emerald-500/15 px-4 py-2.5 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/25";
+import { brandActionButtonSolid } from "@/lib/brand-theme";
+
+export const primaryButtonClass = brandActionButtonSolid;

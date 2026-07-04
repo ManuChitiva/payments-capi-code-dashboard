@@ -4,20 +4,6 @@ import type { PaymentRevenueSummary } from "@/services/storePaymentsService";
 import type { PayuPaymentMethodSummary } from "@/services/payuPaymentMethodService";
 import type { PagedPaymentsResponse } from "@/services/storePaymentsService";
 
-export type DashboardProduct = {
-  id: number;
-  sku: string;
-  name: string;
-  description: string;
-  category: string;
-  price: number;
-  imageUrl: string;
-  stock: number;
-  status: ProductStatus;
-  active: boolean;
-  updatedAt: string;
-};
-
 export type StoreSummary = {
   id: number;
   name: string;
@@ -25,6 +11,7 @@ export type StoreSummary = {
   label: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  coverImageUrl: string | null;
 };
 
 export type ClientDetail = {
@@ -70,6 +57,14 @@ export type AnalyticsDashboard = {
     productName?: string | null;
     count: number;
   }>;
+};
+
+/** Ranking de productos por unidades vendidas (PAID, ventana N días). */
+export type TopSoldProduct = {
+  productId: number;
+  productName: string | null;
+  unitsSold: number;
+  totalRevenue: number;
 };
 
 export type DashboardSectionMeta = {

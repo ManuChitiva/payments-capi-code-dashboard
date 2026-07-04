@@ -10,10 +10,16 @@ import {
   type ProductFormErrors,
 } from "@/lib/product-form-validation";
 import type { ProductStatus } from "@/components/dashboard/products-table";
+import type { CatalogProduct } from "@/components/dashboard/products-table";
 import {
   listMyProducts,
   setMyProductActive,
+  upsertMyProduct,
 } from "@/services/productService";
+import {
+  toVariantUpsertPayload,
+  variantRowFromApi,
+} from "@/lib/product-variants";
 import {
   createPayuPaymentMethod,
   deletePayuPaymentMethod,
@@ -24,8 +30,16 @@ import {
   type PayuPaymentMethodUpdatePayload,
 } from "@/services/payuPaymentMethodService";
 import {
+  getMyOrder,
+  listMyOrders,
+  type AdminOrderListItem,
+  type OrderDetail,
+  type PagedOrdersResponse,
+} from "@/services/orderService";
+import {
   getMyPaymentsRevenueSummary,
   listMyPayuPayments,
+  listMyPayments,
   type PagedPaymentsResponse,
   type PaymentRevenueSummary,
 } from "@/services/storePaymentsService";
@@ -36,6 +50,7 @@ import {
   updatePickup,
   type PickupPoint,
 } from "@/services/storePickupsService";
+import { normalizeStorePrimaryColor } from "@/lib/brand-store-defaults";
 import {
   createMyStore,
   fetchClientMe,
@@ -47,26 +62,28 @@ import {
   updateMyStore,
   type MyStoreFormPayload,
 } from "@/services/storeSettingsService";
+import { DEFAULT_STORE_CATEGORY, normalizeStoreCategory } from "@/lib/store-categories";
 import { buildAuthFilters } from "@/lib/dashboard/auth-filters";
 import { SECTION_META } from "@/lib/dashboard/constants";
 import {
   loadAnalytics,
   loadTopProductsInterestPage,
+  loadTopSoldProducts,
 } from "@/lib/dashboard/analytics-api";
 import type {
   AnalyticsDashboard,
   ClientDetail,
-  DashboardProduct,
   PayuFormState,
   StoreSummary,
   TopProductInterest,
+  TopSoldProduct,
 } from "@/types/dashboard";
 
 export function useDashboardPage() {
   const router = useRouter();
   const [client, setClient] = useState<ClientDetail | null>(null);
-  const [products, setProducts] = useState<DashboardProduct[]>([]);
-  const [catalogStats, setCatalogStats] = useState<DashboardProduct[]>([]);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [catalogStats, setCatalogStats] = useState<CatalogProduct[]>([]);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | ProductStatus>(
     "todos",
@@ -85,6 +102,9 @@ export function useDashboardPage() {
   const [savingProduct, setSavingProduct] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState("");
+  const [uploadingVariantId, setUploadingVariantId] = useState<string | null>(
+    null,
+  );
   const [actionMessage, setActionMessage] = useState("");
   const [activeSection, setActiveSection] =
     useState<DashboardSection>("resumen");
@@ -95,9 +115,22 @@ export function useDashboardPage() {
       label: "",
       phone: "",
       logoUrl: "",
+      primaryColor: normalizeStorePrimaryColor(null),
+      coverImageUrl: "",
       whatsapp: "",
       cellPhone: "",
       address: "",
+      latitude: null,
+      longitude: null,
+      category: DEFAULT_STORE_CATEGORY,
+      description: "",
+      email: "",
+      website: "",
+      instagram: "",
+      facebook: "",
+      tiktok: "",
+      schedule: "",
+      paymentMethods: "",
     });
   const [pickupsList, setPickupsList] = useState<PickupPoint[]>([]);
   const [newPickupAddress, setNewPickupAddress] = useState("");
@@ -112,6 +145,7 @@ export function useDashboardPage() {
   const [myStoreLoading, setMyStoreLoading] = useState(false);
   const [myStoreSaving, setMyStoreSaving] = useState(false);
   const [uploadingStoreLogo, setUploadingStoreLogo] = useState(false);
+  const [uploadingStoreCover, setUploadingStoreCover] = useState(false);
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null);
   const [payuMethods, setPayuMethods] = useState<PayuPaymentMethodSummary[]>(
     [],
@@ -142,25 +176,57 @@ export function useDashboardPage() {
   const [payuPaymentStatusDraft, setPayuPaymentStatusDraft] = useState("");
   const [payuPaymentStatusQuery, setPayuPaymentStatusQuery] = useState("");
   const [payuPaymentsListTick, setPayuPaymentsListTick] = useState(0);
+  const [salesTab, setSalesTab] = useState<"pedidos" | "pagos">("pedidos");
+  const [ordersData, setOrdersData] = useState<PagedOrdersResponse | null>(null);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersPage, setOrdersPage] = useState(0);
+  const [orderStatusDraft, setOrderStatusDraft] = useState("");
+  const [orderStatusQuery, setOrderStatusQuery] = useState("");
+  const [ordersListTick, setOrdersListTick] = useState(0);
+  const [salesPaymentsData, setSalesPaymentsData] =
+    useState<PagedPaymentsResponse | null>(null);
+  const [salesPaymentsLoading, setSalesPaymentsLoading] = useState(false);
+  const [salesPaymentsPage, setSalesPaymentsPage] = useState(0);
+  const [salesPaymentStatusDraft, setSalesPaymentStatusDraft] = useState("");
+  const [salesPaymentStatusQuery, setSalesPaymentStatusQuery] = useState("");
+  const [salesPaymentsListTick, setSalesPaymentsListTick] = useState(0);
+  const [salesRevenueSummary, setSalesRevenueSummary] =
+    useState<PaymentRevenueSummary | null>(null);
+  const [orderDetailOpen, setOrderDetailOpen] = useState(false);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  const [orderDetail, setOrderDetail] = useState<OrderDetail | null>(null);
   const [topInterestItems, setTopInterestItems] = useState<
     TopProductInterest[]
   >([]);
   const [topInterestLast, setTopInterestLast] = useState(true);
+  const [topInterestTotal, setTopInterestTotal] = useState(0);
   const [topInterestLoading, setTopInterestLoading] = useState(false);
   const topInterestScrollRef = useRef<HTMLDivElement | null>(null);
   const topInterestSentinelRef = useRef<HTMLDivElement | null>(null);
   const topInterestPageRef = useRef(0);
+  /** Conteo de pedidos en estado PENDING (revenue en riesgo) */
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [topPendingOrders, setTopPendingOrders] = useState<AdminOrderListItem[]>(
+    [],
+  );
+  /** Top productos vendidos (PAID, ventana 30 días) */
+  const [topSoldProducts, setTopSoldProducts] = useState<TopSoldProduct[]>([]);
   const topInterestLastRef = useRef(true);
   const topInterestLoadingMoreRef = useRef(false);
   const catalogFilterReady = useRef(false);
-  const [newProduct, setNewProduct] = useState({
+  const emptyProductForm = () => ({
     name: "",
     description: "",
     price: "",
+    discount: "",
     imageUrl: "",
     availableQuantity: "0",
     active: true,
+    hasVariants: false,
+    variants: [] as import("@/lib/product-variants").ProductVariantFormRow[],
   });
+
+  const [newProduct, setNewProduct] = useState(emptyProductForm);
   const [newStoreModalOpen, setNewStoreModalOpen] = useState(false);
   const [creatingStore, setCreatingStore] = useState(false);
   const [newStoreForm, setNewStoreForm] = useState({
@@ -307,7 +373,7 @@ export function useDashboardPage() {
       );
       await loadDataForStore(token, updatedClient, selectedStore);
     } catch {
-      setError("No se pudo cambiar la tienda activa.");
+      setError("No se pudo cambiar el negocio activo.");
     }
   };
 
@@ -317,7 +383,7 @@ export function useDashboardPage() {
       return;
     }
     if (!newStoreForm.storeName.trim()) {
-      setError("Indica el nombre de la tienda.");
+      setError("Indica el nombre del negocio.");
       return;
     }
 
@@ -347,10 +413,10 @@ export function useDashboardPage() {
       await loadDataForStore(token, updatedClient, selectedStore);
       setNewStoreModalOpen(false);
       setNewStoreForm({ storeName: "", storeLabel: "", storeSlug: "" });
-      setActionMessage(`Tienda "${created.name}" creada y seleccionada.`);
+      setActionMessage(`Negocio "${created.name}" creado y seleccionado.`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo crear la tienda.",
+        err instanceof Error ? err.message : "No se pudo crear el negocio.",
       );
     } finally {
       setCreatingStore(false);
@@ -422,12 +488,25 @@ export function useDashboardPage() {
         label: detail.label ?? "",
         phone: detail.phone ?? "",
         logoUrl: detail.logoUrl ?? "",
+        primaryColor: normalizeStorePrimaryColor(detail.primaryColor),
+        coverImageUrl: detail.coverImageUrl ?? "",
         whatsapp: detail.whatsapp ?? "",
         cellPhone: detail.cellPhone ?? "",
         address: detail.address ?? "",
+        latitude: detail.latitude ?? null,
+        longitude: detail.longitude ?? null,
+        category: normalizeStoreCategory(detail.category),
+        description: detail.description ?? "",
+        email: detail.email ?? "",
+        website: detail.website ?? "",
+        instagram: detail.instagram ?? "",
+        facebook: detail.facebook ?? "",
+        tiktok: detail.tiktok ?? "",
+        schedule: detail.schedule ?? "",
+        paymentMethods: detail.paymentMethods ?? "",
       });
     } catch {
-      setError("No se pudo cargar la configuracion de la tienda.");
+      setError("No se pudo cargar la configuracion del negocio.");
     } finally {
       setMyStoreLoading(false);
     }
@@ -443,7 +522,7 @@ export function useDashboardPage() {
       const list = await listMyPickups(token, activeStore.id);
       setPickupsList(list);
     } catch {
-      setError("No se pudieron cargar los puntos de recogida.");
+      setError("No se pudieron cargar los puntos de atención.");
     } finally {
       setPickupsLoading(false);
     }
@@ -461,15 +540,20 @@ export function useDashboardPage() {
     if (!token || !activeStore || !client) {
       return;
     }
+    if (myStoreSaving) {
+      return;
+    }
     if (!storeSettingsForm.name.trim()) {
-      setError("El nombre de la tienda es obligatorio.");
+      setError("El nombre del negocio es obligatorio.");
       return;
     }
     setMyStoreSaving(true);
     setError("");
     try {
       await updateMyStore(token, activeStore.id, storeSettingsForm);
-      setActionMessage("Tienda actualizada correctamente.");
+      // Refrescar solo el perfil del cliente (sidebar/header) — NO recargar
+      // el formulario ni el catálogo/analítica/pagos: ya tenemos los datos
+      // recién guardados en `storeSettingsForm` y el resto no cambió.
       const meResponse = await fetch(`${API_URL}/clients/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -479,26 +563,11 @@ export function useDashboardPage() {
       const data = (await meResponse.json()) as ClientDetail;
       setClient(data);
       window.localStorage.setItem("stores_admin_client", JSON.stringify(data));
-      const nextStore =
-        data.stores.find((s) => s.id === data.activeStoreId) ??
-        data.stores.find((s) => s.id === activeStore.id) ??
-        data.stores[0];
-      if (nextStore) {
-        const authFilters = buildAuthFilters(data, nextStore.id);
-        await Promise.all([
-          refreshCatalog(token, nextStore.id, statusFilter),
-          loadAnalytics(token, nextStore.slug).then(setAnalytics),
-        ]);
-        void listPayuPaymentMethods(token, authFilters).then(setPayuMethods);
-        void getMyPaymentsRevenueSummary(token, authFilters).then(
-          setRevenueSummary,
-        );
-      }
-      await loadMyStoreSection();
       await loadPickups();
+      setActionMessage("Negocio actualizado correctamente.");
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "No se pudo guardar la tienda.",
+        e instanceof Error ? e.message : "No se pudo guardar el negocio.",
       );
     } finally {
       setMyStoreSaving(false);
@@ -511,7 +580,7 @@ export function useDashboardPage() {
       return;
     }
     if (!newPickupAddress.trim()) {
-      setError("Indica la dirección del punto de recogida.");
+      setError("Indica la dirección del punto de atención.");
       return;
     }
     setPickupActionLoading(true);
@@ -523,7 +592,7 @@ export function useDashboardPage() {
       });
       setNewPickupAddress("");
       setNewPickupActive(true);
-      setActionMessage("Punto de recogida creado.");
+      setActionMessage("Punto de atención creado.");
       await loadPickups();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo crear el punto.");
@@ -560,12 +629,25 @@ export function useDashboardPage() {
     }
   };
 
-  const handleDeletePickup = async (pickupId: number) => {
+  const [pendingDeletePickupId, setPendingDeletePickupId] = useState<
+    number | null
+  >(null);
+
+  const requestDeletePickup = (pickupId: number) => {
+    setError("");
+    setPendingDeletePickupId(pickupId);
+  };
+
+  const cancelDeletePickup = useCallback(() => {
+    setPendingDeletePickupId(null);
+  }, []);
+
+  const confirmDeletePickup = async () => {
+    const pickupId = pendingDeletePickupId;
+    if (pickupId == null) return;
     const token = window.localStorage.getItem("stores_admin_token");
     if (!token || !activeStore) {
-      return;
-    }
-    if (!window.confirm("Eliminar este punto de recogida?")) {
+      setPendingDeletePickupId(null);
       return;
     }
     setPickupActionLoading(true);
@@ -583,6 +665,7 @@ export function useDashboardPage() {
       );
     } finally {
       setPickupActionLoading(false);
+      setPendingDeletePickupId(null);
     }
   };
 
@@ -623,11 +706,13 @@ export function useDashboardPage() {
     try {
       const data = await loadTopProductsInterestPage(token, slug, 0, 20);
       setTopInterestItems(data.content);
+      setTopInterestTotal(data.totalElements);
       topInterestPageRef.current = 0;
       setTopInterestLast(data.last);
       topInterestLastRef.current = data.last;
     } catch {
       setTopInterestItems([]);
+      setTopInterestTotal(0);
       setTopInterestLast(true);
       topInterestLastRef.current = true;
     } finally {
@@ -635,6 +720,47 @@ export function useDashboardPage() {
       setTopInterestLoading(false);
     }
   }, [activeStore?.slug]);
+
+  /**
+   * Carga los datos extra del panel de Analítica:
+   *  - Pedidos sin pagar (count + top 5 más recientes)
+   *  - Top productos vendidos (PAID, ventana N días)
+   * Se dispara al montar el módulo o al cambiar de tienda. Los errores
+   * son tolerantes: un fallo en cualquiera de las dos no bloquea la otra.
+   */
+  const loadAnalyticsExtras = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    const storeId = activeStore?.id;
+    if (!token || storeId == null) return;
+
+    const clientData = client;
+    if (!clientData) return;
+    const authFilters = buildAuthFilters(clientData, storeId);
+
+    const [pendingResult, soldResult] = await Promise.allSettled([
+      listMyOrders(token, {
+        status: "PENDING",
+        page: 0,
+        size: 5,
+        ...authFilters,
+      }),
+      loadTopSoldProducts(token, storeId, 30),
+    ]);
+
+    if (pendingResult.status === "fulfilled") {
+      setPendingOrdersCount(pendingResult.value.totalElements);
+      setTopPendingOrders(pendingResult.value.content);
+    } else {
+      setPendingOrdersCount(0);
+      setTopPendingOrders([]);
+    }
+
+    if (soldResult.status === "fulfilled") {
+      setTopSoldProducts(soldResult.value);
+    } else {
+      setTopSoldProducts([]);
+    }
+  }, [activeStore?.id, client]);
 
   const appendTopInterestPage = useCallback(async () => {
     const token = window.localStorage.getItem("stores_admin_token");
@@ -647,6 +773,7 @@ export function useDashboardPage() {
     try {
       const data = await loadTopProductsInterestPage(token, slug, nextPage, 20);
       setTopInterestItems((prev) => [...prev, ...data.content]);
+      setTopInterestTotal(data.totalElements);
       topInterestPageRef.current = nextPage;
       setTopInterestLast(data.last);
       topInterestLastRef.current = data.last;
@@ -661,6 +788,7 @@ export function useDashboardPage() {
   useEffect(() => {
     if (!activeStore?.slug) {
       setTopInterestItems([]);
+      setTopInterestTotal(0);
       setTopInterestLast(true);
       topInterestLastRef.current = true;
       topInterestPageRef.current = 0;
@@ -668,6 +796,18 @@ export function useDashboardPage() {
     }
     void loadTopInterestFromStart();
   }, [activeStore?.slug, loadTopInterestFromStart]);
+
+  // Carga "extras" del módulo Analítica (pedidos PENDING + top vendidos).
+  // Se dispara al cambiar de tienda; usa `client` que se hidrata en el boot effect.
+  useEffect(() => {
+    if (activeStore == null || client == null) {
+      setPendingOrdersCount(0);
+      setTopPendingOrders([]);
+      setTopSoldProducts([]);
+      return;
+    }
+    void loadAnalyticsExtras();
+  }, [activeStore, client, loadAnalyticsExtras]);
 
   useEffect(() => {
     const root = topInterestScrollRef.current;
@@ -688,12 +828,12 @@ export function useDashboardPage() {
   }, [activeStore?.slug, appendTopInterestPage, topInterestItems.length]);
 
   const resolvedProductImageUrl = (
-    uploadedMediaUrl || newProduct.imageUrl
+    uploadedMediaUrl || newProduct.imageUrl || ""
   ).trim();
 
   const refreshProductFormValidation = (
     values = newProduct,
-    imageUrl = (uploadedMediaUrl || values.imageUrl).trim(),
+    imageUrl = (uploadedMediaUrl || values.imageUrl || "").trim(),
   ) => {
     const errors = validateProductForm(values, imageUrl);
     setProductFormErrors(errors);
@@ -722,32 +862,32 @@ export function useDashboardPage() {
       const isEditMode =
         productModalMode === "edit" && editingProductId !== null;
       const finalImageUrl = (uploadedMediaUrl || newProduct.imageUrl).trim();
-      const response = await fetch(
-        isEditMode
-          ? `${API_URL}/me/products/${editingProductId}`
-          : `${API_URL}/me/products`,
-        {
-          method: isEditMode ? "PUT" : "POST",
-          headers: buildAuthRequestHeaders({
-            token,
-            storeId: activeStore.id,
-            contentType: "application/json",
-            requireStore: true,
-          }),
-          body: JSON.stringify({
-            name: newProduct.name.trim(),
-            description: newProduct.description.trim(),
-            price: Number(newProduct.price),
-            imageUrl: finalImageUrl.length > 0 ? finalImageUrl : null,
-            availableQuantity: Number(newProduct.availableQuantity),
-            active: newProduct.active,
-          }),
-        },
-      );
+      const basePrice = Number(newProduct.price);
+      const discountRaw = newProduct.discount.trim();
+      const discountValue =
+        discountRaw === "" ? null : Number(discountRaw);
+      const variantsPayload = newProduct.hasVariants
+        ? toVariantUpsertPayload(newProduct.variants, basePrice)
+        : [];
 
-      if (!response.ok) {
-        throw new Error("create_product_error");
-      }
+      await upsertMyProduct(
+        token,
+        activeStore.id,
+        {
+          name: newProduct.name.trim(),
+          description: newProduct.description.trim(),
+          price: basePrice,
+          discount:
+            discountValue != null && Number.isFinite(discountValue) && discountValue > 0
+              ? discountValue
+              : null,
+          imageUrl: finalImageUrl.length > 0 ? finalImageUrl : null,
+          availableQuantity: Number(newProduct.availableQuantity) || 0,
+          active: newProduct.active,
+          variants: variantsPayload,
+        },
+        isEditMode ? editingProductId! : undefined,
+      );
 
       await Promise.all([
         refreshCatalog(token, activeStore.id, statusFilter),
@@ -759,14 +899,8 @@ export function useDashboardPage() {
           ? "Producto actualizado correctamente."
           : "Producto creado correctamente.",
       );
-      setNewProduct({
-        name: "",
-        description: "",
-        price: "",
-        imageUrl: "",
-        availableQuantity: "0",
-        active: true,
-      });
+      setNewProduct(emptyProductForm());
+      setUploadingVariantId(null);
       setUploadedMediaUrl("");
       setProductFormErrors({});
       setProductFormShowErrors(false);
@@ -786,14 +920,8 @@ export function useDashboardPage() {
   const openCreateModal = () => {
     setProductModalMode("create");
     setEditingProductId(null);
-    setNewProduct({
-      name: "",
-      description: "",
-      price: "",
-      imageUrl: "",
-      availableQuantity: "0",
-      active: true,
-    });
+    setNewProduct(emptyProductForm());
+    setUploadingVariantId(null);
     setUploadedMediaUrl("");
     setProductFormErrors({});
     setProductFormShowErrors(false);
@@ -802,17 +930,27 @@ export function useDashboardPage() {
     setProductModalOpen(true);
   };
 
-  const openEditModal = (product: DashboardProduct) => {
+  const openEditModal = (product: CatalogProduct) => {
     setProductModalMode("edit");
     setEditingProductId(product.id);
+    const hasVariants = product.hasVariants && product.variants.length > 0;
     setNewProduct({
       name: product.name,
       description: product.description,
-      price: String(product.price),
+      price: String(product.basePrice),
+      discount:
+        product.discount != null && Number.isFinite(product.discount) && product.discount > 0
+          ? String(product.discount)
+          : "",
       imageUrl: product.imageUrl,
       availableQuantity: String(product.stock),
       active: product.active,
+      hasVariants,
+      variants: hasVariants
+        ? product.variants.map((v) => variantRowFromApi(v))
+        : [],
     });
+    setUploadingVariantId(null);
     setUploadedMediaUrl(product.imageUrl);
     setProductFormErrors({});
     setProductFormShowErrors(false);
@@ -907,6 +1045,115 @@ export function useDashboardPage() {
     loadPayuRegisteredPayments,
     payuPaymentsListTick,
   ]);
+
+  const loadSalesOrders = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !client || !activeStore) {
+      setOrdersData(null);
+      return;
+    }
+    setOrdersLoading(true);
+    try {
+      const data = await listMyOrders(token, {
+        ...buildAuthFilters(client, activeStore.id),
+        status: orderStatusQuery.trim() || undefined,
+        page: ordersPage,
+        size: 15,
+      });
+      setOrdersData(data);
+    } catch {
+      setError("No se pudo cargar el listado de pedidos.");
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, [activeStore, client, orderStatusQuery, ordersPage]);
+
+  const loadSalesPayments = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !client || !activeStore) {
+      setSalesPaymentsData(null);
+      return;
+    }
+    setSalesPaymentsLoading(true);
+    try {
+      const data = await listMyPayments(token, {
+        ...buildAuthFilters(client, activeStore.id),
+        status: salesPaymentStatusQuery.trim() || undefined,
+        page: salesPaymentsPage,
+        size: 15,
+      });
+      setSalesPaymentsData(data);
+    } catch {
+      setError("No se pudo cargar el historial de pagos.");
+    } finally {
+      setSalesPaymentsLoading(false);
+    }
+  }, [activeStore, client, salesPaymentStatusQuery, salesPaymentsPage]);
+
+  const loadSalesRevenueSummary = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !client || !activeStore) {
+      setSalesRevenueSummary(null);
+      return;
+    }
+    try {
+      const data = await getMyPaymentsRevenueSummary(token, {
+        ...buildAuthFilters(client, activeStore.id),
+      });
+      setSalesRevenueSummary(data);
+    } catch {
+      setSalesRevenueSummary(null);
+    }
+  }, [activeStore, client]);
+
+  useEffect(() => {
+    if (activeSection !== "pedidos" || !client || !activeStore) {
+      return;
+    }
+    void loadSalesRevenueSummary();
+    if (salesTab === "pedidos") {
+      void loadSalesOrders();
+    } else {
+      void loadSalesPayments();
+    }
+  }, [
+    activeSection,
+    client,
+    activeStore,
+    salesTab,
+    loadSalesRevenueSummary,
+    loadSalesOrders,
+    loadSalesPayments,
+    ordersListTick,
+    salesPaymentsListTick,
+  ]);
+
+  const openOrderDetail = useCallback(
+    async (orderId: number) => {
+      const token = window.localStorage.getItem("stores_admin_token");
+      if (!token || !client || !activeStore) {
+        return;
+      }
+      setOrderDetailOpen(true);
+      setOrderDetail(null);
+      setOrderDetailLoading(true);
+      try {
+        const detail = await getMyOrder(
+          token,
+          activeStore.id,
+          orderId,
+          buildAuthFilters(client, activeStore.id),
+        );
+        setOrderDetail(detail);
+      } catch {
+        setError("No se pudo cargar el detalle del pedido.");
+        setOrderDetailOpen(false);
+      } finally {
+        setOrderDetailLoading(false);
+      }
+    },
+    [activeStore, client],
+  );
 
   const openCreatePayuModal = () => {
     if (hasActivePayuConfig) {
@@ -1067,6 +1314,44 @@ export function useDashboardPage() {
     }
   };
 
+  const handleStoreCoverUpload = async (file: File) => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      setError("No hay sesion activa para subir archivos.");
+      return;
+    }
+    setUploadingStoreCover(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(`${API_URL}/me/media/upload`, {
+        method: "POST",
+        headers: buildAuthRequestHeaders({
+          token,
+          storeId: activeStore.id,
+          requireStore: true,
+        }),
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error("upload_store_cover_error");
+      }
+      const payload = (await response.json()) as { fileUrl: string };
+      setStoreSettingsForm((prev) => ({
+        ...prev,
+        coverImageUrl: payload.fileUrl,
+      }));
+      setActionMessage(
+        "Portada subida. Pulsa Guardar cambios para publicarla en el negocio.",
+      );
+    } catch {
+      setError("No se pudo subir la foto de portada.");
+    } finally {
+      setUploadingStoreCover(false);
+    }
+  };
+
   const handleStoreLogoUpload = async (file: File) => {
     const token = window.localStorage.getItem("stores_admin_token");
     if (!token || !activeStore) {
@@ -1093,12 +1378,71 @@ export function useDashboardPage() {
       const payload = (await response.json()) as { fileUrl: string };
       setStoreSettingsForm((prev) => ({ ...prev, logoUrl: payload.fileUrl }));
       setActionMessage(
-        "Logo subido. Pulsa Guardar cambios para publicarlo en la tienda.",
+        "Logo subido. Pulsa Guardar cambios para publicarlo en el negocio.",
       );
     } catch {
       setError("No se pudo subir el logo.");
     } finally {
       setUploadingStoreLogo(false);
+    }
+  };
+
+  const handleVariantMediaUpload = async (localId: string, file: File) => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      setError("No hay sesion activa para subir archivos.");
+      return;
+    }
+
+    setUploadingVariantId(localId);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(`${API_URL}/me/media/upload`, {
+        method: "POST",
+        headers: buildAuthRequestHeaders({
+          token,
+          storeId: activeStore.id,
+          requireStore: true,
+        }),
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error("upload_media_error");
+      }
+      const payload = (await response.json()) as { fileUrl: string };
+      const uploadedUrl =
+        typeof payload?.fileUrl === "string" && payload.fileUrl.length > 0
+          ? payload.fileUrl
+          : null;
+      if (uploadedUrl === null) {
+        setError("El servidor no devolvio la URL de la imagen.");
+        return;
+      }
+      setNewProduct((prev) => {
+        const nextVariants = prev.variants.map((v) =>
+          v.localId === localId ? { ...v, imageUrl: uploadedUrl } : v,
+        );
+        const next = { ...prev, variants: nextVariants };
+        if (productFormShowErrors) {
+          const resolvedImage =
+            uploadedMediaUrl || next.imageUrl || "";
+          try {
+            setProductFormErrors(
+              validateProductForm(next, resolvedImage.trim()),
+            );
+          } catch {
+            /* validación post-subida nunca debe romper el render */
+          }
+        }
+        return next;
+      });
+      setActionMessage("Imagen de variante subida.");
+    } catch {
+      setError("No se pudo subir la imagen de la variante.");
+    } finally {
+      setUploadingVariantId(null);
     }
   };
 
@@ -1128,11 +1472,23 @@ export function useDashboardPage() {
         throw new Error("upload_media_error");
       }
       const payload = (await response.json()) as { fileUrl: string };
-      setUploadedMediaUrl(payload.fileUrl);
+      const uploadedUrl =
+        typeof payload?.fileUrl === "string" && payload.fileUrl.length > 0
+          ? payload.fileUrl
+          : null;
+      if (uploadedUrl === null) {
+        setError("El servidor no devolvio la URL de la imagen.");
+        return;
+      }
+      setUploadedMediaUrl(uploadedUrl);
       setNewProduct((prev) => {
-        const next = { ...prev, imageUrl: payload.fileUrl };
+        const next = { ...prev, imageUrl: uploadedUrl };
         if (productFormShowErrors) {
-          setProductFormErrors(validateProductForm(next, payload.fileUrl));
+          try {
+            setProductFormErrors(validateProductForm(next, uploadedUrl));
+          } catch {
+            /* validación post-subida nunca debe romper el render */
+          }
         }
         return next;
       });
@@ -1146,12 +1502,18 @@ export function useDashboardPage() {
 
   const sectionMeta = SECTION_META[activeSection];
 
+  const clearMessages = useCallback(() => {
+    setError("");
+    setActionMessage("");
+  }, []);
+
   return {
     loading,
     error,
     setError,
     actionMessage,
     setActionMessage,
+    clearMessages,
     client,
     activeStore,
     activeSection,
@@ -1169,8 +1531,13 @@ export function useDashboardPage() {
     topInterestItems,
     topInterestLoading,
     topInterestLast,
+    topInterestTotal,
     topInterestScrollRef,
     topInterestSentinelRef,
+    appendTopInterestPage,
+    pendingOrdersCount,
+    topPendingOrders,
+    topSoldProducts,
     productModalOpen,
     setProductModalOpen,
     productModalMode,
@@ -1199,6 +1566,7 @@ export function useDashboardPage() {
     myStoreLoading,
     myStoreSaving,
     uploadingStoreLogo,
+    uploadingStoreCover,
     payuMethods,
     payuModalOpen,
     setPayuModalOpen,
@@ -1217,6 +1585,34 @@ export function useDashboardPage() {
     setPayuPaymentStatusQuery,
     payuPaymentsListTick,
     setPayuPaymentsListTick,
+    salesTab,
+    setSalesTab,
+    ordersData,
+    ordersLoading,
+    ordersPage,
+    setOrdersPage,
+    orderStatusDraft,
+    setOrderStatusDraft,
+    orderStatusQuery,
+    setOrderStatusQuery,
+    ordersListTick,
+    setOrdersListTick,
+    salesPaymentsData,
+    salesPaymentsLoading,
+    salesPaymentsPage,
+    setSalesPaymentsPage,
+    salesPaymentStatusDraft,
+    setSalesPaymentStatusDraft,
+    salesPaymentStatusQuery,
+    setSalesPaymentStatusQuery,
+    salesPaymentsListTick,
+    setSalesPaymentsListTick,
+    salesRevenueSummary,
+    orderDetailOpen,
+    setOrderDetailOpen,
+    orderDetailLoading,
+    orderDetail,
+    openOrderDetail,
     hasActivePayuConfig,
     newStoreModalOpen,
     setNewStoreModalOpen,
@@ -1230,7 +1626,10 @@ export function useDashboardPage() {
     handleSaveStoreSettings,
     handleAddPickup,
     handleSavePickupEdit,
-    handleDeletePickup,
+    requestDeletePickup,
+    confirmDeletePickup,
+    cancelDeletePickup,
+    pendingDeletePickupId,
     handleTogglePickupStatus,
     handleSaveProduct,
     openCreateModal,
@@ -1241,7 +1640,10 @@ export function useDashboardPage() {
     handleSavePayu,
     handleDeletePayu,
     handleStoreLogoUpload,
+    handleStoreCoverUpload,
     handleMediaUpload,
+    handleVariantMediaUpload,
+    uploadingVariantId,
     refreshProductFormValidation,
   };
 }
