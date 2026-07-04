@@ -64,6 +64,9 @@ export default function DashboardPage() {
           onLoadMoreTopInterest={() => void d.appendTopInterestPage()}
           topInterestScrollRef={d.topInterestScrollRef}
           topInterestSentinelRef={d.topInterestSentinelRef}
+          pendingOrdersCount={d.pendingOrdersCount}
+          topPendingOrders={d.topPendingOrders}
+          topSoldProducts={d.topSoldProducts}
         />
       ) : null}
 

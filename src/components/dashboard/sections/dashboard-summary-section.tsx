@@ -11,6 +11,10 @@ import {
   formatCopCurrency,
 } from "@/lib/dashboard/format";
 import { TopProductsInterestPanel } from "@/components/dashboard/top-products-interest-panel";
+import { ConversionFunnel } from "@/components/dashboard/conversion-funnel";
+import { EventDistributionDonut } from "@/components/dashboard/event-distribution-donut";
+import { AbandonedCheckoutsCard } from "@/components/dashboard/abandoned-checkouts-card";
+import { TopProductsComparison } from "@/components/dashboard/top-products-comparison";
 import {
   brandChartArea,
   brandDashboardPanel,
@@ -22,8 +26,10 @@ import {
 import type {
   AnalyticsDashboard,
   TopProductInterest,
+  TopSoldProduct,
 } from "@/types/dashboard";
 import type { PaymentRevenueSummary } from "@/services/storePaymentsService";
+import type { AdminOrderListItem } from "@/services/orderService";
 
 export type DashboardSummarySectionProps = {
   title: string;
@@ -38,6 +44,9 @@ export type DashboardSummarySectionProps = {
   onLoadMoreTopInterest: () => void;
   topInterestScrollRef: RefObject<HTMLDivElement | null>;
   topInterestSentinelRef: RefObject<HTMLDivElement | null>;
+  pendingOrdersCount: number;
+  topPendingOrders: AdminOrderListItem[];
+  topSoldProducts: TopSoldProduct[];
 };
 
 export function DashboardSummarySection({
@@ -53,6 +62,9 @@ export function DashboardSummarySection({
   onLoadMoreTopInterest,
   topInterestScrollRef,
   topInterestSentinelRef,
+  pendingOrdersCount,
+  topPendingOrders,
+  topSoldProducts,
 }: DashboardSummarySectionProps) {
   const totalEvents = analytics?.totalEvents ?? 0;
   const dailySeries = buildDailySeries(analytics?.dailyMetrics ?? []);
@@ -67,10 +79,18 @@ export function DashboardSummarySection({
     daysWithData > 0 ? Math.round(totalEvents / daysWithData) : 0;
   const daysSpan = dailySeries.length;
 
+  // Suma del total monetario visible en la lista de pedidos PENDING (página size=5)
+  const topPendingTotal = topPendingOrders.reduce(
+    (acc, o) => acc + (Number.isFinite(o.total) ? o.total : 0),
+    0,
+  );
+
   return (
     <>
       <SectionHeader title={title} description={description} />
-      <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+
+      {/* Fila 1: stat cards (5 existentes + 1 nueva: Pedidos sin pagar). */}
+      <section className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-6">
         <DashboardStatCard
           title="Productos"
           value={formatCompactNumber(productCount)}
@@ -106,8 +126,28 @@ export function DashboardSummarySection({
           tone="blue"
           icon="revenue"
         />
+        <DashboardStatCard
+          title="Pedidos sin pagar"
+          value={formatCompactNumber(pendingOrdersCount)}
+          fullValue={String(pendingOrdersCount)}
+          tone="amber"
+          icon="pending"
+        />
       </section>
 
+      {/* Fila 2: funnel de conversión (centro de la sección). */}
+      <section className="mb-6">
+        <ConversionFunnel
+          views={analytics?.productViews ?? 0}
+          clicks={analytics?.productClicks ?? 0}
+          carts={analytics?.addToCart ?? 0}
+          intents={analytics?.purchaseIntents ?? 0}
+          paidCount={revenueSummary?.paidTransactions ?? 0}
+          paidAmount={Number(revenueSummary?.totalPaidAmount ?? 0)}
+        />
+      </section>
+
+      {/* Fila 3: activity + top interest (existente). */}
       <section className="mb-6 grid gap-4 xl:grid-cols-3">
         <article
           className={`min-w-0 p-5 sm:p-6 xl:col-span-2 ${brandDashboardPanel}`}
@@ -141,6 +181,30 @@ export function DashboardSummarySection({
             sentinelRef={topInterestSentinelRef}
           />
         </article>
+      </section>
+
+      {/* Fila 4: comparativa de productos vs donut de distribución. */}
+      <section className="mb-6 grid gap-4 xl:grid-cols-2">
+        <TopProductsComparison
+          topSold={topSoldProducts}
+          topInterest={topInterestItems.slice(0, 10)}
+        />
+        <EventDistributionDonut
+          views={analytics?.productViews ?? 0}
+          clicks={analytics?.productClicks ?? 0}
+          carts={analytics?.addToCart ?? 0}
+          intents={analytics?.purchaseIntents ?? 0}
+          totalEvents={totalEvents}
+        />
+      </section>
+
+      {/* Fila 5: pedidos sin pagar (detalle con lista). */}
+      <section className="mb-6">
+        <AbandonedCheckoutsCard
+          count={pendingOrdersCount}
+          visibleTotalAmount={topPendingTotal}
+          pendingOrders={topPendingOrders}
+        />
       </section>
     </>
   );

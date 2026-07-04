@@ -59,6 +59,14 @@ export type AnalyticsDashboard = {
   }>;
 };
 
+/** Ranking de productos por unidades vendidas (PAID, ventana N días). */
+export type TopSoldProduct = {
+  productId: number;
+  productName: string | null;
+  unitsSold: number;
+  totalRevenue: number;
+};
+
 export type DashboardSectionMeta = {
   title: string;
   description: string;

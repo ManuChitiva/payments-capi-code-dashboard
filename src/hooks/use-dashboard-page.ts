@@ -32,6 +32,7 @@ import {
 import {
   getMyOrder,
   listMyOrders,
+  type AdminOrderListItem,
   type OrderDetail,
   type PagedOrdersResponse,
 } from "@/services/orderService";
@@ -67,6 +68,7 @@ import { SECTION_META } from "@/lib/dashboard/constants";
 import {
   loadAnalytics,
   loadTopProductsInterestPage,
+  loadTopSoldProducts,
 } from "@/lib/dashboard/analytics-api";
 import type {
   AnalyticsDashboard,
@@ -74,6 +76,7 @@ import type {
   PayuFormState,
   StoreSummary,
   TopProductInterest,
+  TopSoldProduct,
 } from "@/types/dashboard";
 
 export function useDashboardPage() {
@@ -201,6 +204,13 @@ export function useDashboardPage() {
   const topInterestScrollRef = useRef<HTMLDivElement | null>(null);
   const topInterestSentinelRef = useRef<HTMLDivElement | null>(null);
   const topInterestPageRef = useRef(0);
+  /** Conteo de pedidos en estado PENDING (revenue en riesgo) */
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [topPendingOrders, setTopPendingOrders] = useState<AdminOrderListItem[]>(
+    [],
+  );
+  /** Top productos vendidos (PAID, ventana 30 días) */
+  const [topSoldProducts, setTopSoldProducts] = useState<TopSoldProduct[]>([]);
   const topInterestLastRef = useRef(true);
   const topInterestLoadingMoreRef = useRef(false);
   const catalogFilterReady = useRef(false);
@@ -711,6 +721,47 @@ export function useDashboardPage() {
     }
   }, [activeStore?.slug]);
 
+  /**
+   * Carga los datos extra del panel de Analítica:
+   *  - Pedidos sin pagar (count + top 5 más recientes)
+   *  - Top productos vendidos (PAID, ventana N días)
+   * Se dispara al montar el módulo o al cambiar de tienda. Los errores
+   * son tolerantes: un fallo en cualquiera de las dos no bloquea la otra.
+   */
+  const loadAnalyticsExtras = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    const storeId = activeStore?.id;
+    if (!token || storeId == null) return;
+
+    const clientData = client;
+    if (!clientData) return;
+    const authFilters = buildAuthFilters(clientData, storeId);
+
+    const [pendingResult, soldResult] = await Promise.allSettled([
+      listMyOrders(token, {
+        status: "PENDING",
+        page: 0,
+        size: 5,
+        ...authFilters,
+      }),
+      loadTopSoldProducts(token, storeId, 30),
+    ]);
+
+    if (pendingResult.status === "fulfilled") {
+      setPendingOrdersCount(pendingResult.value.totalElements);
+      setTopPendingOrders(pendingResult.value.content);
+    } else {
+      setPendingOrdersCount(0);
+      setTopPendingOrders([]);
+    }
+
+    if (soldResult.status === "fulfilled") {
+      setTopSoldProducts(soldResult.value);
+    } else {
+      setTopSoldProducts([]);
+    }
+  }, [activeStore?.id, client]);
+
   const appendTopInterestPage = useCallback(async () => {
     const token = window.localStorage.getItem("stores_admin_token");
     const slug = activeStore?.slug;
@@ -745,6 +796,18 @@ export function useDashboardPage() {
     }
     void loadTopInterestFromStart();
   }, [activeStore?.slug, loadTopInterestFromStart]);
+
+  // Carga "extras" del módulo Analítica (pedidos PENDING + top vendidos).
+  // Se dispara al cambiar de tienda; usa `client` que se hidrata en el boot effect.
+  useEffect(() => {
+    if (activeStore == null || client == null) {
+      setPendingOrdersCount(0);
+      setTopPendingOrders([]);
+      setTopSoldProducts([]);
+      return;
+    }
+    void loadAnalyticsExtras();
+  }, [activeStore, client, loadAnalyticsExtras]);
 
   useEffect(() => {
     const root = topInterestScrollRef.current;
@@ -1472,6 +1535,9 @@ export function useDashboardPage() {
     topInterestScrollRef,
     topInterestSentinelRef,
     appendTopInterestPage,
+    pendingOrdersCount,
+    topPendingOrders,
+    topSoldProducts,
     productModalOpen,
     setProductModalOpen,
     productModalMode,

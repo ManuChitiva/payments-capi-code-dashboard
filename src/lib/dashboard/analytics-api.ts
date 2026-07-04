@@ -1,7 +1,9 @@
+import { buildAuthRequestHeaders } from "@/lib/api-headers";
 import { publicApiBaseUrl as API_URL } from "@/lib/public-api";
 import type {
   AnalyticsDashboard,
   TopProductsInterestPage,
+  TopSoldProduct,
 } from "@/types/dashboard";
 
 export async function loadAnalytics(
@@ -48,6 +50,32 @@ export async function loadTopProductsInterestPage(
   }
 
   return (await response.json()) as TopProductsInterestPage;
+}
+
+/**
+ * Top productos vendidos (PAID) del negocio activo.
+ * Usa `X-Store-Id` (admin) en lugar de slug, replicando el patrón de `orderService.ts`.
+ */
+export async function loadTopSoldProducts(
+  token: string,
+  storeId: number,
+  days = 30,
+): Promise<TopSoldProduct[]> {
+  const params = new URLSearchParams({ days: String(days) });
+  const response = await fetch(
+    `${API_URL}/me/orders/top-products?${params}`,
+    {
+      headers: buildAuthRequestHeaders({
+        token,
+        storeId,
+        requireStore: true,
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("top_sold_products_error");
+  }
+  return (await response.json()) as TopSoldProduct[];
 }
 
 export function buildDailySeries(
