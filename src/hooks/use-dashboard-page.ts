@@ -12,9 +12,11 @@ import {
 import type { ProductStatus } from "@/components/dashboard/products-table";
 import type { CatalogProduct } from "@/components/dashboard/products-table";
 import {
+  applyProductStockChanges,
   listMyProducts,
   setMyProductActive,
   upsertMyProduct,
+  type ProductStockChange,
 } from "@/services/productService";
 import {
   toVariantUpsertPayload,
@@ -50,6 +52,18 @@ import {
   updatePickup,
   type PickupPoint,
 } from "@/services/storePickupsService";
+import {
+  createMyPersonalBatch,
+  deleteMyPersonal,
+  listMyPersonal,
+  uploadPersonalPhoto,
+  type PersonalCreatePayload,
+  type PersonalMember,
+} from "@/services/personalService";
+import {
+  emptyPersonalRows,
+  type PersonalFormRow,
+} from "@/components/dashboard/modals/personal-form-modal";
 import { normalizeStorePrimaryColor } from "@/lib/brand-store-defaults";
 import {
   createMyStore,
@@ -142,6 +156,16 @@ export function useDashboardPage() {
   });
   const [pickupsLoading, setPickupsLoading] = useState(false);
   const [pickupActionLoading, setPickupActionLoading] = useState(false);
+  const [personalList, setPersonalList] = useState<PersonalMember[]>([]);
+  const [personalLoading, setPersonalLoading] = useState(false);
+  const [personalActionLoading, setPersonalActionLoading] = useState(false);
+  const [personalModalOpen, setPersonalModalOpen] = useState(false);
+  const [personalFormRows, setPersonalFormRows] =
+    useState<PersonalFormRow[]>(emptyPersonalRows);
+  const [personalSaving, setPersonalSaving] = useState(false);
+  const [pendingDeletePersonalId, setPendingDeletePersonalId] = useState<
+    number | null
+  >(null);
   const [myStoreLoading, setMyStoreLoading] = useState(false);
   const [myStoreSaving, setMyStoreSaving] = useState(false);
   const [uploadingStoreLogo, setUploadingStoreLogo] = useState(false);
@@ -234,6 +258,22 @@ export function useDashboardPage() {
     storeLabel: "",
     storeSlug: "",
   });
+
+  /* Modal de productos agotados (reponer stock) */
+  const [outOfStockModalOpen, setOutOfStockModalOpen] = useState(false);
+  const [outOfStockSaving, setOutOfStockSaving] = useState(false);
+
+  const outOfStockProducts = useMemo(
+    () => catalogStats.filter((p) => p.status === "agotado"),
+    [catalogStats],
+  );
+
+  const openOutOfStockModal = useCallback(() => {
+    setOutOfStockModalOpen(true);
+  }, []);
+  const closeOutOfStockModal = useCallback(() => {
+    setOutOfStockModalOpen(false);
+  }, []);
 
   useEffect(() => {
     const token = window.localStorage.getItem("stores_admin_token");
@@ -528,12 +568,35 @@ export function useDashboardPage() {
     }
   }, [activeStore]);
 
+  const loadPersonal = useCallback(async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      return;
+    }
+    setPersonalLoading(true);
+    try {
+      const list = await listMyPersonal(token, activeStore.id);
+      setPersonalList(list);
+    } catch {
+      setError("No se pudo cargar el personal del negocio.");
+      setPersonalList([]);
+    } finally {
+      setPersonalLoading(false);
+    }
+  }, [activeStore]);
+
   useEffect(() => {
     if (activeSection === "tienda" && activeStore) {
       void loadMyStoreSection();
       void loadPickups();
     }
   }, [activeSection, activeStore, loadMyStoreSection, loadPickups]);
+
+  useEffect(() => {
+    if (activeSection === "personal" && activeStore) {
+      void loadPersonal();
+    }
+  }, [activeSection, activeStore, loadPersonal]);
 
   const handleSaveStoreSettings = async () => {
     const token = window.localStorage.getItem("stores_admin_token");
@@ -688,6 +751,108 @@ export function useDashboardPage() {
       );
     } finally {
       setPickupActionLoading(false);
+    }
+  };
+
+  const openCreatePersonalModal = useCallback(() => {
+    setError("");
+    setActionMessage("");
+    setPersonalFormRows(emptyPersonalRows());
+    setPersonalModalOpen(true);
+  }, []);
+
+  const closePersonalModal = useCallback(() => {
+    if (personalSaving) return;
+    setPersonalModalOpen(false);
+  }, [personalSaving]);
+
+  const handleSavePersonal = async () => {
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      setError("No hay sesion activa para guardar personal.");
+      return;
+    }
+    const cleaned = personalFormRows
+      .map((row) => ({
+        ...row,
+        name: row.name.trim(),
+        phone: row.phone.trim(),
+        whatsapp: row.whatsapp.trim(),
+      }))
+      .filter((row) => row.name.length > 0);
+
+    if (cleaned.length === 0) {
+      setError("Agrega al menos un empleado con nombre.");
+      return;
+    }
+
+    setPersonalSaving(true);
+    setError("");
+    setActionMessage("");
+    try {
+      const payload: PersonalCreatePayload[] = await Promise.all(
+        cleaned.map(async (row, index) => {
+          const photoUrl = row.photoFile
+            ? await uploadPersonalPhoto(token, activeStore.id, row.photoFile)
+            : null;
+          return {
+            name: row.name,
+            phone: row.phone.length > 0 ? row.phone : null,
+            whatsapp: row.whatsapp.length > 0 ? row.whatsapp : null,
+            photoUrl,
+            active: true,
+            sortOrder: index,
+          };
+        }),
+      );
+      await createMyPersonalBatch(token, activeStore.id, payload);
+      setPersonalModalOpen(false);
+      setPersonalFormRows(emptyPersonalRows());
+      setActionMessage(
+        payload.length === 1
+          ? "Empleado agregado correctamente."
+          : `${payload.length} empleados agregados correctamente.`,
+      );
+      await loadPersonal();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo guardar el personal.",
+      );
+    } finally {
+      setPersonalSaving(false);
+    }
+  };
+
+  const requestDeletePersonal = (memberId: number) => {
+    setError("");
+    setPendingDeletePersonalId(memberId);
+  };
+
+  const cancelDeletePersonal = useCallback(() => {
+    setPendingDeletePersonalId(null);
+  }, []);
+
+  const confirmDeletePersonal = async () => {
+    const id = pendingDeletePersonalId;
+    if (id == null) return;
+    const token = window.localStorage.getItem("stores_admin_token");
+    if (!token || !activeStore) {
+      setPendingDeletePersonalId(null);
+      return;
+    }
+    setPersonalActionLoading(true);
+    setError("");
+    try {
+      await deleteMyPersonal(token, activeStore.id, id);
+      setActionMessage("Empleado eliminado.");
+      await loadPersonal();
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "No se pudo eliminar el empleado.",
+      );
+    } finally {
+      setPersonalActionLoading(false);
+      setPendingDeletePersonalId(null);
     }
   };
 
@@ -990,6 +1155,65 @@ export function useDashboardPage() {
       );
     }
   };
+
+  /**
+   * Aplica cambios de stock a varios productos. Usa el snapshot completo
+   * (catálogo + lista filtrada) para reconstruir el cuerpo de cada PUT
+   * sin perder campos no visibles en la UI del modal.
+   */
+  const handleApplyStockChanges = useCallback(
+    async (changes: ProductStockChange[]) => {
+      if (changes.length === 0) {
+        setOutOfStockModalOpen(false);
+        return;
+      }
+      const token = window.localStorage.getItem("stores_admin_token");
+      if (!token || !activeStore) {
+        setError("No hay sesion activa para actualizar el stock.");
+        return;
+      }
+      setOutOfStockSaving(true);
+      setError("");
+      try {
+        const snapshotMap = new Map<number, CatalogProduct>();
+        for (const p of catalogStats) snapshotMap.set(p.id, p);
+        for (const p of products) {
+          if (!snapshotMap.has(p.id)) snapshotMap.set(p.id, p);
+        }
+        const snapshot = Array.from(snapshotMap.values());
+        await applyProductStockChanges(
+          token,
+          activeStore.id,
+          snapshot,
+          changes,
+        );
+        await Promise.all([
+          refreshCatalog(token, activeStore.id, statusFilter),
+          loadAnalytics(token, activeStore.slug).then(setAnalytics),
+        ]);
+        void loadTopInterestFromStart();
+        setActionMessage(
+          `Stock actualizado en ${changes.length} producto${
+            changes.length === 1 ? "" : "s"
+          }.`,
+        );
+        setOutOfStockModalOpen(false);
+      } catch {
+        setError("No se pudo actualizar el stock.");
+      } finally {
+        setOutOfStockSaving(false);
+      }
+    },
+    [
+      activeStore,
+      catalogStats,
+      products,
+      statusFilter,
+      loadAnalytics,
+      loadTopInterestFromStart,
+      refreshCatalog,
+    ],
+  );
 
   const loadPayuMethods = useCallback(async () => {
     const token = window.localStorage.getItem("stores_admin_token");
@@ -1522,6 +1746,12 @@ export function useDashboardPage() {
     setMobileNavOpen,
     products,
     catalogStats,
+    outOfStockProducts,
+    outOfStockModalOpen,
+    outOfStockSaving,
+    openOutOfStockModal,
+    closeOutOfStockModal,
+    handleApplyStockChanges,
     query,
     setQuery,
     statusFilter,
@@ -1619,6 +1849,21 @@ export function useDashboardPage() {
     creatingStore,
     newStoreForm,
     setNewStoreForm,
+    personalList,
+    personalLoading,
+    personalActionLoading,
+    personalModalOpen,
+    setPersonalModalOpen,
+    personalFormRows,
+    setPersonalFormRows,
+    personalSaving,
+    pendingDeletePersonalId,
+    openCreatePersonalModal,
+    closePersonalModal,
+    handleSavePersonal,
+    requestDeletePersonal,
+    cancelDeletePersonal,
+    confirmDeletePersonal,
     logout,
     goToSection,
     handleStoreChange,

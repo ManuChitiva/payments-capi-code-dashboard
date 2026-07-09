@@ -101,6 +101,7 @@ function mapProductRow(item: ProductApiRow): CatalogProduct {
     discountPercent,
     imageUrl: item.imageUrl ?? "",
     stock,
+    parentAvailableQuantity: item.availableQuantity,
     status,
     active: item.active,
     updatedAt: new Date(item.createdAt).toISOString().slice(0, 10),
@@ -200,6 +201,74 @@ export async function setMyProductActive(
   if (!response.ok) {
     throw new Error("set_product_active_error");
   }
+}
+
+/** Cambio de stock a aplicar sobre un producto del catálogo. */
+export type ProductStockChange = {
+  productId: number;
+  /**
+   * Para productos sin variantes: nuevo `availableQuantity` del padre.
+   * Para productos con variantes: valor que se mantiene (no usado).
+   */
+  newParentQuantity?: number;
+  /**
+   * Para productos con variantes: cantidades nuevas por id de variante.
+   * Las variantes no listadas conservan su stock.
+   */
+  variantDeltas?: Record<number, number>;
+};
+
+/**
+ * Aplica cambios de stock a uno o más productos reenviando el cuerpo completo
+ * (el backend no expone PATCH parcial). Construye el payload desde el snapshot
+ * que recibe para no perder campos no tocados por la UI.
+ */
+export async function applyProductStockChanges(
+  token: string,
+  storeId: number,
+  snapshot: CatalogProduct[],
+  changes: ProductStockChange[],
+): Promise<void> {
+  const snapshotById = new Map(snapshot.map((p) => [p.id, p]));
+  await Promise.all(
+    changes.map(async (change) => {
+      const product = snapshotById.get(change.productId);
+      if (!product) {
+        throw new Error("stock_snapshot_missing");
+      }
+      const nextVariants = product.variants.map((v) => {
+        const add = change.variantDeltas?.[v.id];
+        if (add == null || add === 0) return v;
+        const next = Math.max(0, v.availableQuantity + add);
+        return {
+          id: v.id,
+          sku: v.sku,
+          title: v.title,
+          imageUrl: v.imageUrl,
+          price: v.price,
+          availableQuantity: next,
+          active: v.active,
+          sortOrder: v.sortOrder,
+        };
+      });
+      await upsertMyProduct(
+        token,
+        storeId,
+        {
+          name: product.name,
+          description: product.description,
+          price: product.basePrice,
+          discount: product.discount ?? null,
+          imageUrl: product.imageUrl?.trim() ? product.imageUrl : null,
+          availableQuantity:
+            change.newParentQuantity ?? product.parentAvailableQuantity,
+          active: product.active,
+          variants: nextVariants,
+        },
+        product.id,
+      );
+    }),
+  );
 }
 
 const copFormatter = new Intl.NumberFormat("es-CO", {

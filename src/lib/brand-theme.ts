@@ -230,6 +230,14 @@ export const dashboardFilterActive =
 export const dashboardFilterIdle =
   "rounded-lg px-3 py-1.5 text-xs font-medium text-brand-secondary transition-[background-color,color,box-shadow] hover:bg-brand-hover hover:text-brand-primary";
 
+/** Paginación: número de página activo (chip resaltado) */
+export const dashboardPaginationActive =
+  "min-w-8 rounded-lg bg-brand-primary px-2 py-1.5 text-xs font-medium tabular-nums text-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.35)] dark:bg-brand-accent-soft dark:shadow-[0_2px_10px_-2px_rgba(41,151,255,0.5),0_0_0_1px_rgba(41,151,255,0.25)]";
+
+/** Paginación: número de página inactivo (chip con hover sutil) */
+export const dashboardPaginationIdle =
+  "min-w-8 rounded-lg px-2 py-1.5 text-xs font-medium tabular-nums text-brand-secondary transition-[background-color,color] hover:bg-brand-hover hover:text-brand-primary";
+
 export const dashboardInputFocus =
   "focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/25";
 
