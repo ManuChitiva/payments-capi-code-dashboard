@@ -12,6 +12,8 @@ import { DashboardProductsSection } from "@/components/dashboard/sections/dashbo
 import { DashboardOrdersSection } from "@/components/dashboard/sections/dashboard-orders-section";
 import { DashboardPaymentsSection } from "@/components/dashboard/sections/dashboard-payments-section";
 import { DashboardSubscriptionSection } from "@/components/dashboard/sections/dashboard-subscription-section";
+import { DashboardPersonalSection } from "@/components/dashboard/sections/dashboard-personal-section";
+import { PersonalFormModal } from "@/components/dashboard/modals/personal-form-modal";
 import { OrderDetailModal } from "@/components/dashboard/modals/order-detail-modal";
 import { useDashboardPage } from "@/hooks/use-dashboard-page";
 import { brandPageBg, brandTextSecondary } from "@/lib/brand-theme";
@@ -76,6 +78,9 @@ export default function DashboardPage() {
           description={d.sectionMeta.description}
           products={d.products}
           catalogStats={d.catalogStats}
+          outOfStockProducts={d.outOfStockProducts}
+          outOfStockModalOpen={d.outOfStockModalOpen}
+          outOfStockSaving={d.outOfStockSaving}
           query={d.query}
           statusFilter={d.statusFilter}
           onQueryChange={d.setQuery}
@@ -83,6 +88,9 @@ export default function DashboardPage() {
           onEdit={d.openEditModal}
           onToggleActive={d.handleToggleProductActive}
           onCreate={d.openCreateModal}
+          onOpenOutOfStockModal={d.openOutOfStockModal}
+          onCloseOutOfStockModal={d.closeOutOfStockModal}
+          onApplyStockChanges={(changes) => void d.handleApplyStockChanges(changes)}
         />
       ) : null}
 
@@ -192,6 +200,17 @@ export default function DashboardPage() {
         />
       ) : null}
 
+      {d.activeSection === "personal" ? (
+        <DashboardPersonalSection
+          title={d.sectionMeta.title}
+          description={d.sectionMeta.description}
+          personal={d.personalList}
+          loading={d.personalLoading}
+          onAdd={d.openCreatePersonalModal}
+          onDelete={(member) => d.requestDeletePersonal(member.id)}
+        />
+      ) : null}
+
       <ProductFormModal
         open={d.productModalOpen}
         mode={d.productModalMode}
@@ -257,6 +276,16 @@ export default function DashboardPage() {
         onChange={(patch) => d.setNewStoreForm((f) => ({ ...f, ...patch }))}
       />
 
+      <PersonalFormModal
+        open={d.personalModalOpen}
+        rows={d.personalFormRows}
+        saving={d.personalSaving}
+        formError={d.personalModalOpen ? d.error : undefined}
+        onClose={d.closePersonalModal}
+        onSave={() => void d.handleSavePersonal()}
+        onRowsChange={d.setPersonalFormRows}
+      />
+
       <ConfirmActionModal
         open={d.pendingDeletePickupId != null}
         title="¿Eliminar este punto de atención?"
@@ -279,6 +308,31 @@ export default function DashboardPage() {
         variant="danger"
         onClose={d.cancelDeletePickup}
         onConfirm={() => void d.confirmDeletePickup()}
+      />
+
+      <ConfirmActionModal
+        open={d.pendingDeletePersonalId != null}
+        title="¿Eliminar este empleado?"
+        description={
+          <>
+            Vas a eliminar a{" "}
+            <span className="font-medium text-brand-primary">
+              “
+              {d.personalList.find(
+                (p) => p.id === d.pendingDeletePersonalId,
+              )?.name?.trim() || "Sin nombre"}
+              ”
+            </span>
+            . Sus datos dejarán de mostrarse en el negocio. Esta acción no se
+            puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar empleado"
+        cancelLabel="Cancelar"
+        confirming={d.personalActionLoading}
+        variant="danger"
+        onClose={d.cancelDeletePersonal}
+        onConfirm={() => void d.confirmDeletePersonal()}
       />
     </DashboardShell>
   );

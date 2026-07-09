@@ -24,6 +24,11 @@ export const SECTION_META: Record<DashboardSection, DashboardSectionMeta> = {
     title: "Pagos PayU",
     description: "Configura medios de pago y revisa transacciones.",
   },
+  personal: {
+    title: "Personal",
+    description:
+      "Gestiona el equipo del negocio: foto, nombre, teléfono y WhatsApp de cada empleado.",
+  },
   suscripcion: {
     title: "Mi suscripción",
     description:

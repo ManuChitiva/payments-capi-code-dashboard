@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ConfirmActionModal } from "@/components/dashboard/modals/confirm-action-modal";
+import { OutOfStockModal } from "@/components/dashboard/out-of-stock-modal";
 import {
   brandActionButtonSolid,
   brandInputClass,
@@ -11,15 +12,20 @@ import {
   dashboardFilterActive,
   dashboardFilterIdle,
   dashboardInputFocus,
+  dashboardPaginationActive,
+  dashboardPaginationIdle,
   dashboardStatusBadge,
 } from "@/lib/brand-theme";
+import type { ProductVariantApi } from "@/lib/product-variants";
+import {
+  formatCatalogPrice,
+  formatCop,
+  type ProductStockChange,
+} from "@/services/productService";
 
 const PAGE_SIZE = 5;
 
 export type ProductStatus = "activo" | "inactivo" | "agotado";
-
-import type { ProductVariantApi } from "@/lib/product-variants";
-import { formatCatalogPrice, formatCop } from "@/services/productService";
 
 export type CatalogProduct = {
   id: number;
@@ -40,6 +46,12 @@ export type CatalogProduct = {
   discountPercent: number | null;
   imageUrl: string;
   stock: number;
+  /**
+   * `availableQuantity` del producto padre según la API. Cuando hay variantes
+   * el stock "visible" se calcula sumando las activas, pero el backend sigue
+   * exigiendo este campo en PUT para no perderlo.
+   */
+  parentAvailableQuantity: number;
   status: ProductStatus;
   active: boolean;
   updatedAt: string;
@@ -59,6 +71,13 @@ type ProductsTableProps = {
   onEdit: (product: CatalogProduct) => void;
   onToggleActive: (productId: number, active: boolean) => void;
   onCreate: () => void;
+  /** Lista pre-filtrada de productos agotados para el modal de reposición. */
+  outOfStockProducts: CatalogProduct[];
+  outOfStockModalOpen: boolean;
+  outOfStockSaving: boolean;
+  onOpenOutOfStockModal: () => void;
+  onCloseOutOfStockModal: () => void;
+  onApplyStockChanges: (changes: ProductStockChange[]) => void;
 };
 
 const STATUS_FILTERS: Array<{ id: "todos" | ProductStatus; label: string }> = [
@@ -99,6 +118,12 @@ export function ProductsTable({
   onEdit,
   onToggleActive,
   onCreate,
+  outOfStockProducts,
+  outOfStockModalOpen,
+  outOfStockSaving,
+  onOpenOutOfStockModal,
+  onCloseOutOfStockModal,
+  onApplyStockChanges,
 }: ProductsTableProps) {
   const paginationKey = useMemo(
     () => `${query}\0${statusFilter}\0${products.length}`,
@@ -166,10 +191,30 @@ export function ProductsTable({
     <div className="space-y-5">
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total" value={stats.total} />
-        <StatCard label="Activos" value={stats.activo} />
-        <StatCard label="Agotados" value={stats.agotado} />
-        <StatCard label="Inactivos" value={stats.inactivo} />
+        <StatCard
+          label="Total"
+          value={stats.total}
+          accent={<StatBadgeDot tone="blue" />}
+        />
+        <StatCard
+          label="Activos"
+          value={stats.activo}
+          accent={<StatBadgeDot tone="emerald" />}
+        />
+        <StatCard
+          label="Agotados"
+          value={stats.agotado}
+          accent={<StatBadgeDot tone="rose" />}
+          badge={stats.agotado > 0 ? "Reponer →" : undefined}
+          aura="rose"
+          onClick={onOpenOutOfStockModal}
+          ariaLabel="Reponer productos agotados"
+        />
+        <StatCard
+          label="Inactivos"
+          value={stats.inactivo}
+          accent={<StatBadgeDot tone="slate" />}
+        />
       </div>
 
       {/* Toolbar */}
@@ -190,11 +235,17 @@ export function ProductsTable({
               filter.id === "todos"
                 ? stats.total
                 : stats[filter.id as ProductStatus];
+            const handleClick = () => {
+              onStatusFilterChange(filter.id);
+              if (filter.id === "agotado" && stats.agotado > 0) {
+                onOpenOutOfStockModal();
+              }
+            };
             return (
               <button
                 key={filter.id}
                 type="button"
-                onClick={() => onStatusFilterChange(filter.id)}
+                onClick={handleClick}
                 className={active ? dashboardFilterActive : dashboardFilterIdle}
               >
                 {filter.label}
@@ -325,6 +376,14 @@ export function ProductsTable({
         onClose={() => setPendingToggle(null)}
         onConfirm={handleConfirmToggle}
       />
+
+      <OutOfStockModal
+        open={outOfStockModalOpen}
+        products={outOfStockProducts}
+        saving={outOfStockSaving}
+        onClose={onCloseOutOfStockModal}
+        onSubmit={onApplyStockChanges}
+      />
     </div>
   );
 }
@@ -352,8 +411,26 @@ function ProductRow({
   };
 
   if (layout === "card") {
+    const isAgotado = product.status === "agotado";
     return (
-      <article className="rounded-xl border border-brand-separator/70 bg-brand-surface/80 p-4 shadow-[0_4px_12px_-6px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-shadow hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.18)] dark:border-brand-separator dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_14px_-4px_rgba(0,0,0,0.55)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_22px_-4px_rgba(0,0,0,0.7)]">
+      <article
+        className={[
+          "relative overflow-hidden rounded-2xl border border-brand-separator/70 bg-brand-surface/85 p-4 shadow-[0_4px_14px_-6px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.05)] backdrop-blur-sm transition-shadow",
+          "hover:shadow-[0_10px_24px_-10px_rgba(0,0,0,0.18)]",
+          "dark:border-brand-separator dark:bg-white/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_6px_18px_-6px_rgba(0,0,0,0.6)] dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_28px_-6px_rgba(0,0,0,0.8)]",
+          isAgotado
+            ? "ring-1 ring-rose-500/15 dark:ring-rose-400/15"
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {isAgotado ? (
+          <span
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-rose-400/0 via-rose-400/70 to-rose-400/0 dark:from-rose-300/0 dark:via-rose-300/60 dark:to-rose-300/0"
+          />
+        ) : null}
         <div className="flex gap-3">
           <ProductThumb product={product} size="lg" />
           <div className="min-w-0 flex-1">
@@ -395,11 +472,14 @@ function ProductRow({
                   {formatCatalogPrice(product)}
                 </span>
               )}
-              <span className={stockLevel.className}>
+              <span
+                className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium tabular-nums ${stockLevel.chipClass}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${stockLevel.dotClass}`} />
                 {product.stock} uds · {stockLevel.label}
               </span>
             </div>
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               <ActionButton variant="edit" onClick={() => onEdit(product)} />
               <ActionButton
                 variant={willActivate ? "activate" : "deactivate"}
@@ -521,11 +601,11 @@ function ProductsPagination({
                 key={i}
                 type="button"
                 onClick={() => onPageChange(i)}
-                className={`min-w-8 rounded-lg px-2 py-1.5 text-xs font-medium tabular-nums transition ${
+                className={
                   i === page
-                    ? "bg-brand-primary text-white"
-                    : "text-brand-secondary hover:bg-brand-hover hover:text-brand-primary"
-                }`}
+                    ? dashboardPaginationActive
+                    : dashboardPaginationIdle
+                }
                 aria-current={i === page ? "page" : undefined}
               >
                 {i + 1}
@@ -640,16 +720,123 @@ function ActionButton({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({
+  label,
+  value,
+  accent,
+  badge,
+  onClick,
+  ariaLabel,
+  aura,
+}: {
+  label: string;
+  value: number;
+  accent?: ReactNode;
+  badge?: string;
+  onClick?: () => void;
+  ariaLabel?: string;
+  /** Aura "neón" sobria que pinta la card cuando el contador es alto (p. ej. Agotados). */
+  aura?: "rose";
+}) {
+  const interactive = typeof onClick === "function";
+  const showAura = aura != null && value > 0;
+  const className = [
+    "group relative w-full overflow-hidden rounded-2xl border bg-[var(--brand-surface-glass)] px-4 py-3 text-left backdrop-blur-xl",
+    "transition-[transform,box-shadow,border-color] duration-200",
+    showAura
+      ? // Aura rose: borde y sombra coherentes con la paleta de error — más "neón" en dark
+        "border-rose-400/40 shadow-[0_10px_28px_-12px_rgba(244,63,94,0.45),0_2px_8px_-2px_rgba(244,63,94,0.18),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-rose-400/35 dark:shadow-[0_0_0_1px_rgba(244,63,94,0.25),0_18px_44px_-14px_rgba(244,63,94,0.35),0_6px_20px_-8px_rgba(244,63,94,0.25),inset_0_1px_0_rgba(255,255,255,0.05)]"
+      : // Default "profesional": 4 capas — highlight superior interno + drop shadow de 3 niveles
+        "border-brand-separator/80 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_14px_-4px_rgba(0,0,0,0.08),0_14px_32px_-8px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] dark:border-brand-separator dark:shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_12px_28px_-8px_rgba(0,0,0,0.45),0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.05)]",
+    interactive
+      ? showAura
+        ? "hover:-translate-y-0.5 hover:border-rose-500/55 hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_34px_-12px_rgba(244,63,94,0.55),0_4px_12px_-2px_rgba(244,63,94,0.25),inset_0_1px_0_rgba(255,255,255,0.7)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 dark:hover:border-rose-400/55 dark:hover:shadow-[0_0_0_1px_rgba(244,63,94,0.35),0_22px_52px_-14px_rgba(244,63,94,0.45),0_10px_28px_-10px_rgba(244,63,94,0.35),inset_0_1px_0_rgba(255,255,255,0.07)]"
+        : "hover:-translate-y-0.5 hover:border-brand-input-border hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_18px_-4px_rgba(0,0,0,0.10),0_22px_44px_-10px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.85)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-accent-soft dark:hover:border-brand-accent-soft/35 dark:hover:shadow-[0_0_0_1px_rgba(255,255,255,0.10),0_18px_40px_-8px_rgba(0,0,0,0.55),0_4px_14px_-4px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.07)]"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const body = (
+    <>
+      <div className="relative flex items-center justify-between">
+        <p className="text-[11px] font-medium tracking-wide text-brand-tertiary uppercase">
+          {label}
+        </p>
+        {accent}
+      </div>
+      <div className="relative mt-2 flex items-end justify-between gap-2">
+        <p className="text-2xl font-semibold tracking-tight tabular-nums text-brand-primary">
+          {value}
+        </p>
+        {badge ? (
+          <span
+            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${
+              showAura
+                ? "text-rose-700 dark:text-rose-300"
+                : "text-brand-accent dark:text-brand-accent-soft"
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
+      </div>
+    </>
+  );
+
+  // Aura: una capa única "neón" — halo de foco inferior-derecho + tinte en gradiente
+  // desde la misma esquina. Mismo color (rose) con distinta profundidad por modo.
+  const auraOverlay = showAura ? (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(120%_85%_at_85%_95%,rgba(244,63,94,0.22),rgba(244,63,94,0.06)_45%,transparent_70%)] dark:bg-[radial-gradient(120%_85%_at_85%_95%,rgba(244,63,94,0.32),rgba(244,63,94,0.08)_45%,transparent_70%)]"
+    />
+  ) : null;
+
+  if (interactive) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={ariaLabel ?? label}
+        className={className}
+      >
+        {auraOverlay}
+        {body}
+      </button>
+    );
+  }
   return (
-    <div className="rounded-2xl border border-brand-separator/80 bg-[var(--brand-surface-glass)] px-4 py-3 shadow-[var(--brand-shadow-card)] backdrop-blur-xl">
-      <p className="text-[11px] font-medium tracking-wide text-brand-tertiary uppercase">
-        {label}
-      </p>
-      <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular-nums text-brand-primary">
-        {value}
-      </p>
+    <div className={className}>
+      {auraOverlay}
+      {body}
     </div>
+  );
+}
+
+function StatBadgeDot({ tone }: { tone: "blue" | "emerald" | "rose" | "slate" }) {
+  const palette: Record<typeof tone, string> = {
+    blue: "bg-brand-accent/15 text-brand-accent dark:bg-brand-accent-soft/15 dark:text-brand-accent-soft",
+    emerald:
+      "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+    rose:
+      "bg-rose-500/12 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
+    slate:
+      "bg-brand-hover text-brand-tertiary dark:bg-white/[0.08] dark:text-brand-secondary",
+  };
+  const dot: Record<typeof tone, string> = {
+    blue: "bg-brand-accent dark:bg-brand-accent-soft",
+    emerald: "bg-emerald-500 dark:bg-emerald-400",
+    rose: "bg-rose-500 dark:bg-rose-400",
+    slate: "bg-brand-tertiary dark:bg-brand-secondary",
+  };
+  return (
+    <span
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${palette[tone]}`}
+      aria-hidden
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${dot[tone]}`} />
+    </span>
   );
 }
 
